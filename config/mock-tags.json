@@ -1,0 +1,3615 @@
+{
+  "source": "Tag_catalog.docx detailed table",
+  "tags": [
+    {
+      "tag_name": "Alarm01",
+      "device_address": "M100",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "The power Supply phases are swapped",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm02",
+      "device_address": "M101",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Emergency Stop",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm03",
+      "device_address": "M102",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "HMI Emergency Stop",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm04",
+      "device_address": "M103",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "12# Emergency Stop",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm05",
+      "device_address": "M104",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "2# Emergency Stop",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm06",
+      "device_address": "M105",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "9# Emergency Stop",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm07",
+      "device_address": "M106",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm08",
+      "device_address": "M107",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm09",
+      "device_address": "M108",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm10",
+      "device_address": "M109",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm11",
+      "device_address": "M110",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm12",
+      "device_address": "M111",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm13",
+      "device_address": "M112",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm14",
+      "device_address": "M113",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm15",
+      "device_address": "M114",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm16",
+      "device_address": "M115",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm17",
+      "device_address": "M116",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm18",
+      "device_address": "M117",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm19",
+      "device_address": "M118",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm20",
+      "device_address": "M119",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm21",
+      "device_address": "M120",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "1# Filter Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm22",
+      "device_address": "M121",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "3# Filter Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm23",
+      "device_address": "M122",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "5# Filter Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm24",
+      "device_address": "M123",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "5# Swing Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm25",
+      "device_address": "M124",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "7# Filter Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm26",
+      "device_address": "M125",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "10# Filter Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm27",
+      "device_address": "M126",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "11# Filter Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm28",
+      "device_address": "M127",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "14# Filter Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm29",
+      "device_address": "M128",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "16# Filter Pump Overload",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm30",
+      "device_address": "M129",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "1# Heater",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm31",
+      "device_address": "M130",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "3# Heater",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm32",
+      "device_address": "M131",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "5# Heater",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm33",
+      "device_address": "M132",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "7# Heater",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm34",
+      "device_address": "M133",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "10# Heater",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm35",
+      "device_address": "M134",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "13# Heater",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm36",
+      "device_address": "M135",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "14# Heater",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm37",
+      "device_address": "M136",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "16# Heater",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm38",
+      "device_address": "M137",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Front Water Leak",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm39",
+      "device_address": "M138",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Back Water Leak",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm40",
+      "device_address": "M139",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm41",
+      "device_address": "M140",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm42",
+      "device_address": "M141",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm43",
+      "device_address": "M142",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm44",
+      "device_address": "M143",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm45",
+      "device_address": "M144",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm46",
+      "device_address": "M145",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm47",
+      "device_address": "M146",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm48",
+      "device_address": "M147",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm49",
+      "device_address": "M148",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm50",
+      "device_address": "M149",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm51",
+      "device_address": "M150",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "1# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm52",
+      "device_address": "M151",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "1# buffer tank level high",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm53",
+      "device_address": "M152",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "1# Buffer tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm54",
+      "device_address": "M153",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "3# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm55",
+      "device_address": "M154",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "3# buffer tank level high",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm56",
+      "device_address": "M155",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "3# Buffer tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm57",
+      "device_address": "M156",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "5# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm58",
+      "device_address": "M157",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "5# buffer tank level high",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm59",
+      "device_address": "M158",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "5# Buffer tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm60",
+      "device_address": "M159",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "7# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm61",
+      "device_address": "M160",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "7# buffer tank level high",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm62",
+      "device_address": "M161",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "7# Buffer tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm63",
+      "device_address": "M162",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "10# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm64",
+      "device_address": "M163",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "10# buffer tank level high",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm65",
+      "device_address": "M164",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "10# Buffer tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm66",
+      "device_address": "M165",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "11# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm67",
+      "device_address": "M166",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "13# tank level high",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm68",
+      "device_address": "M167",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "13# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm69",
+      "device_address": "M168",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "14# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm70",
+      "device_address": "M169",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "14# buffer tank level high",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm71",
+      "device_address": "M170",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "14# Buffer tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm72",
+      "device_address": "M171",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "16# tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm73",
+      "device_address": "M172",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "16# buffer tank level high",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm74",
+      "device_address": "M173",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "16# Buffer tank level low",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm75",
+      "device_address": "M174",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm76",
+      "device_address": "M175",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm77",
+      "device_address": "M176",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm78",
+      "device_address": "M177",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm79",
+      "device_address": "M178",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Alarm80",
+      "device_address": "M179",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "spare",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Local",
+      "device_address": "L3",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Local (Manual Mode)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "MainInlet",
+      "device_address": "L190",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Main Inlet Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "MainInletStatus",
+      "device_address": "Y5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Main Inlet Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Remote",
+      "device_address": "L4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Remote (API Mode)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01A_USSV",
+      "device_address": "D1044",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank01A Ultrasonic Generator Current (A) Set Value",
+      "low_limit": 0.0,
+      "high_limit": 8.0
+    },
+    {
+      "tag_name": "Tank01B_USSV",
+      "device_address": "D1048",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank01B Ultrasonic Generator Current (A) Set Value",
+      "low_limit": 0.0,
+      "high_limit": 8.0
+    },
+    {
+      "tag_name": "Tank01_DoorCloseRemote",
+      "device_address": "M301",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Door Remote Close",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_DoorClosed",
+      "device_address": "D1000.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Door Actually Closed",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_DoorOpenRemote",
+      "device_address": "M300",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Door Remote Open",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_DoorOpened",
+      "device_address": "D1000.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Door Actually Opened",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_FillWaterAuto",
+      "device_address": "L200",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_FillWaterOn",
+      "device_address": "L100",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_FillWaterStatus",
+      "device_address": "D1002.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_FilterRemote",
+      "device_address": "M320",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Filter Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_FilterStatus",
+      "device_address": "D1002.1",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Filter Pump Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_HaveBasket",
+      "device_address": "M601",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_HeaterRemote",
+      "device_address": "M321",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Heater Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_HeaterStatus",
+      "device_address": "D1002.2",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Heater Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_RemoteStart",
+      "device_address": "M323",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_TempAdj",
+      "device_address": "D4010",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank01 Temperature +- Adjust",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank01_TempPV",
+      "device_address": "D4000",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank01 Temperature Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_TempSV",
+      "device_address": "D4020",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank01 Temperature Set Value",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank01_TimePV",
+      "device_address": "CN101",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_TimeSV",
+      "device_address": "D4051",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank01_TimeUp",
+      "device_address": "CS101",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_USRemote",
+      "device_address": "M322",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank01 Ultrasonic Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_USStatus",
+      "device_address": "Y4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Ultrasonic Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank01_WaterFlow",
+      "device_address": "D1004",
+      "data_type": "Float",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank01 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_AirAgitationAuto",
+      "device_address": "L202",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank02 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_AirAgitationOn",
+      "device_address": "L102",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank02 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_AirAgitationStatus",
+      "device_address": "D1002.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank02 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_FillWaterAuto",
+      "device_address": "L201",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank02 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_FillWaterOn",
+      "device_address": "L101",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank02 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_FillWaterStatus",
+      "device_address": "D1002.C",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank02 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_HaveBasket",
+      "device_address": "M602",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank02 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_RemoteStart",
+      "device_address": "M324",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank02 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_TimePV",
+      "device_address": "CN102",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank02 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_TimeSV",
+      "device_address": "D4052",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank02 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank02_TimeUp",
+      "device_address": "CS102",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank02 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank02_WaterFlow",
+      "device_address": "D1006",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank02 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_DoorCloseRemote",
+      "device_address": "M303",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Door Remote Close",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_DoorClosed",
+      "device_address": "D1010.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Door Actually Closed",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_DoorOpenRemote",
+      "device_address": "M302",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Door Remote Open",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_DoorOpened",
+      "device_address": "D1010.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Door Actually Opened",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_FillWaterAuto",
+      "device_address": "L220",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_FillWaterOn",
+      "device_address": "L110",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_FillWaterStatus",
+      "device_address": "D1012.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_FilterRemote",
+      "device_address": "M332",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Filter Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_FilterStatus",
+      "device_address": "D1012.1",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Filter Pump Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_HaveBasket",
+      "device_address": "M603",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_HeaterRemote",
+      "device_address": "M333",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Heater Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_HeaterStatus",
+      "device_address": "D1012.2",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Heater Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_RemoteStart",
+      "device_address": "M330",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_SwingRemote",
+      "device_address": "M334",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Swing Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_SwingSV",
+      "device_address": "D1008",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Swing Speed Set Value",
+      "low_limit": 0.0,
+      "high_limit": 2000.0
+    },
+    {
+      "tag_name": "Tank03_SwingStatus",
+      "device_address": "D1012.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Swing Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_TempAdj",
+      "device_address": "D4011",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank03 Temperature +- Adjust",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank03_TempPV",
+      "device_address": "D4001",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank03 Temperature Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_TempSV",
+      "device_address": "D4021",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank03 Temperature Set Value",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank03_TimePV",
+      "device_address": "CN103",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_TimeSV",
+      "device_address": "D4053",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank03 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank03_TimeUp",
+      "device_address": "CS103",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank03_WaterFlow",
+      "device_address": "D1014",
+      "data_type": "Float",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank03 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_AirAgitationAuto",
+      "device_address": "L212",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank04 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_AirAgitationOn",
+      "device_address": "L112",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank04 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_AirAgitationStatus",
+      "device_address": "D1012.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank04 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_FillWaterAuto",
+      "device_address": "L211",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank04 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_FillWaterOn",
+      "device_address": "L111",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank04 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_FillWaterStatus",
+      "device_address": "D1012.C",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank04 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_HaveBasket",
+      "device_address": "M604",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank04 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_RemoteStart",
+      "device_address": "M331",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank04 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_TimePV",
+      "device_address": "CN104",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank04 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_TimeSV",
+      "device_address": "D4054",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank04 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank04_TimeUp",
+      "device_address": "CS104",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank04 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank04_WaterFlow",
+      "device_address": "D1016",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank04 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_DoorCloseRemote",
+      "device_address": "M305",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Door Remote Close",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_DoorClosed",
+      "device_address": "D1020.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Door Actually Closed",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_DoorOpenRemote",
+      "device_address": "M304",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Door Remote Open",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_DoorOpened",
+      "device_address": "D1020.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Door Actually Opened",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_FillWaterAuto",
+      "device_address": "L220",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_FillWaterOn",
+      "device_address": "L120",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_FillWaterStatus",
+      "device_address": "D1022.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_FilterRemote",
+      "device_address": "M342",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Filter Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_FilterStatus",
+      "device_address": "D1022.1",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Filter Pump Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_HaveBasket",
+      "device_address": "M605",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_HeaterRemote",
+      "device_address": "M343",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Heater Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_HeaterStatus",
+      "device_address": "D1022.2",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Heater Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_RemoteStart",
+      "device_address": "M340",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_SwingRemote",
+      "device_address": "M344",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Swing Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_SwingSV",
+      "device_address": "D1018",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Swing Speed Set Value",
+      "low_limit": 0.0,
+      "high_limit": 2000.0
+    },
+    {
+      "tag_name": "Tank05_SwingStatus",
+      "device_address": "D1022.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Swing Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_TempAdj",
+      "device_address": "D4012",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank05 Temperature +- Adjust",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank05_TempPV",
+      "device_address": "D4002",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank05 Temperature Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_TempSV",
+      "device_address": "D4022",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank05 Temperature Set Value",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank05_TimePV",
+      "device_address": "CN105",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_TimeSV",
+      "device_address": "D4055",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank05 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank05_TimeUp",
+      "device_address": "CS105",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank05_WaterFlow",
+      "device_address": "D1024",
+      "data_type": "Float",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank05 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_AirAgitationAuto",
+      "device_address": "L222",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank06 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_AirAgitationOn",
+      "device_address": "L122",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank06 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_AirAgitationStatus",
+      "device_address": "D1022.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank06 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_FillWaterAuto",
+      "device_address": "L221",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank06 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_FillWaterOn",
+      "device_address": "L121",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank06 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_FillWaterStatus",
+      "device_address": "D1022.C",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank06 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_HaveBasket",
+      "device_address": "M606",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank06 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_RemoteStart",
+      "device_address": "M341",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank06 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_TimePV",
+      "device_address": "CN106",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank06 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_TimeSV",
+      "device_address": "D4056",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank06 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank06_TimeUp",
+      "device_address": "CS106",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank06 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank06_WaterFlow",
+      "device_address": "D1026",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank06 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_AirAgitationAuto",
+      "device_address": "L235",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_AirAgitationOn",
+      "device_address": "L135",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_AirAgitationStatus",
+      "device_address": "D1030.F",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_AirFlow",
+      "device_address": "D1034",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank07 Air Flow Meter Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_AmperePV",
+      "device_address": "D1055",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.01,
+      "description": "Tank07 Ampere Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_AmpereSV",
+      "device_address": "D1038",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.01,
+      "description": "Tank07 Ampere Set Value",
+      "low_limit": 0.0,
+      "high_limit": 200.0
+    },
+    {
+      "tag_name": "Tank07_CoolerAuto",
+      "device_address": "L231",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Cool Water Circulation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_CoolerOn",
+      "device_address": "L131",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Cool Water Circulation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_CoolerStatus",
+      "device_address": "D1030.B",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Cool Water Circulation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_DoorCloseRemote",
+      "device_address": "M307",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Door Remote Close",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_DoorClosed",
+      "device_address": "D1028.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Door Actually Closed",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_DoorOpenRemote",
+      "device_address": "M306",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Door Remote Open",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_DoorOpened",
+      "device_address": "D1028.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Door Actually Opened",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_FillWaterAuto",
+      "device_address": "L230",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_FillWaterOn",
+      "device_address": "L130",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_FillWaterStatus",
+      "device_address": "D1030.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_FilterRemote",
+      "device_address": "M353",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Filter Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_FilterStatus",
+      "device_address": "D1030.1",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Filter Pump Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_HaveBasket",
+      "device_address": "M607",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_RectRemote",
+      "device_address": "M354",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Rectifier RemoteOn",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_RectStatus",
+      "device_address": "D1030.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Rectifier Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_RemoteStart",
+      "device_address": "M350",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_TempAdj",
+      "device_address": "D4013",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank07 Temperature +- Adjust",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank07_TempPV",
+      "device_address": "D4003",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank07 Temperature Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_TempSV",
+      "device_address": "D4023",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank07 Temperature Set Value",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank07_TimePV",
+      "device_address": "CN107",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_TimeSV",
+      "device_address": "D4057",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank07 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank07_TimeUp",
+      "device_address": "CS107",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_VoltagePV",
+      "device_address": "D1054",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.01,
+      "description": "Tank07 Rectifier Voltage Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank07_WaterFlow",
+      "device_address": "D1032",
+      "data_type": "Float",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank07 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank08_AirAgitationAuto",
+      "device_address": "L232",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank08 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank08_AirAgitationOn",
+      "device_address": "L132",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank08 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank08_AirAgitationStatus",
+      "device_address": "D1030.C",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank08 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank08_HaveBasket",
+      "device_address": "M608",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank08 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank08_RemoteStart",
+      "device_address": "M351",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank08 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank08_TimePV",
+      "device_address": "CN108",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank08 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank08_TimeSV",
+      "device_address": "D4058",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank08 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank08_TimeUp",
+      "device_address": "CS108",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank08 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank08_WaterFlow",
+      "device_address": "D1036",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank08 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_AirAgitationAuto",
+      "device_address": "L233",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank09 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_AirAgitationOn",
+      "device_address": "L133",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank09 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_AirAgitationStatus",
+      "device_address": "D1030.D",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank09 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_FillWaterAuto",
+      "device_address": "L234",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank09 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_FillWaterOn",
+      "device_address": "L134",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank09 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_FillWaterStatus",
+      "device_address": "D1030.E",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank09 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_HaveBasket",
+      "device_address": "M609",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank09 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_RemoteStart",
+      "device_address": "M352",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank09 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_TimePV",
+      "device_address": "CN109",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank09 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_TimeSV",
+      "device_address": "D4059",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank09 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank09_TimeUp",
+      "device_address": "CS109",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank09 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_DoorCloseRemote",
+      "device_address": "M309",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Door Remote Close",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_DoorClosed",
+      "device_address": "D1102.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Door Actually Closed",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_DoorOpenRemote",
+      "device_address": "M308",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Door Remote Open",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_DoorOpened",
+      "device_address": "D1102.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Door Actually Opened",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_FillWaterAuto",
+      "device_address": "L240",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_FillWaterOn",
+      "device_address": "L140",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_FillWaterStatus",
+      "device_address": "D1104.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_FilterRemote",
+      "device_address": "M361",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Filter Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_FilterStatus",
+      "device_address": "D1104.1",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Filter Pump Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_HaveBasket",
+      "device_address": "M610",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_HeaterRemote",
+      "device_address": "M362",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Heater Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_HeaterStatus",
+      "device_address": "D1104.2",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Heater Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_PH",
+      "device_address": "D1108",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.01,
+      "description": "Tank10 PH Meter Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_RemoteStart",
+      "device_address": "M360",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_SwingRemote",
+      "device_address": "M363",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Swing Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_SwingSV",
+      "device_address": "D1100",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Swing Speed Set Value",
+      "low_limit": 0.0,
+      "high_limit": 2000.0
+    },
+    {
+      "tag_name": "Tank10_SwingStatus",
+      "device_address": "D1104.3",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Swing Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_TempAdj",
+      "device_address": "D4014",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank10 Temperature +- Adjust",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank10_TempPV",
+      "device_address": "D4004",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank10 Temperature Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_TempSV",
+      "device_address": "D4024",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank10 Temperature Set Value",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank10_TimePV",
+      "device_address": "CN110",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_TimeSV",
+      "device_address": "D4060",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank10 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank10_TimeUp",
+      "device_address": "CS110",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank10_WaterFlow",
+      "device_address": "D1106",
+      "data_type": "Float",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank10 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_FillWaterAuto",
+      "device_address": "L250",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank11 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_FillWaterOn",
+      "device_address": "L150",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank11 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_FillWaterStatus",
+      "device_address": "D1112.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank11 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_HaveBasket",
+      "device_address": "M611",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank11 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_RemoteStart",
+      "device_address": "M370",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank11 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_SprayRemote",
+      "device_address": "M371",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank11 Spray Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_SprayStatus",
+      "device_address": "D1112.1",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank11 Spray Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_TimePV",
+      "device_address": "CN111",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank11 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_TimeSV",
+      "device_address": "D4061",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank11 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank11_TimeUp",
+      "device_address": "CS111",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank11 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank11_WaterFlow",
+      "device_address": "D1114",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank11 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_AirAgitationAuto",
+      "device_address": "L261",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank12 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_AirAgitationOn",
+      "device_address": "L161",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank12 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_AirAgitationStatus",
+      "device_address": "D1118.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank12 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_DoorCloseRemote",
+      "device_address": "M311",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank12 Door Remote Close",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_DoorClosed",
+      "device_address": "D1116.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank12 Door Actually Closed",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_DoorOpenRemote",
+      "device_address": "M310",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank12 Door Remote Open",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_DoorOpened",
+      "device_address": "D1116.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank12 Door Actually Opened",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_FillWaterAuto",
+      "device_address": "L262",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank12 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_FillWaterOn",
+      "device_address": "L162",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank12 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_FillWaterStatus",
+      "device_address": "D1118.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank12 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_HaveBasket",
+      "device_address": "M612",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank12 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_RemoteStart",
+      "device_address": "M380",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank12 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_TimePV",
+      "device_address": "CN112",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank12 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_TimeSV",
+      "device_address": "D4062",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank12 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank12_TimeUp",
+      "device_address": "CS112",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank12 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank12_WaterFlow",
+      "device_address": "D1120",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank12 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_Conductivity",
+      "device_address": "D1122",
+      "data_type": "Float",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank13 Conductivity Meter Reading",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_FillWaterAuto",
+      "device_address": "L260",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank13 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_FillWaterOn",
+      "device_address": "L160",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank13 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_FillWaterStatus",
+      "device_address": "D1118.3",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank13 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_HaveBasket",
+      "device_address": "M613",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank13 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_HeaterRemote",
+      "device_address": "M382",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank13 Heater Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_HeaterStatus",
+      "device_address": "D1118.2",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank13 Heater Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_RemoteStart",
+      "device_address": "M381",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank13 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_TempAdj",
+      "device_address": "D4015",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank13 Temperature +- Adjust",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank13_TempPV",
+      "device_address": "D4005",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank13 Temperature Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_TempSV",
+      "device_address": "D4025",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank13 Temperature Set Value",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank13_TimePV",
+      "device_address": "CN113",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank13 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank13_TimeSV",
+      "device_address": "D4063",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank13 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank13_TimeUp",
+      "device_address": "CS113",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank13 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_DoorCloseRemote",
+      "device_address": "M313",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Door Remote Close",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_DoorClosed",
+      "device_address": "D1126.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Door Actually Closed",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_DoorOpenRemote",
+      "device_address": "M312",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Door Remote Open",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_DoorOpened",
+      "device_address": "D1126.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Door Actually Opened",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_FillWaterAuto",
+      "device_address": "L270",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_FillWaterOn",
+      "device_address": "L170",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_FillWaterStatus",
+      "device_address": "D1128.8",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_FilterRemote",
+      "device_address": "M391",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Filter Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_FilterStatus",
+      "device_address": "D1128.1",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Filter Pump Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_HaveBasket",
+      "device_address": "M614",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_HeaterRemote",
+      "device_address": "M392",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Heater Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_HeaterStatus",
+      "device_address": "D1128.2",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Heater Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_PH",
+      "device_address": "D1132",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.01,
+      "description": "Tank14 PH Meter Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_RemoteStart",
+      "device_address": "M390",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_SwingRemote",
+      "device_address": "M393",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Swing Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_SwingSV",
+      "device_address": "D1124",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Swing Speed Set Value",
+      "low_limit": 0.0,
+      "high_limit": 2000.0
+    },
+    {
+      "tag_name": "Tank14_SwingStatus",
+      "device_address": "D1128.3",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Swing Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_TempAdj",
+      "device_address": "D4016",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank14 Temperature +- Adjust",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank14_TempPV",
+      "device_address": "D4006",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank14 Temperature Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_TempSV",
+      "device_address": "D4026",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank14 Temperature Set Value",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank14_TimePV",
+      "device_address": "CN114",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_TimeSV",
+      "device_address": "D4064",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank14 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank14_TimeUp",
+      "device_address": "CS114",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank14_WaterFlow",
+      "device_address": "D1130",
+      "data_type": "Float",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank14 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_AirAgitationAuto",
+      "device_address": "L280",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank15 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_AirAgitationOn",
+      "device_address": "L180",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank15 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_AirAgitationStatus",
+      "device_address": "D1136.4",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank15 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_FillWaterAuto",
+      "device_address": "L281",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank15 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_FillWaterOn",
+      "device_address": "L181",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank15 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_FillWaterStatus",
+      "device_address": "D1136.5",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank15 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_HaveBasket",
+      "device_address": "M615",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank15 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_RemoteStart",
+      "device_address": "M400",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank15 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_TimePV",
+      "device_address": "CN115",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank15 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_TimeSV",
+      "device_address": "D4065",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank15 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank15_TimeUp",
+      "device_address": "CS115",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank15 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank15_WaterFlow",
+      "device_address": "D1138",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank15 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_AirAgitationAuto",
+      "device_address": "L282",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank16 Air Agitation Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_AirAgitationOn",
+      "device_address": "L182",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank16 Air Agitation Always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_AirAgitationStatus",
+      "device_address": "D1136.6",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank16 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_FillWaterAuto",
+      "device_address": "L283",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank16 Fill Water Auto",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_FillWaterOn",
+      "device_address": "L183",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank16 Fill Water always On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_FillWaterStatus",
+      "device_address": "D1136.7",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank16 Fill Water Valve Current Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_FilterRemote",
+      "device_address": "M402",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank16 Filter Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_FilterStatus",
+      "device_address": "D1136.2",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank16 Filter Pump Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_HaveBasket",
+      "device_address": "M616",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank16 The Tank has Basket",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_HeaterRemote",
+      "device_address": "M403",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank16 Heater Remote On",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_HeaterStatus",
+      "device_address": "D1136.3",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank16 Heater Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_PH",
+      "device_address": "D1142",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.01,
+      "description": "Tank16 PH Meter Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_RemoteStart",
+      "device_address": "M401",
+      "data_type": "Bool",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank16 Remote Start",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_TempAdj",
+      "device_address": "D4017",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank16 Temperature +- Adjust",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank16_TempPV",
+      "device_address": "D4007",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank16 Temperature Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_TempSV",
+      "device_address": "D4027",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 0.1,
+      "description": "Tank16 Temperature Set Value",
+      "low_limit": 0.0,
+      "high_limit": 999.9
+    },
+    {
+      "tag_name": "Tank16_TimePV",
+      "device_address": "CN116",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank16 Time Present Value",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_TimeSV",
+      "device_address": "D4066",
+      "data_type": "Word",
+      "read_write": "W",
+      "multiplier": 1.0,
+      "description": "Tank16 Time Set Value",
+      "low_limit": 0.0,
+      "high_limit": 9999.0
+    },
+    {
+      "tag_name": "Tank16_TimeUp",
+      "device_address": "CS116",
+      "data_type": "Bool",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Tank16 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_WaterFlow",
+      "device_address": "D1140",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank16 Water Flow Meter Value (LPM)",
+      "low_limit": null,
+      "high_limit": null
+    }
+  ]
+}

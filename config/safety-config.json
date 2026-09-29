@@ -1,0 +1,5 @@
+{
+  "write_mode_ttl_seconds": 1800,
+  "batch_confirmation_phrase": "CONFIRM BATCH WRITE",
+  "max_batch_items": 100
+}
