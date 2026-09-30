@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from .config import ROOT, Settings
 from .log_service import LogService
-from .models import ValidationError
+from .models import Tag, ValidationError
 from .plc_client import MockPLCClient, PLCClient, PLCError
 from .signal_service import SignalService
 from .test_runner import TestRunner
@@ -15,7 +15,8 @@ from .test_runner import TestRunner
 settings = Settings()
 logs = LogService(ROOT / 'logs' / 'events.jsonl', settings.api_key)
 client = MockPLCClient(ROOT / 'config' / 'mock-tags.json') if settings.mock_mode else PLCClient(settings.base_url, settings.api_key, settings.timeout)
-service = SignalService(client, logs, settings.stale_ms)
+baseline = [Tag.parse(tag) for tag in json.loads((ROOT / 'config' / 'mock-tags.json').read_text())['tags']]
+service = SignalService(client, logs, settings.stale_ms, baseline=None if settings.mock_mode else baseline)
 cases = json.loads((ROOT / 'config' / 'test-cases.json').read_text())['tests']
 safety = json.loads((ROOT / 'config' / 'safety-config.json').read_text())
 runner = TestRunner(service, logs, cases)
@@ -69,7 +70,7 @@ async def status():
             'data_fresh': service.fresh(), 'tags_ok': service.last_poll.get('tags_ok') if service.last_poll else None,
             'tags_failed': service.last_poll.get('tags_failed') if service.last_poll else None,
             'last_error': logs.scrub(service.last_error), 'poll_interval_ms': settings.poll_ms, 'stale_after_ms': settings.stale_ms,
-            'write_mode_default': 'OFF'}
+            'write_mode_default': 'OFF', 'catalog_warnings': logs.scrub(service.catalog_warnings)}
 
 @app.get('/api/tags')
 async def tags(): return logs.scrub({'tags': [tag.__dict__ for tag in await service.load_tags()]})

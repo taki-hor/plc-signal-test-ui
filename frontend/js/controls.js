@@ -1,4 +1,4 @@
-import {$, node, valueText} from './dom.js';
+import {$, node, valueText, metadataNumber} from './dom.js';
 import {post, enableMode, disableMode, modeEnabled} from './api.js';
 let tags = [], poll = null, status = null;
 export function updateControls(nextTags, nextPoll, nextStatus) {
@@ -21,10 +21,11 @@ function renderSelected() {
   const tag = selected(), detail = $('write-detail'); detail.replaceChildren();
   if (!tag) { detail.textContent = 'No writable signals in catalog.'; return; }
   const grid = node('div', 'detail-grid');
-  const fields = [['Description', tag.description], ['Tag', tag.tag_name], ['PLC address', tag.device_address], ['Type', tag.data_type], ['Current', valueText(poll?.[tag.tag_name])], ['Multiplier', tag.multiplier], ['Allowed', `${tag.low_limit ?? 'unbounded'} to ${tag.high_limit ?? 'unbounded'}`]];
+  const allowed = `${metadataNumber(tag.low_limit, 'unbounded')} to ${metadataNumber(tag.high_limit, 'unbounded')}`;
+  const fields = [['Description', tag.description], ['Tag', tag.tag_name], ['PLC address', tag.device_address], ['Type', tag.data_type], ['Current', valueText(poll?.[tag.tag_name])], ['Multiplier', metadataNumber(tag.multiplier)], ['Allowed', allowed]];
   fields.forEach(([name,value]) => grid.append(node('span', '', name), node('strong', '', value)));
   detail.append(grid);
-  $('write-limits').textContent = `Allowed: ${tag.data_type === 'Bool' ? '0 or 1' : `${tag.low_limit ?? 'unbounded'} to ${tag.high_limit ?? 'unbounded'}`} · ${tag.data_type} · engineering units`;
+  $('write-limits').textContent = `Allowed: ${tag.data_type === 'Bool' ? '0 or 1' : allowed} · ${tag.data_type} · engineering units`;
   $('write-value').placeholder = tag.data_type === 'Bool' ? '0 or 1' : 'Enter engineering value';
 }
 function validate(tag, raw) {

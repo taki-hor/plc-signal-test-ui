@@ -1,5 +1,5 @@
 {
-  "source": "Tag_catalog.docx detailed table",
+  "source": "HKPU PLC_API_User_Manual (PD-03726), KAL-1600-SG, 29-SEP-2026, Version 1.0",
   "tags": [
     {
       "tag_name": "Alarm01",
@@ -847,7 +847,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank01A Ultrasonic Generator Current (A) Set Value",
+      "description": "Tank01A Ultrasonic Generator Current Set Value (A)",
       "low_limit": 0.0,
       "high_limit": 8.0
     },
@@ -857,7 +857,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank01B Ultrasonic Generator Current (A) Set Value",
+      "description": "Tank01B Ultrasonic Generator Current Set Value (A)",
       "low_limit": 0.0,
       "high_limit": 8.0
     },
@@ -994,11 +994,11 @@
     {
       "tag_name": "Tank01_TempAdj",
       "device_address": "D4010",
-      "data_type": "Word",
+      "data_type": "SignedWord",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank01 Temperature +- Adjust",
-      "low_limit": 0.0,
+      "description": "Tank01 Temperature +- Adjust (Degree Celsius)",
+      "low_limit": -999.0,
       "high_limit": 999.9
     },
     {
@@ -1007,7 +1007,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank01 Temperature Present Value",
+      "description": "Tank01 Temperature Present Value (Degree Celsius)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1017,7 +1017,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank01 Temperature Set Value",
+      "description": "Tank01 Temperature Set Value (Degree Celsius)",
       "low_limit": 0.0,
       "high_limit": 999.9
     },
@@ -1027,7 +1027,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank01 Time Present Value",
+      "description": "Tank01 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1037,7 +1037,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank01 Time Set Value",
+      "description": "Tank01 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -1167,7 +1167,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank02 Time Present Value",
+      "description": "Tank02 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1177,7 +1177,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank02 Time Set Value",
+      "description": "Tank02 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -1347,9 +1347,9 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank03 Swing Speed Set Value",
-      "low_limit": 0.0,
-      "high_limit": 2000.0
+      "description": "Tank03 Swing Speed Set Value (CPM)",
+      "low_limit": 5.0,
+      "high_limit": 120.0
     },
     {
       "tag_name": "Tank03_SwingStatus",
@@ -1364,11 +1364,11 @@
     {
       "tag_name": "Tank03_TempAdj",
       "device_address": "D4011",
-      "data_type": "Word",
+      "data_type": "SignedWord",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank03 Temperature +- Adjust",
-      "low_limit": 0.0,
+      "description": "Tank03 Temperature +- Adjust (Degree Celsius)",
+      "low_limit": -999.0,
       "high_limit": 999.9
     },
     {
@@ -1377,7 +1377,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank03 Temperature Present Value",
+      "description": "Tank03 Temperature Present Value (Degree Celsius)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1387,7 +1387,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank03 Temperature Set Value",
+      "description": "Tank03 Temperature Set Value (Degree Celsius)",
       "low_limit": 0.0,
       "high_limit": 999.9
     },
@@ -1397,7 +1397,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank03 Time Present Value",
+      "description": "Tank03 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1407,7 +1407,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank03 Time Set Value",
+      "description": "Tank03 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -1517,7 +1517,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank04 Time Present Value",
+      "description": "Tank04 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1527,7 +1527,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank04 Time Set Value",
+      "description": "Tank04 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -1697,9 +1697,9 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank05 Swing Speed Set Value",
-      "low_limit": 0.0,
-      "high_limit": 2000.0
+      "description": "Tank05 Swing Speed Set Value (CPM)",
+      "low_limit": 5.0,
+      "high_limit": 120.0
     },
     {
       "tag_name": "Tank05_SwingStatus",
@@ -1714,11 +1714,11 @@
     {
       "tag_name": "Tank05_TempAdj",
       "device_address": "D4012",
-      "data_type": "Word",
+      "data_type": "SignedWord",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank05 Temperature +- Adjust",
-      "low_limit": 0.0,
+      "description": "Tank05 Temperature +- Adjust (Degree Celsius)",
+      "low_limit": -999.0,
       "high_limit": 999.9
     },
     {
@@ -1727,7 +1727,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank05 Temperature Present Value",
+      "description": "Tank05 Temperature Present Value (Degree Celsius)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1737,7 +1737,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank05 Temperature Set Value",
+      "description": "Tank05 Temperature Set Value (Degree Celsius)",
       "low_limit": 0.0,
       "high_limit": 999.9
     },
@@ -1747,7 +1747,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank05 Time Present Value",
+      "description": "Tank05 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1757,7 +1757,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank05 Time Set Value",
+      "description": "Tank05 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -1867,7 +1867,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank06 Time Present Value",
+      "description": "Tank06 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1877,7 +1877,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank06 Time Set Value",
+      "description": "Tank06 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -1937,7 +1937,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank07 Air Flow Meter Value",
+      "description": "Tank07 Air Flow Meter Value (LPM)",
       "low_limit": null,
       "high_limit": null
     },
@@ -1946,18 +1946,18 @@
       "device_address": "D1055",
       "data_type": "Word",
       "read_write": "R",
-      "multiplier": 0.01,
-      "description": "Tank07 Ampere Present Value",
+      "multiplier": 0.1,
+      "description": "Tank07 Ampere Present Value (A)",
       "low_limit": null,
       "high_limit": null
     },
     {
       "tag_name": "Tank07_AmpereSV",
-      "device_address": "D1038",
+      "device_address": "D1362",
       "data_type": "Word",
       "read_write": "W",
-      "multiplier": 0.01,
-      "description": "Tank07 Ampere Set Value",
+      "multiplier": 0.1,
+      "description": "Tank07 Ampere Set Value (A)",
       "low_limit": 0.0,
       "high_limit": 200.0
     },
@@ -2124,11 +2124,11 @@
     {
       "tag_name": "Tank07_TempAdj",
       "device_address": "D4013",
-      "data_type": "Word",
+      "data_type": "SignedWord",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank07 Temperature +- Adjust",
-      "low_limit": 0.0,
+      "description": "Tank07 Temperature +- Adjust (Degree Celsius)",
+      "low_limit": -999.0,
       "high_limit": 999.9
     },
     {
@@ -2137,7 +2137,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank07 Temperature Present Value",
+      "description": "Tank07 Temperature Present Value (Degree Celsius)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2147,7 +2147,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank07 Temperature Set Value",
+      "description": "Tank07 Temperature Set Value (Degree Celsius)",
       "low_limit": 0.0,
       "high_limit": 999.9
     },
@@ -2157,7 +2157,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank07 Time Present Value",
+      "description": "Tank07 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2167,7 +2167,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank07 Time Set Value",
+      "description": "Tank07 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -2186,8 +2186,8 @@
       "device_address": "D1054",
       "data_type": "Word",
       "read_write": "R",
-      "multiplier": 0.01,
-      "description": "Tank07 Rectifier Voltage Present Value",
+      "multiplier": 0.1,
+      "description": "Tank07 Rectifier Voltage Present Value (V)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2257,7 +2257,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank08 Time Present Value",
+      "description": "Tank08 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2267,7 +2267,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank08 Time Set Value",
+      "description": "Tank08 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -2377,7 +2377,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank09 Time Present Value",
+      "description": "Tank09 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2387,7 +2387,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank09 Time Set Value",
+      "description": "Tank09 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -2398,6 +2398,16 @@
       "read_write": "R",
       "multiplier": 1.0,
       "description": "Tank09 Time Up",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank09_WaterFlow",
+      "device_address": "D1036",
+      "data_type": "Word",
+      "read_write": "R",
+      "multiplier": 0.1,
+      "description": "Tank09 Water Flow Meter Value (LPM)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2557,9 +2567,9 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank10 Swing Speed Set Value",
-      "low_limit": 0.0,
-      "high_limit": 2000.0
+      "description": "Tank10 Swing Speed Set Value (CPM)",
+      "low_limit": 5.0,
+      "high_limit": 120.0
     },
     {
       "tag_name": "Tank10_SwingStatus",
@@ -2574,11 +2584,11 @@
     {
       "tag_name": "Tank10_TempAdj",
       "device_address": "D4014",
-      "data_type": "Word",
+      "data_type": "SignedWord",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank10 Temperature +- Adjust",
-      "low_limit": 0.0,
+      "description": "Tank10 Temperature +- Adjust (Degree Celsius)",
+      "low_limit": -999.0,
       "high_limit": 999.9
     },
     {
@@ -2587,7 +2597,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank10 Temperature Present Value",
+      "description": "Tank10 Temperature Present Value (Degree Celsius)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2597,7 +2607,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank10 Temperature Set Value",
+      "description": "Tank10 Temperature Set Value (Degree Celsius)",
       "low_limit": 0.0,
       "high_limit": 999.9
     },
@@ -2607,7 +2617,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank10 Time Present Value",
+      "description": "Tank10 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2617,7 +2627,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank10 Time Set Value",
+      "description": "Tank10 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -2717,7 +2727,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank11 Time Present Value",
+      "description": "Tank11 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2727,7 +2737,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank11 Time Set Value",
+      "description": "Tank11 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -2877,7 +2887,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank12 Time Present Value",
+      "description": "Tank12 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2887,7 +2897,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank12 Time Set Value",
+      "description": "Tank12 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -2917,7 +2927,7 @@
       "data_type": "Float",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank13 Conductivity Meter Reading",
+      "description": "Conductivity Meter Reading (us/cm)",
       "low_limit": null,
       "high_limit": null
     },
@@ -2994,11 +3004,11 @@
     {
       "tag_name": "Tank13_TempAdj",
       "device_address": "D4015",
-      "data_type": "Word",
+      "data_type": "SignedWord",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank13 Temperature +- Adjust",
-      "low_limit": 0.0,
+      "description": "Tank13 Temperature +- Adjust (Degree Celsius)",
+      "low_limit": -999.0,
       "high_limit": 999.9
     },
     {
@@ -3007,7 +3017,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank13 Temperature Present Value",
+      "description": "Tank13 Temperature Present Value (Degree Celsius)",
       "low_limit": null,
       "high_limit": null
     },
@@ -3017,7 +3027,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank13 Temperature Set Value",
+      "description": "Tank13 Temperature Set Value (Degree Celsius)",
       "low_limit": 0.0,
       "high_limit": 999.9
     },
@@ -3027,7 +3037,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank13 Time Present Value",
+      "description": "Tank13 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -3037,7 +3047,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank13 Time Set Value",
+      "description": "Tank13 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -3207,9 +3217,9 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank14 Swing Speed Set Value",
-      "low_limit": 0.0,
-      "high_limit": 2000.0
+      "description": "Tank14 Swing Speed Set Value (CPM)",
+      "low_limit": 5.0,
+      "high_limit": 120.0
     },
     {
       "tag_name": "Tank14_SwingStatus",
@@ -3224,11 +3234,11 @@
     {
       "tag_name": "Tank14_TempAdj",
       "device_address": "D4016",
-      "data_type": "Word",
+      "data_type": "SignedWord",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank14 Temperature +- Adjust",
-      "low_limit": 0.0,
+      "description": "Tank14 Temperature +- Adjust (Degree Celsius)",
+      "low_limit": -999.0,
       "high_limit": 999.9
     },
     {
@@ -3237,7 +3247,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank14 Temperature Present Value",
+      "description": "Tank14 Temperature Present Value (Degree Celsius)",
       "low_limit": null,
       "high_limit": null
     },
@@ -3247,7 +3257,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank14 Temperature Set Value",
+      "description": "Tank14 Temperature Set Value (Degree Celsius)",
       "low_limit": 0.0,
       "high_limit": 999.9
     },
@@ -3257,7 +3267,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank14 Time Present Value",
+      "description": "Tank14 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -3267,7 +3277,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank14 Time Set Value",
+      "description": "Tank14 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -3377,7 +3387,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank15 Time Present Value",
+      "description": "Tank15 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -3387,7 +3397,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank15 Time Set Value",
+      "description": "Tank15 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },
@@ -3438,6 +3448,16 @@
       "read_write": "R",
       "multiplier": 1.0,
       "description": "Tank16 Air Agitation Status",
+      "low_limit": null,
+      "high_limit": null
+    },
+    {
+      "tag_name": "Tank16_Conductivity",
+      "device_address": "D1142",
+      "data_type": "Float",
+      "read_write": "R",
+      "multiplier": 1.0,
+      "description": "Conductivity Meter Reading (MOhmCM)",
       "low_limit": null,
       "high_limit": null
     },
@@ -3522,16 +3542,6 @@
       "high_limit": null
     },
     {
-      "tag_name": "Tank16_PH",
-      "device_address": "D1142",
-      "data_type": "Word",
-      "read_write": "R",
-      "multiplier": 0.01,
-      "description": "Tank16 PH Meter Value",
-      "low_limit": null,
-      "high_limit": null
-    },
-    {
       "tag_name": "Tank16_RemoteStart",
       "device_address": "M401",
       "data_type": "Bool",
@@ -3544,11 +3554,11 @@
     {
       "tag_name": "Tank16_TempAdj",
       "device_address": "D4017",
-      "data_type": "Word",
+      "data_type": "SignedWord",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank16 Temperature +- Adjust",
-      "low_limit": 0.0,
+      "description": "Tank16 Temperature +- Adjust (Degree Celsius)",
+      "low_limit": -999.0,
       "high_limit": 999.9
     },
     {
@@ -3557,7 +3567,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 0.1,
-      "description": "Tank16 Temperature Present Value",
+      "description": "Tank16 Temperature Present Value (Degree Celsius)",
       "low_limit": null,
       "high_limit": null
     },
@@ -3567,7 +3577,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 0.1,
-      "description": "Tank16 Temperature Set Value",
+      "description": "Tank16 Temperature Set Value (Degree Celsius)",
       "low_limit": 0.0,
       "high_limit": 999.9
     },
@@ -3577,7 +3587,7 @@
       "data_type": "Word",
       "read_write": "R",
       "multiplier": 1.0,
-      "description": "Tank16 Time Present Value",
+      "description": "Tank16 Time Present Value (s)",
       "low_limit": null,
       "high_limit": null
     },
@@ -3587,7 +3597,7 @@
       "data_type": "Word",
       "read_write": "W",
       "multiplier": 1.0,
-      "description": "Tank16 Time Set Value",
+      "description": "Tank16 Time Set Value (s)",
       "low_limit": 0.0,
       "high_limit": 9999.0
     },

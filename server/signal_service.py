@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
 from .models import Tag, ValidationError
+from .catalog_diagnostics import catalog_warnings
 
 class SignalService:
-    def __init__(self, client, logs, stale_ms):
+    def __init__(self, client, logs, stale_ms, baseline=None):
         self.client, self.logs, self.stale_ms = client, logs, stale_ms
+        self.baseline = baseline
+        self.catalog_warnings = []
         self.tags = {}
         self.last_poll = None
         self.last_success = None
@@ -16,6 +19,10 @@ class SignalService:
             if len({tag.tag_name for tag in tags}) != len(tags):
                 raise ValidationError('Supplier returned duplicate tag names')
             self.tags = {tag.tag_name: tag for tag in tags}
+            warnings = catalog_warnings(tags, self.baseline)
+            if warnings != self.catalog_warnings:
+                self.logs.add('CATALOG_DIAGNOSTICS', result='WARNING' if warnings else 'OK', warnings=warnings)
+            self.catalog_warnings = warnings
             self.success('TAGS', count=len(tags))
             return tags
         except Exception as exc:

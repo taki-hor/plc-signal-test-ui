@@ -1,4 +1,4 @@
-import {$, node, groupFor, fillGroups, valueText} from './dom.js';
+import {$, node, groupFor, fillGroups, valueText, metadataNumber} from './dom.js';
 let tags = [], poll = null, health = null;
 export function setSignalData(nextTags, nextPoll) {
   if (nextTags) { tags = nextTags; fillGroups($('signal-group'), tags); fillGroups($('browser-group'), tags); initTanks(); }
@@ -82,7 +82,7 @@ function renderBrowser() {
   const body = $('tag-table'); body.replaceChildren();
   for (const tag of matched) {
     const tr = node('tr');
-    const cells = [tag.tag_name, tag.description, tag.device_address, tag.data_type, tag.read_write, tag.multiplier, tag.low_limit ?? '—', tag.high_limit ?? '—', valueText(poll?.[tag.tag_name]), signalStatus(tag)];
+    const cells = [tag.tag_name, tag.description, tag.device_address, tag.data_type, tag.read_write, metadataNumber(tag.multiplier), metadataNumber(tag.low_limit), metadataNumber(tag.high_limit), valueText(poll?.[tag.tag_name]), signalStatus(tag)];
     cells.forEach((value, index) => { const td = node('td', [2,5,6,7].includes(index) ? 'advanced-col' : index === 1 ? 'description' : '', value); if (index === 0) td.title = tag.tag_name; if (index === 1) td.title = tag.description; tr.append(td); });
     const action = node('td');
     if (tag.read_write === 'W') { const button = node('button', 'button small secondary', 'Select'); button.type = 'button'; button.addEventListener('click', () => { $('write-tag').value = tag.tag_name; $('write-tag').dispatchEvent(new Event('change')); $('write').scrollIntoView(); }); action.append(button); }

@@ -18,6 +18,9 @@ export function renderStatus(status, writeMode) {
   const error = $('system-error');
   error.textContent = status.last_error || (status.plc_mode !== 'REMOTE' ? 'PLC is not in Remote/API mode. Write commands are disabled.' : !status.data_fresh ? 'Supplier poll data is stale, incomplete or unavailable. Write commands are disabled.' : '');
   error.classList.toggle('hidden', !error.textContent);
+  const catalog = $('catalog-warning');
+  catalog.textContent = (status.catalog_warnings || []).map(w => w.message).join('\n');
+  catalog.classList.toggle('hidden', !catalog.textContent);
   $('write-banner').className = `write-banner ${writeMode ? 'enabled' : 'readonly'}`;
   setText('write-banner-title', writeMode ? 'WRITE TEST MODE ENABLED' : 'READ-ONLY MODE');
   setText('write-banner-note', writeMode ? 'Manual commands require confirmation. Mode expires after 30 minutes.' : 'Monitoring is active. Physical commands are locked.');
