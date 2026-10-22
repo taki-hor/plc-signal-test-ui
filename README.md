@@ -16,6 +16,20 @@ Browser HTML/CSS/JS → local FastAPI backend → supplier PLC REST API → Wi-F
 
 Requires Python 3.11 or newer.
 
+Run the backend and frontend together:
+
+```bash
+./start
+```
+
+The launcher creates `.venv`, installs dependencies on first run or when
+`requirements.txt` changes, and creates `.env` from `.env.example` if missing.
+It preserves existing configuration. Open `http://127.0.0.1:8080`; press Ctrl+C
+to stop. For the remote PC, set `PLC_API_BASE_URL=http://192.168.1.12:8000`,
+`PLC_API_KEY`, and `PLC_MOCK_MODE=false` in `.env`, then restart `./start`.
+
+For manual setup:
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
