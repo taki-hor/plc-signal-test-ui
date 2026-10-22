@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Python 3.11 or newer is required. Install Python and run ./start again." >&2
+  exit 1
+fi
+if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then
+  echo "Python 3.11 or newer is required." >&2
+  exit 1
+fi
+
+if [[ ! -x .venv/bin/python ]]; then
+  echo "Creating Python virtual environment..."
+  if ! python3 -m venv .venv; then
+    echo "Could not create .venv. On Ubuntu/Debian, install python3-venv and retry." >&2
+    exit 1
+  fi
+fi
+
+if ! cmp -s requirements.txt .venv/.installed-requirements.txt; then
+  echo "Installing Python dependencies..."
+  .venv/bin/python -m pip install -r requirements.txt
+  cp requirements.txt .venv/.installed-requirements.txt
+fi
+
+if [[ ! -e .env ]]; then
+  cp .env.example .env
+  echo "Created .env with mock mode enabled."
+  echo "For the remote PLC, set PLC_API_BASE_URL=http://192.168.1.12:8000,"
+  echo "PLC_API_KEY, and PLC_MOCK_MODE=false in .env, then restart."
+fi
+
+echo "Starting backend and frontend at http://127.0.0.1:8080"
+echo "Press Ctrl+C to stop."
+exec .venv/bin/python -m uvicorn server.app:app --host 127.0.0.1 --port 8080
