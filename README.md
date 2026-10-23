@@ -6,6 +6,15 @@ An engineering console for qualifying the supplier REST API and recording comman
 
 Latest authoritative static supplier reference: **HKPU PLC_API_User_Manual**, Project **PD-03726**, Model **KAL-1600-SG**, dated **29-SEP-2026**, Version **1.0**. A copy is in [docs/source](docs/source/HKPU_PLC_API_User_Manual_PD-03726_2026-09-29.pdf). `Tag_catalog.docx` is retained there as a superseded historical reference.
 
+The [PDF/Swagger alignment audit](docs/swagger-alignment-2026-10-23.md) compares
+all 362 PDF rows with the saved supplier schema and catalog, with every differing
+signal in a [CSV](docs/swagger-signal-differences-2026-10-23.csv). It records the
+39 unpublished numeric limit pairs, eight spacing-only descriptions, stale
+examples and shared physical/address issues. A fresh GET-only comparison at
+20:05:19 Hong Kong time on 23 October 2026 confirmed the retained schema/catalog
+still match the live server. These files are evidence, not a runtime fallback. The Tank12 door naming error also exists in
+the captured API and is not corrected by renaming transport tags.
+
 `config/mock-tags.json` is a commissioning/development snapshot: **362 tags, 141 writable, 221 read-only**. Supported data types are **Bool, Word, SignedWord, Float**. REAL MODE always uses `GET /api/v1/tags/list` as runtime authority for names, addresses, types, permissions, multipliers, descriptions and engineering limits. Counts are obtained dynamically. Static addresses are never used to route or authorize real writes. The browser communicates with this local FastAPI backend; only the backend sends `X-API-Key` to the supplier. No PLC register access is performed.
 
 ```

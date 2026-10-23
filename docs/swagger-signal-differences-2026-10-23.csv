@@ -1,0 +1,48 @@
+tag_name,device_address,data_type,read_write,multiplier,changed_fields,pdf_low_limit,pdf_high_limit,api_low_limit_present,api_high_limit_present,api_low_limit,api_high_limit,pdf_description,api_description,pdf_page
+Tank01A_USSV,D1044,Word,W,0.1,"low_limit,high_limit",0.0,8.0,False,False,,,Tank01A Ultrasonic Generator Current Set Value (A),Tank01A Ultrasonic Generator Current Set Value (A),9
+Tank01B_USSV,D1048,Word,W,0.1,"low_limit,high_limit",0.0,8.0,False,False,,,Tank01B Ultrasonic Generator Current Set Value (A),Tank01B Ultrasonic Generator Current Set Value (A),9
+Tank01_TempAdj,D4010,SignedWord,W,0.1,"low_limit,high_limit",-999.0,999.9,False,False,,,Tank01 Temperature +- Adjust (Degree Celsius),Tank01 Temperature +- Adjust (Degree Celsius),9
+Tank01_TempPV,D4000,Word,R,0.1,description,,,False,False,,,Tank01 Temperature Present Value (Degree Celsius),Tank01 Temperature Present Value  (Degree Celsius),9
+Tank01_TempSV,D4020,Word,W,0.1,"low_limit,high_limit",0.0,999.9,False,False,,,Tank01 Temperature Set Value (Degree Celsius),Tank01 Temperature Set Value (Degree Celsius),9
+Tank01_TimeSV,D4051,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank01 Time Set Value (s),Tank01 Time Set Value (s),9
+Tank02_TimeSV,D4052,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank02 Time Set Value (s),Tank02 Time Set Value (s),10
+Tank03_SwingSV,D1008,Word,W,1.0,"low_limit,high_limit",5.0,120.0,False,False,,,Tank03 Swing Speed Set Value (CPM),Tank03 Swing Speed Set Value (CPM),11
+Tank03_TempAdj,D4011,SignedWord,W,0.1,"low_limit,high_limit",-999.0,999.9,False,False,,,Tank03 Temperature +- Adjust (Degree Celsius),Tank03 Temperature +- Adjust (Degree Celsius),11
+Tank03_TempPV,D4001,Word,R,0.1,description,,,False,False,,,Tank03 Temperature Present Value (Degree Celsius),Tank03 Temperature Present Value  (Degree Celsius),11
+Tank03_TempSV,D4021,Word,W,0.1,"low_limit,high_limit",0.0,999.9,False,False,,,Tank03 Temperature Set Value (Degree Celsius),Tank03 Temperature Set Value (Degree Celsius),11
+Tank03_TimeSV,D4053,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank03 Time Set Value (s),Tank03 Time Set Value (s),11
+Tank04_TimeSV,D4054,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank04 Time Set Value (s),Tank04 Time Set Value (s),12
+Tank05_SwingSV,D1018,Word,W,1.0,"low_limit,high_limit",5.0,120.0,False,False,,,Tank05 Swing Speed Set Value (CPM),Tank05 Swing Speed Set Value (CPM),12
+Tank05_TempAdj,D4012,SignedWord,W,0.1,"low_limit,high_limit",-999.0,999.9,False,False,,,Tank05 Temperature +- Adjust (Degree Celsius),Tank05 Temperature +- Adjust (Degree Celsius),12
+Tank05_TempPV,D4002,Word,R,0.1,description,,,False,False,,,Tank05 Temperature Present Value (Degree Celsius),Tank05 Temperature Present Value  (Degree Celsius),12
+Tank05_TempSV,D4022,Word,W,0.1,"low_limit,high_limit",0.0,999.9,False,False,,,Tank05 Temperature Set Value (Degree Celsius),Tank05 Temperature Set Value (Degree Celsius),12
+Tank05_TimeSV,D4055,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank05 Time Set Value (s),Tank05 Time Set Value (s),13
+Tank06_TimeSV,D4056,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank06 Time Set Value (s),Tank06 Time Set Value (s),13
+Tank07_AmpereSV,D1362,Word,W,0.1,"low_limit,high_limit",0.0,200.0,False,False,,,Tank07 Ampere Set Value (A),Tank07 Ampere Set Value (A),13
+Tank07_TempAdj,D4013,SignedWord,W,0.1,"low_limit,high_limit",-999.0,999.9,False,False,,,Tank07 Temperature +- Adjust (Degree Celsius),Tank07 Temperature +- Adjust (Degree Celsius),14
+Tank07_TempPV,D4003,Word,R,0.1,description,,,False,False,,,Tank07 Temperature Present Value (Degree Celsius),Tank07 Temperature Present Value  (Degree Celsius),14
+Tank07_TempSV,D4023,Word,W,0.1,"low_limit,high_limit",0.0,999.9,False,False,,,Tank07 Temperature Set Value (Degree Celsius),Tank07 Temperature Set Value (Degree Celsius),14
+Tank07_TimeSV,D4057,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank07 Time Set Value (s),Tank07 Time Set Value (s),14
+Tank08_TimeSV,D4058,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank08 Time Set Value (s),Tank08 Time Set Value (s),15
+Tank09_TimeSV,D4059,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank09 Time Set Value (s),Tank09 Time Set Value (s),15
+Tank10_SwingSV,D1100,Word,W,1.0,"low_limit,high_limit",5.0,120.0,False,False,,,Tank10 Swing Speed Set Value (CPM),Tank10 Swing Speed Set Value (CPM),16
+Tank10_TempAdj,D4014,SignedWord,W,0.1,"low_limit,high_limit",-999.0,999.9,False,False,,,Tank10 Temperature +- Adjust (Degree Celsius),Tank10 Temperature +- Adjust (Degree Celsius),16
+Tank10_TempPV,D4004,Word,R,0.1,description,,,False,False,,,Tank10 Temperature Present Value (Degree Celsius),Tank10 Temperature Present Value  (Degree Celsius),16
+Tank10_TempSV,D4024,Word,W,0.1,"low_limit,high_limit",0.0,999.9,False,False,,,Tank10 Temperature Set Value (Degree Celsius),Tank10 Temperature Set Value (Degree Celsius),16
+Tank10_TimeSV,D4060,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank10 Time Set Value (s),Tank10 Time Set Value (s),16
+Tank11_TimeSV,D4061,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank11 Time Set Value (s),Tank11 Time Set Value (s),17
+Tank12_TimeSV,D4062,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank12 Time Set Value (s),Tank12 Time Set Value (s),18
+Tank13_TempAdj,D4015,SignedWord,W,0.1,"low_limit,high_limit",-999.0,999.9,False,False,,,Tank13 Temperature +- Adjust (Degree Celsius),Tank13 Temperature +- Adjust (Degree Celsius),18
+Tank13_TempPV,D4005,Word,R,0.1,description,,,False,False,,,Tank13 Temperature Present Value (Degree Celsius),Tank13 Temperature Present Value  (Degree Celsius),18
+Tank13_TempSV,D4025,Word,W,0.1,"low_limit,high_limit",0.0,999.9,False,False,,,Tank13 Temperature Set Value (Degree Celsius),Tank13 Temperature Set Value (Degree Celsius),18
+Tank13_TimeSV,D4063,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank13 Time Set Value (s),Tank13 Time Set Value (s),18
+Tank14_SwingSV,D1124,Word,W,1.0,"low_limit,high_limit",5.0,120.0,False,False,,,Tank14 Swing Speed Set Value (CPM),Tank14 Swing Speed Set Value (CPM),19
+Tank14_TempAdj,D4016,SignedWord,W,0.1,"low_limit,high_limit",-999.0,999.9,False,False,,,Tank14 Temperature +- Adjust (Degree Celsius),Tank14 Temperature +- Adjust (Degree Celsius),19
+Tank14_TempPV,D4006,Word,R,0.1,description,,,False,False,,,Tank14 Temperature Present Value (Degree Celsius),Tank14 Temperature Present Value  (Degree Celsius),19
+Tank14_TempSV,D4026,Word,W,0.1,"low_limit,high_limit",0.0,999.9,False,False,,,Tank14 Temperature Set Value (Degree Celsius),Tank14 Temperature Set Value (Degree Celsius),19
+Tank14_TimeSV,D4064,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank14 Time Set Value (s),Tank14 Time Set Value (s),19
+Tank15_TimeSV,D4065,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank15 Time Set Value (s),Tank15 Time Set Value (s),20
+Tank16_TempAdj,D4017,SignedWord,W,0.1,"low_limit,high_limit",-999.0,999.9,False,False,,,Tank16 Temperature +- Adjust (Degree Celsius),Tank16 Temperature +- Adjust (Degree Celsius),20
+Tank16_TempPV,D4007,Word,R,0.1,description,,,False,False,,,Tank16 Temperature Present Value (Degree Celsius),Tank16 Temperature Present Value  (Degree Celsius),21
+Tank16_TempSV,D4027,Word,W,0.1,"low_limit,high_limit",0.0,999.9,False,False,,,Tank16 Temperature Set Value (Degree Celsius),Tank16 Temperature Set Value (Degree Celsius),21
+Tank16_TimeSV,D4066,Word,W,1.0,"low_limit,high_limit",0.0,9999.0,False,False,,,Tank16 Time Set Value (s),Tank16 Time Set Value (s),21

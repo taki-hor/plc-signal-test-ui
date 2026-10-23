@@ -20,6 +20,13 @@ The status bar and Overview page distinguish API connection, `Remote` mode, supp
 
 Signal browser (the Live signals route, `#/signals`) groups every matching card in the manual’s order: Alarms, System, then Tank 01 onward, with a count for each group. The previous first-120 limit is removed; all 221 read-only signals, or all 362 tags with All signals selected, remain accessible. Descriptions wrap in full. Search by name/description/address and combine type, permission and group filters. Extra live tags remain included. Choose a tank in Tank monitor’s horizontal tab bar for its catalog-defined signals. The bar scrolls to every live tank; Left/Right and Home/End select tanks without resetting on a poll. R/W labels distinguish read-only values from writable request/setpoint readbacks; Tank01A and Tank01B identities remain visible. Each read view labels stale, disconnected or missing observations instead of presenting cached values as current. The Alarms page shows raw Bool values; the supplier must confirm polarity. In Tag catalog, enable Advanced mode to see PLC addresses, multipliers, and limits. Read-only rows have no write action.
 
+**API limits** shows the bounds supplied by the current API. If a bound is
+missing, it says **not published**. Missing metadata does not mean that an
+operating value is unlimited. The saved supplier catalog omits the PDF's numeric
+limits. The console retains finite/type checks and checks any limits the API
+does supply. Confirm the approved engineering value before a write. See the
+[PDF/Swagger audit](swagger-alignment-2026-10-23.md) for the exact signal list.
+
 Both type filters include Bool, Word, SignedWord and Float. The current static mock snapshot is 362 tags (141 W, 221 R); real counts come from the live API. For Tank01_TempAdj, Advanced mode shows D4010, SignedWord, W, multiplier 0.1, low −999.0 and high 999.9. Setpoints & batch shows the same allowed range and accepts −5 or −10.5 as engineering values within those limits. No multiplier conversion is applied by this console.
 
 The 29-SEP-2026 supplier baseline also shows Tank07_AmpereSV at D1362 with multiplier 0.1 and 0–200 A limits; Tank07 current/voltage multipliers are 0.1. SwingSV limits for Tank03/05/10/14 are 5–120 CPM. Tank16_Conductivity (D1142, Float, R, multiplier 1.0) replaces Tank16_PH; Tank09_WaterFlow is added at D1036. All eight TempAdj tags use SignedWord with −999.0 to 999.9 limits.

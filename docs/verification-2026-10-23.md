@@ -553,10 +553,10 @@ were sent. A source correction/display alias is separate follow-up work.
 ## Supervised outside-Feedback test: Tank07 air agitation
 
 The operator approved one test: Tank07_AirAgitationOn (L135) =1 for up to
-15 seconds, observing Tank07_AirAgitationStatus (D1030.F), then command0.
+15 seconds, observing Tank07_AirAgitationStatus (D1030.F), then command 0.
 Both baseline values were0 in fresh REAL/Remote data. The supplier acknowledged1.
-Later fresh data newer than the receipt showed command1/status1. Command0 was
-then acknowledged; a later fresh snapshot showed command0/status0. The operator
+Later fresh data newer than the receipt showed command1/status1. Command 0 was
+then acknowledged; a later fresh snapshot showed command 0/status0. The operator
 explicitly confirmed physical start and stop and selected Pass.
 
 This is operator-observed evidence for this device/address, not supplier source
@@ -712,3 +712,45 @@ raw logs, local evidence/ZIP/PDF files and temporary test scripts stay outside
 the staged source. Runtime field artifacts remain local; committed verification
 summaries identify their scope and limits. The backend must be restarted before
 using newly edited server guards. No additional live equipment tests were run.
+
+## PDF and live Swagger/catalog alignment
+
+The user requested every PDF/API signal discrepancy and software alignment,
+then authorized use of local history and publication of all findings. The first
+comparison used the retained 23 October schema/catalog captures. A later live
+GET-only recheck at 20:05:19 Hong Kong time on 23 October 2026 confirmed both are
+semantically identical to the current server. All four GET endpoints returned
+HTTP 200; /read contained all 362 signals, with 362 OK and 0 failed. No production
+POST, write-mode enable or actuator test occurred. The line adapter can be
+disconnected after that check; publication uses ordinary Internet access.
+
+The actual PDF table was independently extracted and all 362 rows matched the
+PDF-derived fixture. Against the saved/live API, names, addresses, types, W/R
+permissions and multipliers all agree. The complete report lists 39 numeric
+signals whose PDF limits are omitted from the API, eight description spacing
+differences, incorrect PDF/example references, the four operator-confirmed
+Tank12-door/physical-Tank13 tags and all five shared-address groups. An omitted
+API bound does not establish unlimited operating range. Shared source errors
+were not mislabeled as PDF-versus-Swagger differences or guessed remappings.
+
+Published notes and primary evidence:
+
+- [Complete audit](swagger-alignment-2026-10-23.md).
+- [All 47 differing signal definitions](swagger-signal-differences-2026-10-23.csv).
+- [Provenance/hashes and live confirmation](source/supplier-api-capture-2026-10-23.json).
+- Saved OpenAPI schema and full 362-tag response under docs/source.
+
+Implementation changes are limited to Swagger-shaped mock batch results/count,
+an explicit HTTP 422 request-validation message and truthful Not published
+numeric-limit labels. Production already obtains tag definitions from the live
+API. No tag routing/name/address, permission, finite/type/supplied-limit guard,
+authorization or calibration setting was weakened or replaced by the PDF.
+The retained source snapshots are evidence, not an offline runtime fallback.
+
+Affected offline validation: 192 passed in 37.66s; contract/runtime-catalog and
+parallel-backend follow-up: 39 passed in 2.71s; final contract/client/UI checks
+after fresh provenance: 20 passed in 10.08s. These groups overlap. Syntax, diff
+and credential checks passed. The complete earlier suite was not repeated for
+these small targeted changes. Raw /read operating values remain outside Git;
+source evidence contains only schema/catalog and capture metadata, without
+API keys or authentication tokens. Line write testing remains stopped.
