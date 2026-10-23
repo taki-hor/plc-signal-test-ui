@@ -45,7 +45,13 @@ class PLCClient:
     async def wait_for_signal(self, tag_name, expected, timeout_ms, poll_interval_ms):
         deadline = asyncio.get_running_loop().time() + timeout_ms / 1000
         while True:
-            poll = await self.read_signals()
+            remaining = deadline - asyncio.get_running_loop().time()
+            if remaining <= 0: return None
+            try:
+                poll = await asyncio.wait_for(self.read_signals(), timeout=remaining)
+            except TimeoutError:
+                return None
+            if asyncio.get_running_loop().time() >= deadline: return None
             if poll.get(tag_name) == expected:
                 return poll
             if asyncio.get_running_loop().time() >= deadline:
@@ -106,7 +112,13 @@ class MockPLCClient:
     async def wait_for_signal(self, tag_name, expected, timeout_ms, poll_interval_ms):
         deadline = asyncio.get_running_loop().time() + timeout_ms / 1000
         while True:
-            poll = await self.read_signals()
+            remaining = deadline - asyncio.get_running_loop().time()
+            if remaining <= 0: return None
+            try:
+                poll = await asyncio.wait_for(self.read_signals(), timeout=remaining)
+            except TimeoutError:
+                return None
+            if asyncio.get_running_loop().time() >= deadline: return None
             if poll.get(tag_name) == expected: return poll
             if asyncio.get_running_loop().time() >= deadline: return None
             await asyncio.sleep(min(poll_interval_ms / 1000, max(0, deadline - asyncio.get_running_loop().time())))

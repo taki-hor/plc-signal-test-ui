@@ -1,7 +1,15 @@
 import {$, node, groupFor, fillGroups, valueText, metadataNumber} from './dom.js';
+import {go} from './router.js';
 let tags = [], poll = null, health = null;
 export function setSignalData(nextTags, nextPoll) {
-  if (nextTags) { tags = nextTags; fillGroups($('signal-group'), tags); fillGroups($('browser-group'), tags); initTanks(); }
+  if (nextTags) {
+    tags = nextTags; fillGroups($('signal-group'), tags); fillGroups($('browser-group'), tags); initTanks();
+    const writable = tags.filter(t => t.read_write === 'W');
+    $('nav-signals-badge').textContent = tags.length;
+    $('nav-alarms-badge').textContent = tags.filter(t => /^Alarm\d+$/i.test(t.tag_name)).length;
+    $('ov-read-count').textContent = `${tags.length - writable.length} read-only tags`;
+    $('ov-write-count').textContent = `${writable.length} writable · ${writable.filter(t => t.data_type === 'Bool').length} Bool`;
+  }
   if (nextPoll) poll = nextPoll;
   renderSignals(); renderTanks(); renderAlarms(); renderBrowser();
 }
@@ -85,7 +93,7 @@ function renderBrowser() {
     const cells = [tag.tag_name, tag.description, tag.device_address, tag.data_type, tag.read_write, metadataNumber(tag.multiplier), metadataNumber(tag.low_limit), metadataNumber(tag.high_limit), valueText(poll?.[tag.tag_name]), signalStatus(tag)];
     cells.forEach((value, index) => { const td = node('td', [2,5,6,7].includes(index) ? 'advanced-col' : index === 1 ? 'description' : '', value); if (index === 0) td.title = tag.tag_name; if (index === 1) td.title = tag.description; tr.append(td); });
     const action = node('td');
-    if (tag.read_write === 'W') { const button = node('button', 'button small secondary', 'Select'); button.type = 'button'; button.addEventListener('click', () => { $('write-tag').value = tag.tag_name; $('write-tag').dispatchEvent(new Event('change')); $('write').scrollIntoView(); }); action.append(button); }
+    if (tag.read_write === 'W') { const button = node('button', 'button small secondary', 'Select'); button.type = 'button'; button.addEventListener('click', () => { $('write-tag').value = tag.tag_name; $('write-tag').dispatchEvent(new Event('change')); go('write'); }); action.append(button); }
     tr.append(action); body.append(tr);
   }
   $('browser-count').textContent = `Showing ${matched.length} of ${tags.length} tags`;

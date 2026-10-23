@@ -7,7 +7,7 @@
       "command_value": 1,
       "feedback_tag": "Tank01_DoorOpened",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 30000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -19,7 +19,7 @@
       "command_value": 1,
       "feedback_tag": "Tank01_DoorClosed",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 30000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false

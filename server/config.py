@@ -14,6 +14,8 @@ class Settings:
     timeout: float = float(os.getenv('PLC_REQUEST_TIMEOUT', '5'))
     poll_ms: int = int(os.getenv('PLC_UI_POLL_INTERVAL_MS', '1000'))
     stale_ms: int = int(os.getenv('PLC_STALE_AFTER_MS', '3000'))
+    timestamp_timezone: str = os.getenv('PLC_TIMESTAMP_TIMEZONE', '')
+    timestamp_offset_seconds: int = int(os.getenv('PLC_TIMESTAMP_OFFSET_SECONDS', '0'))
     mock_mode: bool = os.getenv('PLC_MOCK_MODE', 'false').lower() == 'true'
 
     def __post_init__(self):

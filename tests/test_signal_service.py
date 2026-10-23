@@ -196,3 +196,49 @@ def test_null_tag_is_not_fresh_even_if_supplier_count_claims_success(tmp_path):
         with pytest.raises(ValidationError, match='stale'):
             await service.write('Tank01_TempSV', 25)
     asyncio.run(run())
+
+
+@pytest.mark.parametrize('configured,offset_seconds,aware,expected_fresh', [
+    (False, 0, False, False),
+    (True, 0, False, True),
+    (True, 44, False, False),
+    (True, 0, True, True),
+])
+def test_supplier_timestamp_timezone_and_clock_drift(tmp_path, configured, offset_seconds, aware, expected_fresh):
+    from datetime import datetime, timedelta, timezone
+    from zoneinfo import ZoneInfo
+
+    client, _, logs = make_service(tmp_path)
+    service = SignalService(client, logs, 3000,
+                            timestamp_timezone='Asia/Hong_Kong' if configured else None)
+    stamp = datetime.now(timezone.utc) - timedelta(seconds=offset_seconds)
+    if not aware:
+        stamp = stamp.astimezone(ZoneInfo('Asia/Hong_Kong')).replace(tzinfo=None)
+    service.last_poll = {'timestamp': stamp.isoformat(), 'tags_failed': 0}
+    assert service.fresh() is expected_fresh
+    if configured and not aware and offset_seconds:
+        assert 43000 <= service.age_ms() <= 46000
+
+
+@pytest.mark.parametrize('correction,clock_delay,naive,expected_fresh', [
+    (44, 44, False, True),
+    (0, 44, False, False),
+    (44, 50, False, False),
+    (44, 0, False, False),
+    (-44, -44, False, True),
+    (44, 44, True, True),
+])
+def test_temporary_clock_correction_preserves_stale_detection(tmp_path, correction, clock_delay, naive, expected_fresh):
+    from datetime import datetime, timedelta, timezone
+    from zoneinfo import ZoneInfo
+
+    client, _, logs = make_service(tmp_path)
+    service = SignalService(client, logs, 3000, timestamp_timezone='Asia/Hong_Kong',
+                            timestamp_offset_seconds=correction)
+    stamp = datetime.now(timezone.utc) - timedelta(seconds=clock_delay)
+    if naive:
+        stamp = stamp.astimezone(ZoneInfo('Asia/Hong_Kong')).replace(tzinfo=None)
+    raw_timestamp = stamp.isoformat()
+    service.last_poll = {'timestamp': raw_timestamp, 'tags_failed': 0}
+    assert service.fresh() is expected_fresh
+    assert service.last_poll['timestamp'] == raw_timestamp

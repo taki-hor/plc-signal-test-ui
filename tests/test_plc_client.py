@@ -41,3 +41,20 @@ def test_signed_word_batch_engineering_value_unchanged():
         await client.write_batch(writes)
         await client.client.aclose()
     asyncio.run(run())
+
+
+@pytest.mark.parametrize('mock', [False, True])
+def test_wait_helper_rejects_matching_feedback_after_deadline(mock):
+    from server.plc_client import MockPLCClient
+    from server.config import ROOT
+    async def run():
+        client = MockPLCClient(ROOT / 'config/mock-tags.json') if mock else PLCClient('http://example.test', 'test', 5, httpx.MockTransport(lambda r: httpx.Response(200, json={})))
+        async def slow_read():
+            await asyncio.sleep(.03)
+            return {'Feedback':1}
+        client.read_signals = slow_read
+        try:
+            assert await asyncio.wait_for(client.wait_for_signal('Feedback',1,10,1), .2) is None
+        finally:
+            if not mock: await client.client.aclose()
+    asyncio.run(run())
