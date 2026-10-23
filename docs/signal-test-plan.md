@@ -7,13 +7,13 @@
 5. Verify `Remote=1` with the supplier and machine operator. `Local`/`Remote` behavior beyond the documented descriptions needs confirmation.
 6. Confirm the physical area and equipment with the responsible engineer. Enable write test mode on the local workstation. It expires after 30 minutes and a refresh disables the browser's ability to write.
 7. Test permitted writable setpoints within catalog limits, beginning with non-motion values chosen by the engineer. Record entered engineering units, live address, supplier response, and observed readback. No scaling is applied in this app.
-8. Run one reviewed command/feedback test at a time. Confirm initial feedback differs from the expected value. The runner records write acceptance, each feedback read, PASS/FAIL/TIMEOUT/BLOCKED/COMMUNICATION ERROR, and elapsed time. Confirm whether commands are latched, momentary, or need explicit clearing before adding reset behavior.
+8. Run one reviewed command/feedback test at a time. Confirm initial feedback differs from the expected value. The runner records write acceptance, each feedback read, PASS/OBSERVED/FAIL/TIMEOUT/BLOCKED/COMMUNICATION ERROR, and elapsed time. Confirm whether commands are latched, momentary, or need explicit clearing before adding reset behavior.
 9. Export communication and test logs as CSV/JSON. Save the persistent JSONL log with the test record if required.
 10. Review failed and uncertain mappings with the PLC supplier. Do not promote a name-based mapping to confirmed field behavior without observation.
 
 ## Initial mappings
 
-Door open/close command → actual door opened/closed feedback pairs are configured for tanks where both catalog tags exist. The remaining filter, heater, ultrasonic, swing, rectifier, spray and fill-water name matches are included as blocked candidates. Their command semantics and physical feedback association require supplier confirmation. Alarm polarity is undocumented in the catalog, so the UI displays raw Bool values without assigning severity.
+Door open/close command → actual door opened/closed feedback pairs are configured for tanks where both catalog tags exist. The remaining filter, heater, ultrasonic, swing, rectifier, spray and fill-water pairs are manual-derived candidates. They can be run as explicitly confirmed **Mapping under test** observations. A matching transition returns OBSERVED; their command semantics and physical feedback association still require confirmation before being treated as established mappings. Alarm polarity is undocumented in the catalog, so the UI displays raw Bool values without assigning severity.
 
 ## Latest static baseline
 
@@ -51,7 +51,8 @@ entries. There were no missing, null or invalid values and zero supplier read
 failures; four distinct poll snapshots were observed. Reading W-tag values
 sends no write command. This initial phase was read only; physical writes and command-hold rules
 were established only for the later Tank 01 tests recorded below. The 36 unconfirmed
-command/feedback mappings remain blocked. See [verification-2026-10-22.md](verification-2026-10-22.md).
+command/feedback mappings were blocked during that initial field session; the
+later supervised Mapping under test path does not retroactively confirm them. See [verification-2026-10-22.md](verification-2026-10-22.md).
 
 
 ## Tank 01 physical follow-up
@@ -106,11 +107,115 @@ The 39 numeric writable tags (31 Word and eight SignedWord in this baseline)
 are engineering setpoints; the Bool hold/reset table does not define a rule to
 reset those values to zero.
 
-The UI's Keep at 1 option is an explicit operator decision after an accepted
+The UI's compact After 1 toggle records an explicit operator decision in the
+send confirmation. Hold becomes a local Keep at 1 record only after an accepted
 write and later fresh readback of 1. It sends no additional write, keeps the
 state visible, and permits the next guided test. Eligibility of a non-door tag
 for this option does not confirm its hold behavior; RemoteStart remains
 unclassified. Door commands retain the guided clear-to-0 workflow. No pulse or
-reset is inferred, and the 36 unconfirmed command/feedback mappings remain
-blocked. Record supplier-confirmed rules before promoting a tag's behavior or
-mapping to confirmed status.
+reset is inferred. The 36 manual-derived command/feedback mappings remain marked
+unconfirmed in configuration, but can be selected for a supervised per-run
+**Mapping under test** observation. A matching transition is **OBSERVED**, rather
+than a confirmed-mapping PASS. The default API path still blocks these mappings
+without explicit opt-in. Record supplier-confirmed rules before promoting a
+tag's behavior or mapping to confirmed status.
+
+
+Earlier on 23 October, all 50 bundled cases used a 30-second window. The later
+operator request changes the default to `timeout_ms=15000`. Feedback tests allow
+a per-run override of 1–300 whole seconds, captured in confirmation and logs.
+This limits software observation only. It does not specify a hold duration,
+stop or automatic reset.
+
+## Physical Tank 13 door uses Tank12 API names
+
+On 23 October 2026, the operator explicitly confirmed both Open and Close
+operate the physical Tank 13 door. The operator also confirmed both API position
+feedback signals follow that door's actual position. Physical Tank 12 has no
+door, according to the operator.
+
+| Physical Tank 13 function | Supplier API tag | Address |
+| --- | --- | --- |
+| Open door | Tank12_DoorOpenRemote | M310 |
+| Close door | Tank12_DoorCloseRemote | M311 |
+| Door opened feedback | Tank12_DoorOpened | D1116.4 |
+| Door closed feedback | Tank12_DoorClosed | D1116.5 |
+
+The supplier manual PDF page 17 and current live catalog both label these four
+tags Tank12. Neither contains a Tank13_Door tag. This is an operator-confirmed
+physical identity discrepancy in the supplied names. Matching the API to the
+manual did not establish the correct physical tank number. This finding does
+not imply an Open/Closed feedback swap.
+
+Use the exact existing API names for transport. Do not invent Tank13_Door API
+names or rename all Tank12 signals. The physical correction applies only to the
+four door tags above. Supplier sign-off and a corrected source catalog remain
+pending. Existing tank12-door-open/close test IDs and saved operator marks refer
+to the physical Tank 13 door; no record was rewritten or copied. The current UI
+still groups these source-named tags under Tank12. Any future physical display
+alias must retain the raw API name and this operator evidence.
+
+A read-only recheck compared all 14 door pair definitions with the supplier
+metadata. Their names and addresses agree with the written sources, but no new
+physical identity test was performed for the other doors. No door commands or
+other line writes were sent during this check. The detailed local artifact is
+api_test/artifacts/door-physical-identity-audit-2026-10-23.json.
+
+## Guided run list outside Feedback tests
+
+The operator requested tests of writes outside the existing Feedback test list.
+The live catalog contains 91 such signals: 52 Bool and 39 numeric. The old
+Tank01 filter readiness question was not approved and was superseded by this
+list. The first seven devices were subsequently tested with explicit operator
+authorization, using 14 acknowledged writes including restoration. All seven
+retain API checked; all current human marks are Not checked at the operator's
+request. Three original physical confirmations remain in history. Testing is
+stopped because water was turned off. This list is not an unattended schedule.
+
+First proposed block: seven On commands with distinct, related read-status
+references from the supplier tag table. These are mappings under test, not new
+supplier-certified completion pairs.
+
+| Order | Command | Address | Read-status reference | Address |
+| --- | --- | --- | --- | --- |
+| 1 | Tank07_AirAgitationOn | L135 | Tank07_AirAgitationStatus | D1030.F |
+| 2 | Tank07_CoolerOn | L131 | Tank07_CoolerStatus | D1030.B |
+| 3 | Tank08_AirAgitationOn | L132 | Tank08_AirAgitationStatus | D1030.C |
+| 4 | Tank09_AirAgitationOn | L133 | Tank09_AirAgitationStatus | D1030.D |
+| 5 | Tank12_AirAgitationOn | L161 | Tank12_AirAgitationStatus | D1118.4 |
+| 6 | Tank15_AirAgitationOn | L180 | Tank15_AirAgitationStatus | D1136.4 |
+| 7 | Tank16_AirAgitationOn | L182 | Tank16_AirAgitationStatus | D1136.6 |
+
+For each approved device, capture fresh baseline values and stable tag/address
+metadata. Proceed only with verified request/status 0, fresh data and Remote
+mode. After operator readiness, propose command 1 for up to 15 seconds. Record
+its receipt, subsequent fresh request readback and related status. Send 0 as
+part of that explicitly approved sequence. Verify later fresh readback 0 and
+observe the related status/physical result. A status still at 1 is an observation
+to investigate, not proof that another write will stop it. Do not start the next
+device until the current request is restored and the operator is ready. Human
+Pass/Fail stays separate from API readback and status observations.
+
+Later blocks and pending items:
+
+- 23 distinct Auto bits: approved transitions and own-bit readback only. An
+  actuator status does not prove Auto-mode acceptance.
+- 39 numeric values: capture the fresh original value, use an operator-approved
+  engineering test value, verify later own-tag readback, then restore and verify
+  the original. Do not treat a process PV as immediate equality completion.
+- 3 Air On tags on Tanks02/04/06: status bits alias other tanks' Fill status.
+- 2 FillWaterAuto tags on Tanks03/05: both use L220.
+- MainInlet: the planning snapshot is already 1. Preserve its state.
+- 16 RemoteStart bits: operating, pulse/hold and reset sequence must be agreed
+  before any write. No start sequence is inferred from the tag names.
+
+The seven proposed tests plus 62 later tests and 22 pending items cover all 91
+outside-list writes. All values in the plan are snapshots
+for review, never authority for a later restore. Recapture immediately before
+each test. The Tank12-door physical correction does not rename Tank12 air tags.
+The complete 91-row plan is saved outside Git as api_test/artifacts/
+remaining-write-run-list-2026-10-23.csv and .json. No Auto-mode, numeric,
+RemoteStart, shared-address or MainInlet test was run in this supervised block.
+Further execution requires a new instruction and current equipment readiness.
+See the [latest verification record](verification-2026-10-23.md#current-human-marks-reset-physical-evidence-retained)
+for the stopped-session state and preserved evidence.

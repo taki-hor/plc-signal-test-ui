@@ -1,0 +1,74 @@
+{
+  "evidence": "Historical read-only GET capture; user explicitly authorized local-history use",
+  "api_origin": "http://192.168.1.12:8000",
+  "recorded_date": "2026-10-23",
+  "freshness": "Live schema and complete catalog revalidated; semantically identical to retained historical captures",
+  "sources": {
+    "openapi": {
+      "path": "supplier-openapi-2026-10-23.json",
+      "endpoint": "/openapi.json",
+      "sha256": "b5ca255695e24a46d787a0709f22d7d288f584e0be3a6f8e042f505465a0ddbe",
+      "original_capture_file": "failed-pair-recheck-openapi-2026-10-23.json",
+      "recorded_file_mtime_utc": "2026-10-23T10:37:34.347579+00:00"
+    },
+    "tags": {
+      "path": "supplier-tags-2026-10-23.json",
+      "endpoint": "/api/v1/tags/list",
+      "sha256": "e8b283dd95c9dcd48fcea0640e0f290e9098e071879b99d60dd9e520f3ecee3e",
+      "original_capture_file": "failed-pair-recheck-catalog-2026-10-23.json",
+      "recorded_file_mtime_utc": "2026-10-23T10:37:34.353045+00:00"
+    },
+    "pdf": {
+      "path": "HKPU_PLC_API_User_Manual_PD-03726_2026-09-29.pdf",
+      "sha256": "a157cfc7165fa86ee23ea10fc7293b343b4a2e356c8f7a70b863876b4ad0f40e",
+      "table_rows_parsed": 362
+    }
+  },
+  "findings": {
+    "signals_in_each_source": 362,
+    "operational_metadata_differences": 0,
+    "missing_limit_signals": 39,
+    "whitespace_only_description_signals": 8,
+    "total_signal_rows_with_differences": 47,
+    "missing_signals": [],
+    "additional_signals": [],
+    "shared_address_groups": {
+      "D1002.8": [
+        "Tank01_FillWaterStatus",
+        "Tank02_AirAgitationStatus"
+      ],
+      "L220": [
+        "Tank03_FillWaterAuto",
+        "Tank05_FillWaterAuto"
+      ],
+      "D1012.8": [
+        "Tank03_FillWaterStatus",
+        "Tank04_AirAgitationStatus"
+      ],
+      "D1022.8": [
+        "Tank05_FillWaterStatus",
+        "Tank06_AirAgitationStatus"
+      ],
+      "D1036": [
+        "Tank08_WaterFlow",
+        "Tank09_WaterFlow"
+      ]
+    },
+    "operator_confirmed_physical_tank": "Tank12 door API names refer to physical Tank13; both documents retain Tank12 names"
+  },
+  "live_revalidation": {
+    "checked_at_utc": "2026-10-23T12:05:19.009471+00:00",
+    "checked_at_hong_kong": "2026-10-23T20:05:19.009471+08:00",
+    "requests": "GET only: /docs, /openapi.json, /api/v1/tags/list, /api/v1/tags/read",
+    "all_http_statuses": 200,
+    "saved_schema_matches_live": true,
+    "saved_catalog_matches_live": true,
+    "catalog_count": 362,
+    "read_tags_ok": 362,
+    "read_tags_failed": 0,
+    "missing_catalog_values": 0,
+    "raw_supplier_timestamp": "2026-10-23T20:04:32.831352",
+    "uncorrected_timestamp_age_seconds_approximately": 46.2,
+    "timestamp_assumption": "Supplier timestamps interpreted as previously operator-confirmed Asia/Hong_Kong; observed age includes polling/transport delay"
+  }
+}

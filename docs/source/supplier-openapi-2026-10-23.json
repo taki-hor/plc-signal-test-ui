@@ -1,0 +1,403 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PLC Polling Data API",
+    "description": "Read/write API for FX5U PLC polling data and tag control.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/tags/read": {
+      "get": {
+        "summary": "Read Tags",
+        "description": "Get the most recent polling record.",
+        "operationId": "read_tags_api_v1_tags_read_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Read Tags Api V1 Tags Read Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/tags/list": {
+      "get": {
+        "summary": "List Tags",
+        "description": "List PLC tags with data types and read/write access.",
+        "operationId": "list_tags_api_v1_tags_list_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/tags/write": {
+      "post": {
+        "summary": "Write Tag",
+        "description": "Write a value to a writable PLC tag (ReadWrite=W in TagsMap.xlsx).",
+        "operationId": "write_tag_api_v1_tags_write_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagWriteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagWriteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/api/v1/tags/write/batch": {
+      "post": {
+        "summary": "Write Tags Batch",
+        "description": "Write values to multiple writable PLC tags in one PLC session.",
+        "operationId": "write_tags_batch_api_v1_tags_write_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MultiTagWriteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MultiTagWriteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "MultiTagWriteRequest": {
+        "properties": {
+          "writes": {
+            "items": {
+              "$ref": "#/components/schemas/TagWriteItem"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Writes",
+            "description": "Tags and values to write in one PLC session"
+          }
+        },
+        "type": "object",
+        "required": [
+          "writes"
+        ],
+        "title": "MultiTagWriteRequest"
+      },
+      "MultiTagWriteResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/TagWriteResponse"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "count"
+        ],
+        "title": "MultiTagWriteResponse"
+      },
+      "TagInfo": {
+        "properties": {
+          "tag_name": {
+            "type": "string",
+            "title": "Tag Name"
+          },
+          "device_address": {
+            "type": "string",
+            "title": "Device Address"
+          },
+          "data_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Type"
+          },
+          "read_write": {
+            "type": "string",
+            "title": "Read Write"
+          },
+          "multiplier": {
+            "type": "number",
+            "title": "Multiplier",
+            "default": 1.0
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tag_name",
+          "device_address",
+          "data_type",
+          "read_write",
+          "description"
+        ],
+        "title": "TagInfo"
+      },
+      "TagWriteItem": {
+        "properties": {
+          "tag_name": {
+            "type": "string",
+            "title": "Tag Name",
+            "description": "Tag name, e.g. Tank1_AddWater"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value",
+            "description": "Engineering value. Bool: 0 or 1. Word: unsigned 16-bit, scaled by TagsMap Multiplier before writing to PLC (e.g. Multiplier 0.1 means write 25.0 stores 250). SignedWord: signed 16-bit (-32768 to 32767 after scaling), also multiplier-scaled (e.g. write -5.0 with Multiplier 0.1 stores -50). Float: IEEE-754 REAL over 2 consecutive words, also multiplier-scaled."
+          }
+        },
+        "type": "object",
+        "required": [
+          "tag_name",
+          "value"
+        ],
+        "title": "TagWriteItem"
+      },
+      "TagWriteRequest": {
+        "properties": {
+          "tag_name": {
+            "type": "string",
+            "title": "Tag Name",
+            "description": "Tag name, e.g. Tank1_AddWater"
+          },
+          "value": {
+            "type": "number",
+            "title": "Value",
+            "description": "Engineering value. Bool: 0 or 1. Word: unsigned 16-bit, scaled by TagsMap Multiplier before writing to PLC (e.g. Multiplier 0.1 means write 25.0 stores 250). SignedWord: signed 16-bit (-32768 to 32767 after scaling), also multiplier-scaled (e.g. write -5.0 with Multiplier 0.1 stores -50). Float: IEEE-754 REAL over 2 consecutive words, also multiplier-scaled."
+          }
+        },
+        "type": "object",
+        "required": [
+          "tag_name",
+          "value"
+        ],
+        "title": "TagWriteRequest"
+      },
+      "TagWriteResponse": {
+        "properties": {
+          "tag_name": {
+            "type": "string",
+            "title": "Tag Name"
+          },
+          "device_address": {
+            "type": "string",
+            "title": "Device Address"
+          },
+          "data_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Type"
+          },
+          "read_write": {
+            "type": "string",
+            "title": "Read Write"
+          },
+          "multiplier": {
+            "type": "number",
+            "title": "Multiplier",
+            "default": 1.0
+          },
+          "value": {
+            "type": "number",
+            "title": "Value"
+          },
+          "written": {
+            "type": "boolean",
+            "title": "Written"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tag_name",
+          "device_address",
+          "data_type",
+          "read_write",
+          "value",
+          "written"
+        ],
+        "title": "TagWriteResponse"
+      },
+      "TagsResponse": {
+        "properties": {
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagInfo"
+            },
+            "type": "array",
+            "title": "Tags"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tags"
+        ],
+        "title": "TagsResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    }
+  }
+}

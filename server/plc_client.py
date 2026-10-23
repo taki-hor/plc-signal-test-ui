@@ -9,6 +9,7 @@ ERRORS = {
     401: 'PLC API authentication failed.',
     403: 'This tag is read-only and cannot be written.',
     404: 'PLC tag or poll data was not found.',
+    422: 'PLC API rejected the request format. Check the tag name and numeric value.',
     502: 'PLC write or PLC communication failed.',
     503: 'PLC API or PLC is temporarily unavailable/busy.',
 }
@@ -107,7 +108,7 @@ class MockPLCClient:
         results = []
         for item in writes:
             results.append(await self.write_signal(item['tag_name'], item['value']))
-        return {'writes': results}
+        return {'results': results, 'count': len(results)}
 
     async def wait_for_signal(self, tag_name, expected, timeout_ms, poll_interval_ms):
         deadline = asyncio.get_running_loop().time() + timeout_ms / 1000

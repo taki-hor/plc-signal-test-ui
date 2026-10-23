@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from server.config import ROOT
 from server.log_service import LogService
-from server.plc_client import MockPLCClient
+from server.plc_client import MockPLCClient, PLCError
 from server.signal_service import SignalService
 from server.models import Tag, ValidationError
 from server.catalog_diagnostics import catalog_warnings
@@ -242,3 +242,46 @@ def test_temporary_clock_correction_preserves_stale_detection(tmp_path, correcti
     service.last_poll = {'timestamp': raw_timestamp, 'tags_failed': 0}
     assert service.fresh() is expected_fresh
     assert service.last_poll['timestamp'] == raw_timestamp
+
+
+def test_log_exports_preserve_mapping_test_mode_and_legacy_rows(tmp_path):
+    import csv
+    import io
+    path = tmp_path / 'events.jsonl'
+    logs = LogService(path)
+    logs.add('TEST_FINISH', result='OBSERVED', mapping_under_test=True, end_mode='hold')
+    logs.add('TEST_FINISH', result='PASS', mapping_under_test=False, end_mode='manual0')
+    logs.add('READ', result='OK')
+    restored = LogService(path)
+    rows = list(csv.DictReader(io.StringIO(restored.export('all','csv')[0])))
+    assert [(r['mapping_under_test'],r['end_mode']) for r in rows] == [('True','hold'),('False','manual0'),('','')]
+    records = json.loads(restored.export('tests','json')[0])
+    assert [(r['mapping_under_test'],r['end_mode']) for r in records] == [(True,'hold'),(False,'manual0')]
+
+
+@pytest.mark.parametrize('acknowledgement',[None,[]])
+def test_non_object_write_ack_is_uncertain_after_transport(tmp_path,acknowledgement):
+    async def run():
+        client, service, _=make_service(tmp_path)
+        original=client.write_signal
+        async def acted_without_object(name,value):
+            await original(name,value)
+            return acknowledgement
+        client.write_signal=acted_without_object
+        with pytest.raises(PLCError) as failure:
+            await service.write('Tank01_FilterRemote',1)
+        assert failure.value.status==502 and failure.value.write_dispatched is True
+        assert client.values['Tank01_FilterRemote']==1
+    asyncio.run(run())
+
+
+def test_write_receipt_uses_validated_address_instead_of_supplier_claim(tmp_path):
+    async def run():
+        client, service, _=make_service(tmp_path)
+        original=client.write_signal
+        async def forged_address(name,value):
+            return {**await original(name,value),'console_command_address':'M999'}
+        client.write_signal=forged_address
+        receipt=await service.write('Tank01_FilterRemote',1)
+        assert receipt['written'] is True and receipt['console_command_address']=='M320'
+    asyncio.run(run())

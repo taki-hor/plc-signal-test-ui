@@ -1,14 +1,25 @@
+import {go} from './router.js';
 import {$, node, valueText, metadataNumber} from './dom.js';
 import {post, enableMode, disableMode, modeEnabled} from './api.js';
 import {beginWriteObservation, finishWriteObservation} from './write-feedback.js';
-let tags = [], poll = null, status = null;
+let tags = [], poll = null, status = null, valueIdentity = null;
 function canWrite() { return modeEnabled() && status?.supplier_api_connected && status?.data_fresh && status?.plc_mode === 'REMOTE'; }
+export function writeIdentity(tag, context) {
+  return tag && context?.api_address && context?.mode ?
+    JSON.stringify([context.api_address,context.mode,tag.tag_name,tag.device_address,tag.data_type,tag.read_write,tag.multiplier]) : null;
+}
 export function updateControls(nextTags, nextPoll, nextStatus) {
   if (nextTags) {
     tags = nextTags;
     const writable = tags.filter(t => t.read_write === 'W').sort((a,b) => a.tag_name.localeCompare(b.tag_name));
     const select = $('write-tag'), prior = select.value;
-    select.replaceChildren(...writable.map(t => { const option = node('option', '', `${t.tag_name} — ${t.description}`); option.value = t.tag_name; return option; }));
+    select.replaceChildren();
+    for (const [label,items] of [['Numeric setpoints',writable.filter(t => t.data_type !== 'Bool')],['Bool commands',writable.filter(t => t.data_type === 'Bool')]]) {
+      if (!items.length) continue;
+      const group = node('optgroup'); group.label = label;
+      group.append(...items.map(t => { const option = node('option', '', `${t.tag_name} — ${t.description}`); option.value = t.tag_name; return option; }));
+      select.append(group);
+    }
     if (writable.some(t => t.tag_name === prior)) select.value = prior;
   }
   if (nextPoll) poll = nextPoll;
@@ -18,15 +29,25 @@ export function updateControls(nextTags, nextPoll, nextStatus) {
   renderSelected();
 }
 function selected() { return tags.find(t => t.tag_name === $('write-tag').value); }
+function renderValueControl(tag, defaultInvalid = false) {
+  const bool = tag?.data_type === 'Bool', input = $('write-value');
+  input.classList.toggle('hidden',bool); $('write-bool-control').classList.toggle('hidden',!bool);
+  if (bool) $('write-value-label').removeAttribute('for'); else $('write-value-label').htmlFor = 'write-value';
+  if (bool && defaultInvalid && (input.value.trim() === '' || ![0,1].includes(Number(input.value)))) input.value = '0';
+  const value = input.value.trim() === '' ? null : Number(input.value);
+  $('write-bool-zero').checked = bool && value === 0; $('write-bool-one').checked = bool && value === 1;
+}
 function renderSelected() {
-  const tag = selected(), detail = $('write-detail'); detail.replaceChildren();
+  const tag = selected(), identity = tag ? JSON.stringify([tag.tag_name,tag.device_address,tag.data_type]) : null;
+  renderValueControl(tag,identity !== valueIdentity); valueIdentity = identity;
+  const detail = $('write-detail'); detail.replaceChildren();
   if (!tag) { detail.textContent = 'No writable signals in catalog.'; return; }
   const grid = node('div', 'detail-grid');
-  const allowed = `${metadataNumber(tag.low_limit, 'unbounded')} to ${metadataNumber(tag.high_limit, 'unbounded')}`;
-  const fields = [['Description', tag.description], ['Tag', tag.tag_name], ['PLC address', tag.device_address], ['Type', tag.data_type], ['Current', valueText(poll?.[tag.tag_name])], ['Multiplier', metadataNumber(tag.multiplier)], ['Allowed', allowed]];
+  const allowed = tag.data_type === 'Bool' ? '0 or 1' : tag.low_limit == null && tag.high_limit == null ? 'Not published' : `${metadataNumber(tag.low_limit, 'not published')} to ${metadataNumber(tag.high_limit, 'not published')}`;
+  const fields = [['Description', tag.description], ['Tag', tag.tag_name], ['PLC address', tag.device_address], ['Type', tag.data_type], ['Current', valueText(poll?.[tag.tag_name])], ['Multiplier', metadataNumber(tag.multiplier)], ['API limits', allowed]];
   fields.forEach(([name,value]) => grid.append(node('span', '', name), node('strong', '', value)));
   detail.append(grid);
-  $('write-limits').textContent = `Allowed: ${tag.data_type === 'Bool' ? '0 or 1' : allowed} · ${tag.data_type} · engineering units`;
+  $('write-limits').textContent = `API limits: ${allowed} · ${tag.data_type} · engineering units`;
   $('write-value').placeholder = tag.data_type === 'Bool' ? '0 or 1' : 'Enter engineering value';
 }
 export function validate(tag, raw) {
@@ -39,6 +60,18 @@ export function validate(tag, raw) {
   if (tag.high_limit != null && value > tag.high_limit) throw new Error(`Above high limit ${tag.high_limit}`);
   return value;
 }
+export function prepareWrite(tagName, value) {
+  const tag = tags.find(item => item.tag_name === tagName);
+  if (!tag || tag.read_write !== 'W') return false;
+  if (value !== undefined) {
+    try { validate(tag, String(value)); } catch { return false; }
+    $('write-value').value = String(value);
+  }
+  $('write-tag').value = tag.tag_name;
+  $('write-tag').dispatchEvent(new Event('change'));
+  go('write');
+  return true;
+}
 export function confirmWrite(title, fields, action) {
   const dialog = $('confirm-dialog'); dialog.returnValue = ''; $('confirm-title').textContent = title;
   const body = $('confirm-body'); body.replaceChildren();
@@ -49,20 +82,38 @@ export function confirmWrite(title, fields, action) {
 }
 export function initControls(onChange) {
   $('write-tag').addEventListener('change', renderSelected);
+  $('write-value').addEventListener('input', () => renderValueControl(selected()));
+  for (const id of ['write-bool-zero','write-bool-one']) $(id).addEventListener('change', () => {
+    if (selected()?.data_type !== 'Bool' || !$(id).checked) return;
+    $('write-value').value = $(id).value; renderValueControl(selected());
+  });
   $('mode-btn').addEventListener('click', async () => {
     $('mode-btn').disabled = true;
     try {
       if (modeEnabled()) { const disabling = disableMode(); onChange(); await disabling; }
-      else if (window.confirm('Enable WRITE TEST MODE for 30 minutes? Commands may actuate equipment.')) await enableMode();
-    } catch (error) { $('write-result').textContent = error.message; }
+      else {
+        if (!window.confirm('Enable WRITE TEST MODE for 30 minutes? Commands may actuate equipment.')) return;
+        await enableMode();
+      }
+      $('mode-error').textContent = ''; $('mode-error').classList.add('hidden');
+    } catch (error) {
+      $('mode-error').textContent = `Write mode request failed: ${error.message}`;
+      $('mode-error').classList.remove('hidden');
+    }
     finally { $('mode-btn').disabled = false; onChange(); }
   });
   $('write-submit').addEventListener('click', () => {
     if (!canWrite()) { onChange(); return; }
     const tag = selected();
     try {
+      renderValueControl(tag);
       const value = validate(tag, $('write-value').value);
+      const reviewed = writeIdentity(tag,status);
       confirmWrite('Confirm PLC write', [['Signal',tag.tag_name],['Address',tag.device_address],['Current value',valueText(poll?.[tag.tag_name])],['New value',value]], async () => {
+        const current = selected();
+        if (!reviewed || writeIdentity(current,status) !== reviewed) {
+          $('write-result').textContent = 'Write blocked: signal, permissions or API context changed. Review the command again.'; onChange(); return;
+        }
         if (!canWrite()) { $('write-result').textContent = 'Write blocked: fresh Remote data and write test mode are required.'; onChange(); return; }
         const observation = beginWriteObservation([{tag_name:tag.tag_name,value}]);
         try { const response = await post('/api/write', {tag_name: tag.tag_name, value}); finishWriteObservation(observation,response); $('write-result').textContent = response.written === true ? `WRITE ACCEPTED · ${response.tag_name} = ${response.value}. Watch the read signals and feedback below.` : `WRITE FAILED · Supplier did not confirm written=true for ${tag.tag_name}.`; onChange(); }
@@ -82,7 +133,11 @@ export function initControls(onChange) {
         names.add(item.tag_name);
         return {tag_name: item.tag_name, value: validate(tag, String(item.value))};
       });
+      const reviewed = validated.map(item => writeIdentity(tags.find(tag => tag.tag_name === item.tag_name),status));
       confirmWrite('Confirm batch PLC write', [['Item count',validated.length],['Signals',validated.map(w => `${w.tag_name}=${w.value}`).join(', ')],['Confirmation','CONFIRM BATCH WRITE']], async () => {
+        if (validated.some((item,index) => !reviewed[index] || writeIdentity(tags.find(tag => tag.tag_name === item.tag_name),status) !== reviewed[index])) {
+          $('batch-result').textContent = 'Batch blocked: signal, permissions or API context changed. Review the commands again.'; onChange(); return;
+        }
         if (!canWrite()) { $('batch-result').textContent = 'Batch blocked: fresh Remote data and write test mode are required.'; onChange(); return; }
         const observation = beginWriteObservation(validated);
         try { const response = await post('/api/write/batch', {writes:validated, confirmation:'CONFIRM BATCH WRITE'}); finishWriteObservation(observation,response); $('batch-result').textContent = response.console_batch_accepted === true ? `BATCH ACCEPTED · ${validated.length} items. Watch the read signals and feedback above.` : 'BATCH OUTCOME REQUIRES REVIEW · Supplier did not confirm every item as written.'; onChange(); }

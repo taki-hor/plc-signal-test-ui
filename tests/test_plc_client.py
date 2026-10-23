@@ -4,7 +4,7 @@ import httpx
 import pytest
 from server.plc_client import PLCClient, PLCError, ERRORS
 
-@pytest.mark.parametrize('code', [400,401,403,404,502,503])
+@pytest.mark.parametrize('code', [400,401,403,404,422,502,503])
 def test_supplier_error_mapping(code):
     async def run():
         transport = httpx.MockTransport(lambda request: httpx.Response(code, json={'detail':'supplier detail'}))
