@@ -7,13 +7,13 @@
   <nav class="side-nav" aria-label="Console pages">
     <a href="#/overview" data-nav="overview"><span class="nav-dot"></span>Overview</a>
     <div class="nav-group read">Read signals</div>
-    <a href="#/signals" data-nav="signals"><span class="nav-dot read"></span>Live signals<span id="nav-signals-badge" class="nav-badge"></span></a>
-    <a href="#/tanks" data-nav="tanks"><span class="nav-dot read"></span>Tank view</a>
-    <a href="#/alarms" data-nav="alarms"><span class="nav-dot read"></span>Alarms<span id="nav-alarms-badge" class="nav-badge"></span></a>
+    <a href="#/tanks" data-nav="tanks"><span class="nav-dot read"></span>Tank monitor</a>
+    <a href="#/signals" data-nav="signals"><span class="nav-dot read"></span>Signal browser<span id="nav-signals-badge" class="nav-badge"></span></a>
+    <a href="#/alarms" data-nav="alarms"><span class="nav-dot read"></span>Alarm signals<span id="nav-alarms-badge" class="nav-badge"></span></a>
     <div class="nav-group write">Write signals</div>
-    <a href="#/commands" data-nav="commands"><span class="nav-dot write"></span>0/1 commands<span id="nav-commands-badge" class="nav-badge"></span></a>
-    <a href="#/write" data-nav="write"><span class="nav-dot write"></span>Value write</a>
     <a href="#/verify" data-nav="verify"><span class="nav-dot write"></span>Feedback tests</a>
+    <a href="#/commands" data-nav="commands"><span class="nav-dot write"></span>Manual 0/1<span id="nav-commands-badge" class="nav-badge"></span></a>
+    <a href="#/write" data-nav="write"><span class="nav-dot write"></span>Setpoints &amp; batch</a>
     <div class="nav-group">Records</div>
     <a href="#/catalog" data-nav="catalog"><span class="nav-dot"></span>Tag catalog</a>
     <a href="#/logs" data-nav="logs"><span class="nav-dot"></span>Evidence log</a>
@@ -36,34 +36,35 @@
 
 <main>
 <section id="overview" data-page="overview" class="page">
-  <div class="page-head"><div><div class="eyebrow">OVERVIEW</div><h1>Connection &amp; test workflow</h1><p>Read signals are safe to monitor at any time. Write pages stay locked until write test mode is enabled and the PLC reports fresh Remote data.</p></div></div>
+  <div class="page-head"><div><div class="eyebrow">OVERVIEW</div><h1>Connection &amp; test workflow</h1><p>Monitor read signals at any time. Writes need write test mode and fresh Remote data.</p></div></div>
   <div id="catalog-warning" class="inline-alert notice hidden" role="status"></div>
   <div class="panel"><h2 class="panel-title">Connection details</h2><div class="status-details"><div><small>SUPPLIER API ADDRESS</small><span id="api-address">—</span></div><div><small>LAST SUCCESSFUL REQUEST</small><span id="last-api">—</span></div><div><small>SUPPLIER POLL TIME</small><span id="poll-time">—</span></div><div><small>DATA AGE</small><span id="data-age">—</span></div><div id="clock-offset-detail" class="hidden"><small>TEMPORARY CLOCK CORRECTION</small><span id="clock-offset">—</span></div></div></div>
   <div class="split">
     <div class="panel lane read"><div class="lane-head"><span class="lane-tag read">READ</span><h2>Read signal testing</h2><strong id="ov-read-count" class="lane-count">—</strong></div><p>Observe live supplier poll values. No PLC writes are possible from these pages.</p>
-      <ol class="lane-links"><li><a href="#/signals"><strong>Live signals</strong><span>Search every tag value from the latest poll</span></a></li><li><a href="#/tanks"><strong>Tank view</strong><span>Door, temperature, timer and basket signals per tank</span></a></li><li><a href="#/alarms"><strong>Alarms</strong><span>Raw alarm values; polarity requires supplier confirmation</span></a></li></ol></div>
+      <ol class="lane-links"><li><a href="#/signals"><strong>Signal browser</strong><span>Find tags in manual group order</span></a></li><li><a href="#/tanks"><strong>Tank monitor</strong><span>Compare one tank’s feedback and command readbacks by function</span></a></li><li><a href="#/alarms"><strong>Alarm signals</strong><span>Read all raw alarm bits. Alarm polarity is unconfirmed.</span></a></li></ol></div>
     <div class="panel lane write"><div class="lane-head"><span class="lane-tag write">WRITE</span><h2>Write signal testing</h2><strong id="ov-write-count" class="lane-count">—</strong></div><p>Each write is confirmed individually and recorded. HTTP acceptance does not prove physical operation.</p>
-      <ol class="lane-links"><li><a href="#/commands"><strong>0/1 commands</strong><span>Step through writable Bool commands with timing and notes</span></a></li><li><a href="#/write"><strong>Value write</strong><span>Setpoints and numeric values within engineering limits</span></a></li><li><a href="#/verify"><strong>Feedback tests</strong><span>Configured command → feedback test cases</span></a></li></ol></div>
+      <ol class="lane-links"><li><a href="#/verify"><strong>Feedback tests</strong><span>Send a command. Measure its feedback.</span></a></li><li><a href="#/commands"><strong>Manual 0/1</strong><span>Set or clear a Bool command.</span></a></li><li><a href="#/write"><strong>Setpoints &amp; batch</strong><span>Set a value within the tag limits.</span></a></li></ol></div>
   </div>
 </section>
 
 <section id="signals" data-page="signals" class="page hidden">
-  <div class="page-head"><div><div class="eyebrow read">READ SIGNALS</div><h1>Live PLC signals</h1><p>One supplier poll snapshot per refresh. Values reflect the latest supplier cycle.</p></div><span id="signal-total" class="count">—</span></div>
+  <div class="page-head"><div><div class="eyebrow read">READ SIGNALS</div><h1>Signal browser</h1><p>Find tags in manual group order. Use search and filters to select tags.</p></div><span id="signal-total" class="count">—</span></div>
   <div class="panel"><div class="toolbar"><input id="signal-search" placeholder="Search name, description or PLC address" aria-label="Search live signals"><select id="signal-filter" aria-label="Filter signals"><option value="R">Read-only (status) signals</option><option value="all">All signals</option><option value="W">Writable (readback)</option><option value="Bool">Bool</option><option value="Word">Word</option><option value="SignedWord">SignedWord</option><option value="Float">Float</option></select><select id="signal-group" aria-label="Group signals"><option value="all">All groups</option></select></div><div id="signal-list" class="signal-list empty">Loading catalog…</div></div>
 </section>
 
 <section id="tanks" data-page="tanks" class="page hidden">
-  <div class="page-head"><div><div class="eyebrow read">READ SIGNALS</div><h1>Tank view</h1><p>Signals are shown only where the catalog defines them.</p></div><select id="tank-select" aria-label="Choose tank"></select></div>
-  <div id="tank-grid" class="tank-grid empty">Loading tanks…</div>
+  <div class="page-head"><div><div class="eyebrow read">READ SIGNALS</div><h1>Tank monitor</h1><p>Compare values by function. R means read-only. W means command or setpoint readback. A W value does not prove physical operation.</p></div></div>
+  <div id="tank-select" class="tank-tabs" role="tablist" aria-label="Choose tank"></div>
+  <div id="tank-grid" class="tank-grid empty" role="tabpanel">Loading tanks…</div>
 </section>
 
 <section id="alarms" data-page="alarms" class="page hidden">
-  <div class="page-head"><div><div class="eyebrow read">READ SIGNALS</div><h1>Alarm signals</h1><p>Raw values only. Alarm polarity requires supplier confirmation.</p></div><span id="alarm-count" class="count">—</span></div>
+  <div class="page-head"><div><div class="eyebrow read">READ SIGNALS</div><h1>Alarm signals</h1><p>Read all raw alarm values. The console does not infer alarm polarity or severity.</p></div><span id="alarm-count" class="count">—</span></div>
   <div class="panel"><div id="alarm-list" class="alarm-grid empty">Loading alarms…</div></div>
 </section>
 
 <section id="command-checklist" data-page="commands" class="page hidden">
-  <div class="page-head"><div><div class="eyebrow write">WRITE SIGNALS</div><h1>0/1 command checklist</h1><p>Choose a writable Bool tag. Each send has one confirmation popup; observe the equipment and record your notes.</p></div><span id="bool-progress" class="count">Loading…</span></div>
+  <div class="page-head"><div><div class="eyebrow write">WRITE SIGNALS</div><h1>Manual 0/1</h1><p>Select a Bool command. Confirm each write. Observe the equipment. Record your notes.</p></div><span id="bool-progress" class="count">Loading…</span></div>
   <div class="write-gate" data-gate></div>
   <div id="bool-pending" class="inline-alert hidden" role="status"></div>
   <div id="bool-held" class="inline-alert bool-held hidden" role="status"></div>
@@ -74,19 +75,26 @@
     </div>
     <div class="bool-workspace">
       <div class="panel">
-        <div class="bool-title"><div><h2 id="bool-name">Select a command</h2><p id="bool-description" class="muted">Numeric setpoints are on the Value write page.</p></div><div class="bool-live"><span>Current value<strong id="bool-value">—</strong></span><span>PLC address<code id="bool-address">—</code></span></div></div>
+        <div class="bool-title"><div><h2 id="bool-name">Select a command</h2><p id="bool-description" class="muted">Numeric setpoints are on the Setpoints &amp; batch page.</p></div><div class="bool-live"><span>Current value<strong id="bool-value">—</strong></span><span>PLC address<code id="bool-address">—</code></span></div></div>
         <p id="bool-feedback" class="muted"></p>
+        <div id="bool-end-mode" class="command-mode" role="group" aria-labelledby="bool-mode-label" aria-describedby="bool-mode-hint">
+          <span id="bool-mode-label" class="command-mode-label">After 1:</span>
+          <div class="command-mode-options"><label><input id="bool-mode-hold" type="radio" name="bool-end-mode" value="hold" disabled><span>Hold 1</span></label><label><input id="bool-mode-manual" type="radio" name="bool-end-mode" value="manual0" checked disabled><span>Manual 0</span></label></div>
+          <p id="bool-mode-hint" class="sr-only">Select a command to choose its end state.</p>
+        </div>
         <div class="bool-checks">
           <div class="bool-actions"><button id="bool-one" type="button" class="button primary" disabled>Send 1…</button><button id="bool-zero" type="button" class="button secondary" disabled>Send 0…</button><button id="bool-keep" type="button" class="button secondary" disabled>Keep at 1 (non-door)</button></div>
           <p id="bool-write-hint" class="muted" role="status"></p>
           <div class="bool-receipts"><span id="bool-sent-one">— API accepted 1</span><span id="bool-sent-zero">— API accepted 0</span><span id="bool-read-zero">— Later poll confirmed 0</span></div>
         </div>
-        <p class="muted fine">No automatic pulse, clear or retry. For door commands, wait for movement to finish before sending 0. For a confirmed maintained non-door state, choose Keep at 1 explicitly. A completed API cycle does not prove physical operation.</p>
+        <p class="muted fine">The console does not send automatic 0. Check physical movement.</p>
+        <details class="muted fine"><summary>Write rules</summary><p>The console does not send automatic pulses, clears, or retries. Follow the command’s confirmed procedure. Select Hold 1 or Manual 0 before you send 1. Hold records your choice after a fresh readback. It does not enforce the PLC value. An API cycle does not prove physical operation.</p></details>
       </div>
       <div class="panel">
         <div class="bool-summary"><span id="bool-result" class="pill amber">Not started</span><span class="timer-box"><small>1 → completion</small><output id="bool-timer" role="timer" aria-live="off">00:00.0</output></span><div class="bool-summary-actions"><button id="bool-issue" type="button" class="button small secondary" disabled>Record issue</button><button id="bool-new" type="button" class="button small secondary" disabled>New attempt</button></div></div>
         <p><strong id="bool-completion">NOT STARTED</strong> · <span id="bool-api-latency" class="muted">API response · 1: — ms · 0: — ms</span></p>
-        <p class="muted fine">Timer starts at Confirm Send 1 and stops at a fresh completion signal from the API. Send 0 is separate. Includes network and polling delay; this is not mechanical travel time. No confirmed mapping means no completion time.</p>
+        <p class="muted fine">The timer uses fresh API feedback. It does not measure mechanical travel time.</p>
+        <details class="muted fine"><summary>Timer details</summary><p>The timer starts when you confirm 1. It stops at a fresh API completion signal. Send 0 uses a separate write. Timing includes network and polling delays. It does not measure mechanical travel time. Without a confirmed mapping, the console records no completion time.</p></details>
         <label for="bool-notes" class="bool-notes-label">Expected effect / operator notes</label><textarea id="bool-notes" rows="2" maxlength="2000" placeholder="Record the expected action, physical observations, or an issue." disabled></textarea>
       </div>
       <div class="panel"><h3 class="bool-log-title">Attempt log</h3><ol id="bool-log" class="bool-log"><li>No command sent.</li></ol></div>
@@ -96,7 +104,7 @@
 </section>
 
 <section id="write" data-page="write" class="page hidden">
-  <div class="page-head"><div><div class="eyebrow write">WRITE SIGNALS</div><h1>Value write test</h1><p>Every write requires an explicit confirmation and fresh Remote mode data.</p></div><span class="pill amber">CONTROLLED ACCESS</span></div>
+  <div class="page-head"><div><div class="eyebrow write">WRITE SIGNALS</div><h1>Setpoints &amp; batch</h1><p>Every write requires an explicit confirmation and fresh Remote mode data.</p></div><span class="pill amber">CONTROLLED ACCESS</span></div>
   <div class="write-gate" data-gate></div>
   <div class="panel"><h2 class="panel-title">Single write</h2><div class="write-layout"><div class="field-stack"><label for="write-tag">Writable signal</label><select id="write-tag"></select><label for="write-value">New engineering value</label><input id="write-value" inputmode="decimal" placeholder="Enter value"><small id="write-limits">—</small><button id="write-submit" class="button primary" disabled>Review write</button></div><div id="write-detail" class="write-detail">Select a writable signal.</div></div><div id="write-result" class="result-line" role="status"></div></div>
   <div class="panel write-feedback-panel">
@@ -116,9 +124,33 @@
 </section>
 
 <section id="verify" data-page="verify" class="page hidden">
-  <div class="page-head"><div><div class="eyebrow write">WRITE SIGNALS</div><h1>Command → feedback tests</h1><p>HTTP acceptance and feedback are recorded separately. Tests run only when selected.</p></div></div>
+  <div class="page-head"><div><div class="eyebrow write">WRITE SIGNALS</div><h1>Feedback tests</h1><p>The console records acceptance and feedback separately. Run only the selected test.</p></div></div>
   <div class="write-gate" data-gate></div>
-  <div id="test-list" class="test-list empty">Loading test cases…</div><div id="test-result" class="test-result" role="status"></div>
+  <div id="test-active-commands" class="inline-alert bool-held hidden">
+    <h2 class="panel-title">Command bits</h2>
+    <p id="test-active-command-list" class="sr-only" role="status"></p>
+    <div id="test-active-command-rows" aria-label="Commands at 1 or pending 0"></div>
+    <div id="test-last-clear" class="hidden"><strong id="test-clear-target"></strong><p id="test-clear-state" class="test-status hidden" role="status"></p><details class="test-technical"><summary>Receipt details</summary><p id="test-clear-detail" class="muted hidden"></p></details></div>
+    <p>These bits do not prove physical state. <a href="#/commands">Review Manual 0/1 records</a>.</p>
+  </div>
+  <div id="test-result" class="panel test-result" role="region" tabindex="-1" aria-labelledby="test-result-title">
+    <h2 id="test-result-title" class="panel-title">Active test &amp; result</h2>
+    <p id="test-result-state" class="test-status" role="status">Choose a configured test below. Its progress and result appear here.</p>
+    <div id="test-result-detail" class="hidden">
+      <dl class="test-case-values"><div><dt>Command</dt><dd id="test-active-command">—</dd></div><div><dt>Current command readback</dt><dd id="test-command-readback">—</dd></div><div><dt>Expected feedback</dt><dd id="test-expected-feedback">—</dd></div></dl>
+      <div class="test-live-row"><strong id="test-live-feedback">NO DATA</strong><span id="test-live-health" class="test-status">STALE / NO DATA</span></div>
+      <p id="test-live-source" class="muted"></p>
+      <p id="test-backend-result" class="test-backend-result hidden"></p>
+      <p class="muted">Only the backend test sets PASS or OBSERVED. API feedback does not prove physical movement.</p>
+      <p id="test-operation-mode" class="muted"></p>
+      <button id="test-send-zero" class="button secondary hidden" type="button" disabled>Send 0…</button>
+      <p id="test-reset-rule" class="test-reset-rule"></p>
+      <details class="test-technical"><summary>Rule source</summary><p id="test-rule-evidence"></p></details>
+      <p id="test-hold-state" class="test-status hidden" role="status"></p>
+      <details class="test-technical"><summary>Technical details</summary><p id="test-result-technical"></p><p id="test-result-error" class="bad hidden"></p></details>
+    </div>
+  </div>
+  <div id="test-list" class="test-list empty">Loading test cases…</div>
 </section>
 
 <section id="browser" data-page="catalog" class="page hidden">
@@ -133,5 +165,5 @@
 </main>
 <footer>ANODIZING LINE · PLC COMMUNICATION QUALIFICATION <span>Safety functions remain outside this console.</span></footer>
 </div></div>
-<dialog id="confirm-dialog"><form method="dialog"><div class="eyebrow write">WRITE AUTHORIZATION</div><h2 id="confirm-title">Confirm PLC write</h2><div id="confirm-body"></div><p class="dialog-warning">This request may actuate physical equipment. Verify the area is clear and the signal is correct.</p><div class="dialog-actions"><button value="cancel" class="button secondary">Cancel</button><button id="confirm-yes" value="confirm" class="button primary">Confirm write</button></div></form></dialog>
+<dialog id="confirm-dialog"><form method="dialog"><div class="eyebrow write">WRITE AUTHORIZATION</div><h2 id="confirm-title">Confirm PLC write</h2><div id="confirm-body"></div><p class="dialog-warning">This request can operate equipment. Check the area. Check the signal.</p><div class="dialog-actions"><button value="cancel" class="button secondary">Cancel</button><button id="confirm-yes" value="confirm" class="button primary">Confirm write</button></div></form></dialog>
 <script type="module" src="/js/app.js"></script></body></html>

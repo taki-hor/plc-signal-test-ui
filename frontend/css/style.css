@@ -254,3 +254,87 @@ dialog h2{margin:7px 0 18px;font-size:20px}
   .log-row{grid-template-columns:1fr;gap:3px}
   footer{display:block}footer span{display:block;margin-top:5px}
 }
+
+/* Active feedback test stays above the case list; status always includes a word. */
+#verify .test-list{grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))}
+#verify .test-card{border-left:3px solid #64748b;min-width:0}
+#verify .test-card h3{font-size:16px}
+#verify .test-card .row{flex-wrap:wrap}
+#verify .test-case-values{display:grid;gap:8px;margin:12px 0;font-size:13px}
+#verify .test-case-values>div{min-width:0}
+#verify .test-case-values dt{color:var(--muted);font-size:12px}
+#verify .test-case-values dd{margin:2px 0 0;font-family:ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+#verify .test-status{display:inline-block;font-size:12px;font-weight:700;padding:5px 9px;border-radius:7px;color:#334155;background:#f1f5f9}
+#verify .test-status[data-state="RUNNING"],#verify .test-status[data-state="OBSERVED"]{color:#155d7a;background:#eaf4f8}
+#verify .test-status[data-state="PASS"]{color:#167653;background:#e8f5f0}
+#verify .test-status[data-state="TIMEOUT"],#verify .test-status[data-state="BLOCKED"],#verify .test-status[data-state="NEEDS CONFIRMATION"],#verify .test-status[data-state="MAPPING UNDER TEST"]{color:#7a4b00;background:#fff4d6}
+#verify .test-status[data-state="FAIL"],#verify .test-status[data-state="COMMUNICATION ERROR"]{color:#a52c32;background:#fff0ee}
+#verify .test-result{margin-top:0;scroll-margin-top:150px;border-left:4px solid var(--blue)}
+#verify .test-result:focus,#verify button:focus-visible,#verify summary:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+#verify #test-result-state{font-size:20px}
+#verify #test-result-detail{display:grid;gap:10px;margin-top:12px;overflow-wrap:anywhere}
+#verify .test-live-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#verify #test-live-feedback{font:700 18px ui-monospace,Consolas,monospace;overflow-wrap:anywhere}
+#verify .test-backend-result{font-weight:700}
+#verify .test-reset-rule{color:#7a4b00;background:#fff4d6;padding:10px;border-radius:7px}
+#verify #test-send-zero{justify-self:start}
+#verify .test-technical{font-size:12px;color:var(--muted)}
+#verify .test-technical summary{cursor:pointer}
+#verify .test-technical p{margin-top:8px}
+
+/* Manual procedure guidance is informational, never a success indicator. */
+.command-rule{background:#f8fafc;color:#334155;border:1px solid #cbd5e1;border-left:4px solid #155d7a;border-radius:9px;padding:14px;margin:14px 0}
+.command-rule[data-kind="unconfirmed"],.command-rule[data-kind="reset"][data-confirmed="false"]{background:#fff4d6;border-left-color:#7a4b00}
+.command-rule h3{font-size:15px;margin:0 0 7px}.command-rule>p{font-size:13px;line-height:1.5}.command-rule>p:first-of-type{color:#475569}
+.command-rule dl{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;margin:12px 0;font-size:13px}.command-rule dt{font-weight:700}.command-rule dd{margin:0;overflow-wrap:anywhere}.command-rule>p:last-child{font-weight:600}
+
+#verify .test-card .test-case-note{font-family:inherit;font-size:13px;line-height:1.5;color:#7a4b00;background:#fff4d6;margin:12px 0;padding:10px;border-radius:7px}
+
+/* The selected end state applies to one explicitly confirmed command attempt. */
+.command-mode{display:flex;align-items:center;gap:8px;margin:12px 0;padding:0;border:0;min-width:0}
+.command-mode-label{font-size:12px;font-weight:600;color:#475569;white-space:nowrap}
+.command-mode-options{display:flex;gap:4px;flex-wrap:wrap}
+.command-mode-options label{display:flex;align-items:center;gap:5px;min-height:32px;padding:4px 8px;border:1px solid #94a3b8;border-radius:6px;color:#334155;background:#fff;font-size:12px;cursor:pointer;white-space:nowrap}
+.command-mode-options label:has(input:checked){border-color:#155d7a;background:#eaf4f8;color:#155d7a;font-weight:700}
+.command-mode-options label:has(input:disabled){cursor:default}
+.command-mode-options input{min-height:0;margin:0;accent-color:#155d7a}
+.command-mode-options input:focus-visible{outline:2px solid #155d7a;outline-offset:3px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+@media(max-width:650px){#verify .test-result{scroll-margin-top:210px}}
+
+.bool-tag[data-result="WAITING FOR 1 READBACK"] .bool-tag-meta span:last-child{color:var(--amber)}
+
+/* Keep every matching signal accessible within its manual group. */
+.signal-list.signal-groups{grid-template-columns:minmax(0,1fr);gap:20px}
+.signal-group{min-width:0}
+.signal-group-header{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:8px}
+.signal-group-header h2{font-size:15px;color:var(--ink)}
+.signal-group-count{font-size:12px;color:var(--muted)}
+.signal-group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:8px}
+
+#confirm-dialog{max-height:calc(100dvh - 30px);overflow:auto}
+#confirm-dialog .dialog-actions{position:sticky;bottom:0;background:var(--panel);padding-top:10px}
+
+#signals .signal-card small{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+
+/* Cached or missing telemetry has an explicit data-health label in every read view. */
+#signals .read-state,#tanks .read-state,#alarms .read-state{display:block;color:#7a4b00;font:700 11px/1.5 system-ui,sans-serif;margin-top:5px;white-space:normal}
+#signals .signal-card.failed,#tanks .tank-row.failed,#alarms .alarm-item.failed{background:#fff4d6;border-left:3px solid #7a4b00}
+#tanks .tank-row{align-items:flex-start;min-width:0}#tanks .tank-row.failed{padding-left:9px}
+#tanks .tank-label{min-width:0;flex:1}
+#tanks .tank-name{display:block;font-weight:700;overflow-wrap:anywhere}
+#tanks .read-permission{display:inline-block;font:600 11px/1.5 system-ui,sans-serif;color:#334155;background:#f1f5f9;border-radius:4px;padding:2px 5px;margin-top:4px}
+#tanks .tank-description{display:block;font:12px/1.5 system-ui,sans-serif;color:var(--muted);overflow-wrap:anywhere;margin-top:4px}
+#alarms .alarm-item>div{min-width:0}#alarms .alarm-item small{display:block;overflow-wrap:anywhere}
+#alarms .alarm-item .read-state{font:700 11px/1.5 system-ui,sans-serif;white-space:normal}
+.tank-tabs{display:flex;flex:1;min-width:0;max-width:100%;gap:6px;overflow-x:auto;padding:4px 4px 10px;scrollbar-color:#64748b #e2e8f0}
+.tank-tab{flex:0 0 auto;white-space:nowrap;border:1px solid #94a3b8;border-radius:7px;padding:8px 12px;min-height:40px;background:#fff;color:#334155;font:600 13px system-ui,sans-serif;cursor:pointer}
+.tank-tab[aria-selected=true]{background:#155d7a;border-color:#155d7a;color:#fff}
+.tank-tab:focus-visible{outline:2px solid #155d7a;outline-offset:2px}
+@media(max-width:650px){.tank-tabs{width:100%;flex:auto}}
+
+.command-mode-options .command-mode-badge{font-size:10px;line-height:1.2;padding:2px 4px;border-radius:3px;background:#fff4d6;color:#7a4b00;font-weight:700}
+.command-mode-options .command-mode-badge.confirmed{background:#e8f5f0;color:#167653}
+
+#test-active-commands .test-command-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 0}
+#test-active-commands .test-command-name{flex:1;min-width:0;overflow-wrap:anywhere}

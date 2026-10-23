@@ -97,15 +97,24 @@ class SignalService:
             raise
         return tag, value
 
-    async def write(self, tag_name, value, authorize=None, before_write=None):
-        tag, value = await self.validate_write(tag_name, value)
-        if before_write: before_write(self.last_poll)
-        if authorize: authorize()
+    async def write(self, tag_name, value, authorize=None, before_write=None, on_dispatch=None):
         try:
+            tag, value = await self.validate_write(tag_name, value)
+            if before_write: before_write(self.last_poll)
+            if authorize: authorize()
+        except Exception as exc:
+            exc.write_dispatched = False
+            raise
+        try:
+            if on_dispatch: on_dispatch()
             response = await self.client.write_signal(tag_name, value)
+            if not isinstance(response, dict):
+                raise PLCError(502, 'Supplier write response is not an object. Inspect the command before retrying.')
+            response = {**response, 'console_command_address': tag.device_address}
             self.logs.add('WRITE', tag_name=tag_name, value=value, address=tag.device_address, result='ACCEPTED' if response.get('written') is True else 'REJECTED', http_status=200)
             return response
         except Exception as exc:
+            exc.write_dispatched = True
             self.failure('WRITE', exc, tag_name=tag_name, value=value)
             raise
 
@@ -134,5 +143,6 @@ class SignalService:
             self.logs.add('WRITE_BATCH', writes=validated, result='ACCEPTED', http_status=200)
             return response
         except Exception as exc:
+            exc.write_dispatched = True
             self.failure('WRITE_BATCH', exc)
             raise

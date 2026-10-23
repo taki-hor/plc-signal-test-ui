@@ -349,3 +349,53 @@ def test_supplier_failure_before_dispatch_is_distinct_from_unknown_write(console
                 assert r.json().get('write_dispatched') is False
                 assert console.client.values['Tank01_TempSV']==0
     asyncio.run(run())
+
+
+def test_candidate_endpoint_opt_in_records_observation_without_promoting_configuration(console):
+    async def run():
+        candidate=console.runner.cases['tank01-filterremote'].copy()
+        candidate['timeout_ms']=150
+        console.runner.cases[candidate['id']]=candidate
+        original=console.client.read_signals
+        reads=0
+        async def feedback():
+            nonlocal reads
+            reads+=1
+            if reads>=3: console.client.values['Tank01_FilterStatus']=1
+            return await original()
+        console.client.read_signals=feedback
+        transport=httpx.ASGITransport(app=console.app,client=('127.0.0.1',1234))
+        async with httpx.AsyncClient(transport=transport,base_url='http://console.test') as browser:
+            token=(await browser.post('/api/mode/enable')).json()['write_token']
+            headers={'X-Write-Token':token}
+            rejected=await browser.post('/api/test/run',headers=headers,json={'id':candidate['id']})
+            assert rejected.status_code==400
+            response=await browser.post('/api/test/run',headers=headers,json={'id':candidate['id'],'mapping_under_test':True,'end_mode':'hold'})
+            assert response.status_code==200
+            result=response.json()
+            assert result['result']=='OBSERVED' and result['mapping_under_test'] is True and result['end_mode']=='hold'
+            assert result['write_response']['console_accepted_at']
+            assert result['write_response']['console_command_baseline_utc']
+            assert result['command_address']==console.client.by_name['Tank01_FilterRemote']['device_address']
+            assert candidate['requires_confirmation'] is True
+            assert next(c for c in (await browser.get('/api/test/cases')).json()['tests'] if c['id']==candidate['id'])['requires_confirmation'] is True
+            assert console.client.values['Tank01_FilterRemote']==1
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('options', [
+    {'mapping_under_test':'true'}, {'mapping_under_test':1}, {'mapping_under_test':None},
+    {'mapping_under_test':True,'end_mode':'auto'}, {'mapping_under_test':True,'end_mode':None},
+    {'mapping_under_test':True,'end_mode':True}, {'mapping_under_test':True,'end_mode':[]},
+    {'mapping_under_test':True,'end_mode':'hold'},
+])
+def test_test_endpoint_rejects_invalid_modes_before_writing(console, options):
+    async def run():
+        transport=httpx.ASGITransport(app=console.app,client=('127.0.0.1',1234))
+        async with httpx.AsyncClient(transport=transport,base_url='http://console.test') as browser:
+            token=(await browser.post('/api/mode/enable')).json()['write_token']
+            response=await browser.post('/api/test/run',headers={'X-Write-Token':token},json={'id':'tank01-door-open',**options})
+            assert response.status_code==400
+            assert console.client.values['Tank01_DoorOpenRemote']==0
+            assert not any(e['event']=='WRITE' for e in console.logs.get())
+    asyncio.run(run())

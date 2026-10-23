@@ -79,28 +79,48 @@ The page starts in **READ-ONLY MODE** on every load. Refresh loses the in-memory
 
 The console does not pulse, clear, toggle, or reset commands unless an explicit `reset_command` is placed in a configured test case. No tests or writes run on page load. Emergency stop remains outside this application. A catalog `W` marker alone is not proof of safe field behavior; the line engineer must confirm each physical test area and equipment state.
 
+Signal browser groups all matching cards by the manual’s Alarms, System and tank sections, with counts and complete descriptions. Search and group/type/permission filters reach every tag; there is no first-120 cutoff.
+
 ## 0/1 command checklist
 
 The checklist lists every live writable Bool tag (currently 102), with search,
 tank/group filters, **Send 1…** and **Send 0…**. Each send uses one confirmation
 popup. A timer runs from Confirm Send 1 to fresh configured completion feedback;
 API response time and later 0 readback are shown separately. New attempt leaves
-the timer at zero. Non-door commands can explicitly be kept at 1 after verified
-readback, with a visible active-state record. Detailed logs update automatically. Enter physical observations in Notes; **API CYCLE
+the timer at zero. A two-option end-state control offers manual 0 or Hold at 1. Manual-based Hold hints remain marked unconfirmed. Only the tested Tank 01 rule marks Manual 0 as confirmed.
+For non-door Hold, the confirmed choice becomes a visible Keep at 1 record after
+accepted 1 and verified later readback, without an additional write. Detailed logs update automatically. Enter physical observations in Notes; **API CYCLE
 COMPLETE** is not a physical test PASS. Nothing automatically clears or retries.
 History stays in this browser for the selected API and mode and exports to
 CSV/JSON; refresh always starts with write mode off. Numeric setpoints and all
-141 writable tags remain available on the Value write page. See the
+141 writable tags remain available on the Setpoints & batch page (`#/write`). See the
 [user guide](docs/user-guide.md#01-command-checklist) for the procedure and limits. The
 [hold/reset findings](docs/signal-test-plan.md#command-hold-and-reset-findings)
 distinguish manual descriptions, the tested Tank 01 procedure and unspecified
 RemoteStart behavior.
 
+If the API catalogue is unavailable at startup, the UI retries loading it after
+communication returns. The Commands page explains loading, unavailable, empty
+catalogue and empty-filter states instead of leaving a blank list. Selected
+commands show evidence-qualified Hold/Reset guidance; every write remains manual.
+
 ## Command/feedback tests
 
-`config/test-cases.json` includes door open/close pairs whose names and descriptions explicitly identify command and actual door position. Other plausible pairs are visible as **NEEDS CONFIRMATION** and blocked until a supplier/engineer reviews their semantics and sets `requires_confirmation` to `false`. A configured test checks baseline feedback again at the final pre-dispatch read, writes one engineering value, and requires a newer poll timestamp at or after command acceptance before awarding PASS. Poll timestamps use the configured timezone and temporary clock correction; cyclic poll_count values are not used as a sequence. Each feedback read is bounded by the remaining test deadline, and late feedback cannot pass. Revoked write mode or leaving Remote mode stops verification. No reset is inferred. Results and communication records can be exported as CSV or JSON.
+All 50 bundled feedback tests use a 30-second observation window. A timeout leaves the command state for manual review and clearing.
+
+`config/test-cases.json` includes configured door open/close pairs and 36 manual-derived non-door pairs labelled **MAPPING UNDER TEST**. Their `requires_confirmation` flags remain set. The UI permits an explicitly confirmed supervised observation of these proposed pairs; a matching transition returns **OBSERVED**, not PASS. It does not certify the mapping or hold/reset behavior. A configured test checks baseline feedback again at the final pre-dispatch read, writes one engineering value, and requires a newer poll timestamp at or after command acceptance before awarding PASS. Poll timestamps use the configured timezone and temporary clock correction; cyclic poll_count values are not used as a sequence. Each feedback read is bounded by the remaining test deadline, and late feedback cannot pass. Revoked write mode or leaving Remote mode stops verification. No reset is inferred. Results and communication records can be exported as CSV or JSON.
 
 The snapshot contains eight Float tags, all read-only. A physical writable Float test is unavailable until the supplier exposes one as `W` in `/tags/list`. SignedWord represents a signed 16-bit register; writes accept negative engineering values within live limits. The supplier performs scaling: `Tank01_TempAdj=-5.0` with multiplier `0.1` sends `-5.0`, and `Tank01_TempSV=25.0` sends `25.0`.
+
+
+The write sidebar separates Feedback tests, Manual 0/1, and Setpoints & batch. Each active command row has its own confirmed **Send 0…** action; it also works after reload without starting a test.
+
+Feedback tests show a persistent **Active test & result** card above the cases,
+with live API feedback, expected value and current command readback. Only the
+completed backend result awards PASS for configured mappings. The confirmation
+includes a compact Hold/manual-0 choice for non-door commands. **Send 0…** clears
+the same command directly on Feedback tests after one confirmation, while keeping
+the original feedback result and timer visible. No automatic reset is sent. See the [user guide](docs/user-guide.md).
 
 ## Catalog compatibility and diagnostics
 
@@ -131,4 +151,4 @@ If the supplier omits a timestamp offset, set `PLC_TIMESTAMP_TIMEZONE=Asia/Hong_
 
 ## Verification
 
-Run `pytest -q` in the activated virtual environment. Browser regressions use an isolated loopback fake API and run when Firefox and geckodriver are installed; otherwise they are explicitly skipped. They never use the line API. See [verification-2026-10-22.md](docs/verification-2026-10-22.md) for the live read-only signal test and bug-fix evidence. If the shell inherits ROS's unrelated Python plugins, use `env -u PYTHONPATH pytest -q`. A mock-only failure can be injected through `POST /api/mock/fault` from loopback; the next read returns a mock communication error. This endpoint returns 404 in real mode. See [signal-test-plan.md](docs/signal-test-plan.md) for the commissioning sequence, [user-guide.md](docs/user-guide.md) for UI use, and [mock-verification-report.md](docs/mock-verification-report.md) for observed mock evidence.
+Run `pytest -q` in the activated virtual environment. Browser regressions use an isolated loopback fake API and run when Firefox and geckodriver are installed; otherwise they are explicitly skipped. They never use the line API. See [verification-2026-10-22.md](docs/verification-2026-10-22.md) for the live read-only signal test and bug-fix evidence. See [verification-2026-10-23.md](docs/verification-2026-10-23.md#feedback-command-modes-and-read-view-update) for the latest UI, command-evidence safeguards and 354-test result. If the shell inherits ROS's unrelated Python plugins, use `env -u PYTHONPATH pytest -q`. A mock-only failure can be injected through `POST /api/mock/fault` from loopback; the next read returns a mock communication error. This endpoint returns 404 in real mode. See [signal-test-plan.md](docs/signal-test-plan.md) for the commissioning sequence, [user-guide.md](docs/user-guide.md) for UI use, and [mock-verification-report.md](docs/mock-verification-report.md) for observed mock evidence.

@@ -40,6 +40,10 @@ def harness(tmp_path_factory):
 
         def do_GET(self):
             if not self.path.startswith('/api/'): return super().do_GET()
+            if self.path == '/api/tags':
+                state['catalog_reads'] = state.get('catalog_reads', 0) + 1
+                if state['fault'] == 'catalog_503': return self.reply({'error':'Injected catalog unavailable'}, 503)
+                if state['fault'] == 'catalog_empty': return self.reply({'tags':[]})
             if self.path == '/api/signals' and state['fault'] == 'signals_hang':
                 state['release'].wait(5)
             if ((self.path == '/api/signals' and state['fault'] == 'signals_503')
@@ -91,7 +95,7 @@ def harness(tmp_path_factory):
                 baseline = None if not case else {'feedback_tag':case['feedback_tag'], 'expected_feedback':case['expected_feedback'],
                     'value_before':state['values'].get(case['feedback_tag'],0), 'supplier_timestamp_utc':command_stamp}
                 for item in body.get('writes', [body]): state['values'][item['tag_name']] = item['value']
-                return self.reply({'written':True, **body, 'console_batch_accepted':True, 'console_accepted_at':datetime.now(timezone.utc).isoformat(), 'console_feedback_baseline':baseline,
+                return self.reply({'written':True, **body, 'console_command_address':next((t['device_address'] for t in tags if t['tag_name']==body.get('tag_name')),None), 'console_batch_accepted':True, 'console_accepted_at':datetime.now(timezone.utc).isoformat(), 'console_feedback_baseline':baseline,
                                    **({} if state['omit_baseline'] else {'console_command_baseline_utc':command_stamp,'console_read_baseline':read_baseline})})
             state['mode'] = False
             self.reply({'write_mode':'OFF'})
@@ -425,9 +429,9 @@ def test_historical_local_403_is_recovered_without_a_false_clear(browser):
 def test_non_door_can_be_kept_at_one_and_cleared_during_another_pending_command(browser):
     state, _, _, js, wait_for = browser
     choose_command(browser, 'Tank01_FilterRemote')
+    js("document.getElementById('bool-mode-hold').click()")
     checklist_write(browser, 1)
-    wait_for("return !document.getElementById('bool-keep').disabled")
-    js("document.getElementById('bool-keep').click()")
+    wait_for("return document.getElementById('bool-result').textContent==='KEPT AT 1'")
     assert js("return document.getElementById('bool-result').textContent") == 'KEPT AT 1'
     assert js("return !document.getElementById('bool-held').classList.contains('hidden')")
     assert js("return document.getElementById('bool-pending').classList.contains('hidden')")
@@ -447,13 +451,13 @@ def test_non_door_can_be_kept_at_one_and_cleared_during_another_pending_command(
 def test_keep_at_one_requires_new_readback_and_never_applies_to_a_door(browser):
     state, _, _, js, wait_for = browser
     choose_command(browser, 'Tank01_FilterRemote')
+    js("document.getElementById('bool-mode-hold').click()")
     state['freeze_stamp'] = state['last_poll']
     checklist_write(browser, 1)
     time.sleep(.4)
-    assert js("return document.getElementById('bool-keep').disabled")
+    assert js("return document.getElementById('bool-result').textContent!=='KEPT AT 1'")
     state['freeze_stamp'] = None
-    wait_for("return !document.getElementById('bool-keep').disabled")
-    js("document.getElementById('bool-keep').click()")
+    wait_for("return document.getElementById('bool-result').textContent==='KEPT AT 1'")
     choose_command(browser, 'Tank01_DoorOpenRemote')
     checklist_write(browser, 1)
     wait_for("return document.getElementById('bool-value').textContent==='1'")
@@ -599,23 +603,24 @@ def test_readback_requires_final_backend_snapshot_not_frontend_snapshot(browser,
     state, _, _, js, wait_for=browser
     choose_command(browser,'Tank01_FilterRemote')
     if value==0: checklist_write(browser,1)
+    else: js("document.getElementById('bool-mode-hold').click()")
     state['validation_advance']=True;state['omit_baseline']=missing_baseline
     checklist_write(browser,value)
     stamp=state['freeze_stamp']
     wait_for("return document.getElementById('poll-time').textContent===new Date("+json.dumps(stamp)+").toLocaleString()")
     time.sleep(.4)
     if value==1:
-        assert js("return document.getElementById('bool-keep').disabled")
+        assert js("return document.getElementById('bool-result').textContent!=='KEPT AT 1'")
     else:
         assert not js("return document.getElementById('bool-read-zero').dataset.verified==='true'")
     state['freeze_stamp']=(datetime.fromisoformat(stamp)+timedelta(milliseconds=1)).isoformat()
     if missing_baseline:
         time.sleep(.5)
         assert 'final pre-write timestamp' in js("return document.getElementById('bool-write-hint').textContent")
-        if value==1: assert js("return document.getElementById('bool-keep').disabled")
+        if value==1: assert js("return document.getElementById('bool-result').textContent!=='KEPT AT 1'")
         else: assert not js("return document.getElementById('bool-read-zero').dataset.verified==='true'")
     elif value==1:
-        wait_for("return !document.getElementById('bool-keep').disabled")
+        wait_for("return document.getElementById('bool-result').textContent==='KEPT AT 1'")
     else:
         wait_for("return document.getElementById('bool-read-zero').dataset.verified==='true'")
     assert [w['value'] for w in state['writes']] == ([1] if value==1 else [1,0])
@@ -769,3 +774,16 @@ def test_value_numeric_reading_can_be_captured_later_without_another_write(brows
     assert record['state']=='READ SNAPSHOT RECORDED'
     assert record['feedback']==[]
     assert state['writes']==[{'tag_name':'Tank01_TempSV','value':25}]
+
+
+def test_value_selector_groups_setpoints_and_keeps_every_bool_accessible(browser):
+    state, _, _, js, wait_for = browser
+    assert js("return [...document.querySelectorAll('#write-tag optgroup')].map(group=>[group.label,group.querySelectorAll('option').length])") == [['Numeric setpoints',39],['Bool commands',102]]
+    assert js("return document.getElementById('write-tag').options.length") == 141
+    assert js("return document.querySelector('#write-tag option:checked').closest('optgroup').label") == 'Numeric setpoints'
+    js("document.getElementById('write-tag').value='MainInlet';document.getElementById('write-tag').dispatchEvent(new Event('change'))")
+    assert js("return document.getElementById('write-detail').textContent.includes('MainInlet')")
+    js("window.previousValueOption=document.getElementById('write-tag').selectedOptions[0];document.getElementById('refresh-btn').click()")
+    wait_for("return !window.previousValueOption.isConnected&&document.querySelectorAll('#write-tag option').length===141")
+    assert js("return document.getElementById('write-tag').value") == 'MainInlet'
+    assert not state['writes']

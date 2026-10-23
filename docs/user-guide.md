@@ -2,13 +2,13 @@
 
 Open the dashboard on the backend workstation at `http://localhost:8080`. The banner must read **READ-ONLY MODE** after every page load. **MOCK MODE** appears prominently when `PLC_MOCK_MODE=true`.
 
-The left sidebar separates the console into pages. **Read signals** (Live signals, Tank view, Alarms) only display supplier poll values. **Write signals** (0/1 commands, Value write, Feedback tests) hold every control that can send a command; each of these pages shows a write gate listing write test mode, API connection, data freshness and PLC Remote, and stays locked until all four are met. **Records** holds the Tag catalog and Evidence log. The status bar and write-mode banner stay visible on every page. Pages can be bookmarked, e.g. `http://localhost:8080/#/commands`.
+The left sidebar separates the console into pages. **Read signals** keeps three separate sidebar destinations: **Tank monitor** compares one tank’s values by function, **Signal browser** searches the complete catalogue, and **Alarm signals** inspects raw alarm bits. All three only display supplier poll values. **Write signals** lists **Feedback tests**, **Manual 0/1**, and **Setpoints & batch**. These pages hold every control that can send a command; each of these pages shows a write gate listing write test mode, API connection, data freshness and PLC Remote, and stays locked until all four are met. **Records** holds the Tag catalog and Evidence log. The status bar and write-mode banner stay visible on every page. Pages can be bookmarked, e.g. `http://localhost:8080/#/commands`.
 
 The status bar and Overview page distinguish API connection, `Remote` mode, supplier poll timestamp, data age, and tag success/failure counts. A green connection with amber stale data is not ready for writes. Live values and connection status refresh automatically at `PLC_UI_POLL_INTERVAL_MS` (currently 1 second); no button click is needed. **Refresh now** also reloads the catalog, test definitions, and logs. The communication log has its own **Refresh log** button. Failed, malformed or overdue refreshes remove the healthy state and disable write/test controls. The overdue timer uses the stale-data limit; read requests also have a 10-second transport timeout. A temporary clock correction is displayed separately from the raw supplier poll time.
 
-Use Live signals for name/description/address search and type or permission filters. Choose a tank for its catalog-defined signals. The Alarms page shows raw Bool values; the supplier must confirm polarity. In Tag catalog, enable Advanced mode to see PLC addresses, multipliers, and limits. Read-only rows have no write action.
+Signal browser (the Live signals route, `#/signals`) groups every matching card in the manual’s order: Alarms, System, then Tank 01 onward, with a count for each group. The previous first-120 limit is removed; all 221 read-only signals, or all 362 tags with All signals selected, remain accessible. Descriptions wrap in full. Search by name/description/address and combine type, permission and group filters. Extra live tags remain included. Choose a tank in Tank monitor’s horizontal tab bar for its catalog-defined signals. The bar scrolls to every live tank; Left/Right and Home/End select tanks without resetting on a poll. R/W labels distinguish read-only values from writable request/setpoint readbacks; Tank01A and Tank01B identities remain visible. Each read view labels stale, disconnected or missing observations instead of presenting cached values as current. The Alarms page shows raw Bool values; the supplier must confirm polarity. In Tag catalog, enable Advanced mode to see PLC addresses, multipliers, and limits. Read-only rows have no write action.
 
-Both type filters include Bool, Word, SignedWord and Float. The current static mock snapshot is 362 tags (141 W, 221 R); real counts come from the live API. For Tank01_TempAdj, Advanced mode shows D4010, SignedWord, W, multiplier 0.1, low −999.0 and high 999.9. Value write shows the same allowed range and accepts −5 or −10.5 as engineering values within those limits. No multiplier conversion is applied by this console.
+Both type filters include Bool, Word, SignedWord and Float. The current static mock snapshot is 362 tags (141 W, 221 R); real counts come from the live API. For Tank01_TempAdj, Advanced mode shows D4010, SignedWord, W, multiplier 0.1, low −999.0 and high 999.9. Setpoints & batch shows the same allowed range and accepts −5 or −10.5 as engineering values within those limits. No multiplier conversion is applied by this console.
 
 The 29-SEP-2026 supplier baseline also shows Tank07_AmpereSV at D1362 with multiplier 0.1 and 0–200 A limits; Tank07 current/voltage multipliers are 0.1. SwingSV limits for Tank03/05/10/14 are 5–120 CPM. Tank16_Conductivity (D1142, Float, R, multiplier 1.0) replaces Tank16_PH; Tank09_WaterFlow is added at D1036. All eight TempAdj tags use SignedWord with −999.0 to 999.9 limits.
 
@@ -16,13 +16,36 @@ Health warnings display catalog differences without changing the live metadata. 
 
 ## 0/1 command checklist
 
-Use the **0/1 commands** page for writable Bool commands (currently 102). Search by name,
+Use the **Manual 0/1** page (`#/commands`) for writable Bool commands (currently 102). Search by name,
 description or PLC address, filter by tank/group, and choose a command. Numeric
-setpoints remain on the **Value write** page, which still includes all 141 writable tags.
+setpoints remain on the **Setpoints & batch** page (`#/write`), which still includes all 141 writable tags.
 
-1. Enable write test mode when ready. Select the command, click **Send 1…**, and
-   check the tag, address, current value and requested value in the single
-   confirmation popup. **Cancel** or Escape sends nothing.
+If the catalogue was unavailable at startup, loading retries when API communication
+returns. The page shows its loading/error state and a Retry action. An empty
+filter shows **No commands match your filters** and **Clear filters**. A valid
+catalogue with no writable Bool tags is shown explicitly without endless retries.
+
+The compact mode control marks a **Hint** on Hold 1 for the manual's Always On
+and Remote On descriptions. This is an inference, not a confirmed hold rule.
+Auto, RemoteStart and unknown tags have no recommendation. The tested Tank 01
+rule marks Manual 0 as **Confirmed**. The console does not replace your selected
+mode or change an active attempt. Full procedure and source text remain in
+expandable details.
+
+The selected command's guide explains values 1 and 0, the manual evidence and
+which rules remain unconfirmed. Tank 01 at its tested M300/M301 addresses has an
+operator-confirmed hold-until-complete then manual-clear procedure. Other doors
+remain unconfirmed. Always On, Auto and Remote On hold interpretations are
+inferred from descriptions; Auto polarity is not certified. RemoteStart and new
+names remain unclassified. These guides also appear in the existing confirmation.
+
+1. Enable write test mode when ready. Select the command and choose its end-state
+   mode: **Send 1 → manual 0** or **Hold at 1**. Manual 0 is the initial default;
+   the manual's inferred descriptions do not select Hold for you. Doors retain
+   the manual-0 path. Click the mode's Send 1 action and check the tag, address,
+   current value, requested value and selected mode in the single confirmation.
+   **Cancel** or Escape sends nothing. The confirmed mode is recorded with the
+   attempt; it cannot be changed while that command needs clearing.
 2. Watch the equipment. **1 → completion** starts only when you confirm
    **Send 1…**. It stops at **CONFIRMED** when a fresh API poll reports the
    configured opened/closed signal at its expected value. The backend records
@@ -30,17 +53,21 @@ setpoints remain on the **Value write** page, which still includes all 141 writa
    signal already complete before the write cannot prove a new transition.
    API response time for 1 and 0 is displayed separately. Enter physical
    observations or any problem in Notes.
-3. For a door command, wait for movement to finish, then **Send 0…** and confirm
-   the clear. The completion timer stays frozen while you do this. Other
+3. For the confirmed Tank 01 door procedure, wait for physical movement to finish,
+   then **Send 0…** and confirm the clear. Confirm other doors' rules before applying
+   this sequence. The completion timer stays frozen while you do this. Other
    checklist commands remain locked until a later poll verifies 0. The on-screen
    hint names the pending command; **Send 0…** remains available for clearing it.
-4. For a maintained non-door state, you can explicitly choose **Keep at 1
-   (non-door)** after a later fresh poll shows 1. This records your decision
-   without sending another write. The state stays visible in an active-state
-   banner and other tests become available. Send 0 when the state should end;
-   clearing a previously sent command remains possible while another command is
-   pending. Door commands cannot use Keep at 1. No pulse, retry, automatic clear
-   or repeated enforcement of 1 is performed.
+4. For a confirmed maintained non-door state, choose **Hold at 1** before sending.
+   After the API accepts 1 and a later fresh poll verifies command value 1, the
+   UI records **KEPT AT 1** automatically using your confirmed choice. This is a
+   local audit update, with no additional write or physical-completion claim.
+   The state stays visible in the active-state banner and other tests become
+   available. **Send 0…** remains manual when the state should end; clearing a
+   previously sent command remains possible while another command is pending.
+   The older **Keep at 1 (non-door)** action remains available for a manual
+   decision on existing attempts. Door commands cannot use Keep at 1. No pulse,
+   retry, automatic clear or repeated enforcement of 1 is performed.
 5. **API CYCLE COMPLETE** means both writes were accepted and a fresh poll later
    than the pre-clear snapshot and the clear receipt shows 0. Completion feedback,
    API response, and the clear cycle are separate evidence. **KEPT AT 1** records
@@ -76,7 +103,7 @@ including communication errors; no write was sent. A failure after write
 transport begins, or an outcome lost on reload, remains pending for inspection
 and manual clearing. Reloading starts with write mode off;
 the page checks the backend token's status to detect expiry or a backend restart.
-Other clients and the separate Value write form are outside the guided sequence.
+Other clients and the separate Setpoints & batch form are outside the guided sequence.
 
 If Send 0 starts before completion feedback has been observed, the monitor
 shows **CLEARING** and cannot award a completion time while that request is
@@ -118,7 +145,9 @@ separate. No unconfirmed command/feedback mapping is enabled by this checklist.
 
 For a manual write, select a writable tag, enter an engineering value, then click **Review write**. Confirm the tag, address, current value, and new value in the dialog. A supplier `written=true` response means the API accepted the request; inspect a physical feedback signal or run a configured verification test to prove effect. Escape and Cancel close the review without issuing a command, including after an earlier confirmed write. Batch writes use a JSON array of `{ "tag_name": "...", "value": 0 }` objects and an extra batch confirmation.
 
-### Read signals on Value write
+The value selector puts **Numeric setpoints** first and **Bool commands** second. All 141 writable tags remain available. A catalogue refresh preserves a valid selected tag.
+
+### Read signals on Setpoints & batch
 
 **Read signals & feedback** shows every live catalog tag marked read-only (221 in
 the bundled snapshot). The selected command's mapped feedback and other read
@@ -150,13 +179,53 @@ Feedback history retains the last 50 manual requests in this browser, separately
 for each API and mock/real mode, with no credential or write token. Select the
 original writable tag and its **Write record** to revisit its evidence, including
 batch records containing that tag. Reload, stale or disconnected data, leaving
-Remote mode, or a subsequent Value write interrupts unfinished completion
+Remote mode, or a subsequent manual value write interrupts unfinished completion
 observation; it cannot resume and claim a transition across that gap. Completed
 records remain available. A blocked or uncertain write is retained as such, with
 no invented readback. **Export feedback JSON/CSV** saves all retained records and
 their read values; these browser records are separate from the backend log and
 are lost if browser data is cleared. Export them before clearing browser storage.
 
-To run a command/feedback case, first enable write test mode, then click **Run test** on a configured case and confirm the command. The runner blocks if feedback already has the expected value, if data is stale, if `Remote` is not active, or if the mapping is marked as unconfirmed. Only one write or test can run at a time; overlapping commands are rejected. Disabling write mode blocks commands still in validation and any configured reset not yet dispatched. PASS requires fresh feedback from a newer snapshot at or after command acceptance; late feedback produces TIMEOUT. Tests never start automatically. No automatic command reset is configured in the initial cases.
+The command list above the active test shows writable Bool bits at 1 and commands
+that still need a verified 0. Click **Send 0…** beside a command. The single
+confirmation identifies that tag, its address and current value. This works
+without an active feedback test, including after a reload. Clear results show
+API acceptance and later verified 0 separately. Clearing another command does
+not replace the current test result or elapsed time. Cleanup records do not
+invent a previous Send 1.
+
+All bundled feedback tests use a **30-second wait limit**. This limits observation; it does not stop equipment or clear a command.
+
+To run a command/feedback case, first enable write test mode, then click **Run test** and check its command, expected feedback and end-state choice in the single confirmation. Configured door cases retain their mapping status. The 36 manual-derived non-door pairs are labelled **MAPPING UNDER TEST** and require explicit per-run opt-in through that confirmation. A fresh matching transition returns **OBSERVED**, not a confirmed-mapping PASS; it does not promote the mapping in configuration. A direct API request without this opt-in still blocks an unconfirmed mapping. The runner blocks if feedback already has the expected value, if data is stale, or if `Remote` is not active. Only one write or test can run at a time; overlapping commands are rejected. Disabling write mode blocks commands still in validation and any configured reset not yet dispatched. PASS requires fresh feedback from a newer snapshot at or after command acceptance; late feedback produces TIMEOUT. Tests never start automatically. No automatic command reset is configured in the initial cases.
+
+The **Active test & result** card stays above the test list. After confirmation it
+shows RUNNING, the command, expected feedback, current API feedback, freshness and
+supplier timestamp. Live values continue updating while the backend test runs;
+matching the expected live value does not itself award PASS. The returned backend
+result, recorded actual feedback and elapsed time are shown separately. The panel
+receives focus when a test starts; completion does not move you away from another
+sidebar page or steal its keyboard focus.
+
+A green PASS confirms API feedback, not command clearing or physical safety.
+**OBSERVED** retains the manual-derived mapping-under-test status. The card also
+shows current command readback. Choose **Hold 1** or **Manual 0** in the compact
+**After 1** control in a non-door test's confirmation. Manual 0 is the default;
+doors keep the manual-0 path. For Hold, accepted 1 and a later fresh command
+readback of 1 record your local Keep decision, with no repeated write or claim
+about physical operation.
+
+For the known Tank 01 procedure, wait for physical movement to finish, then click
+**Send 0…** on the same Feedback tests card. Your single confirmation names the
+**same command tag**, address and value 0; Cancel sends nothing. Non-door manual-0
+tests use your chosen procedure rather than borrowing Tank 01's door rule.
+Clearing DoorOpenRemote is different from commanding DoorCloseRemote. Other
+procedures remain unconfirmed unless separately established.
+
+Clear acceptance, later verified command 0, and the original test result are
+shown separately. Verification requires a poll strictly newer than the browser
+baseline, final pre-clear backend snapshot and clear receipt; cached or missing
+evidence cannot qualify. The test result and elapsed time stay unchanged. A
+failed or uncertain clear stays visible for manual inspection; it does not retry.
+No automatic clear or pulse is added.
 
 Use Log & export to choose all, communication, or test entries, then export CSV or JSON. The log includes UTC timestamps and an expandable technical detail for each entry. Do not interpret mock results as real PLC qualification.

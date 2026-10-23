@@ -126,7 +126,7 @@ function render() {
   $('write-feedback-health').textContent = fresh ? 'LIVE · FRESH' : 'STALE / NO DATA';
   $('write-feedback-health').className = `pill ${fresh ? '' : 'amber'}`;
   const mappings = cases.filter(c => c.command_tag === name);
-  $('write-feedback-mapping').textContent = mappings.length ? mappings.map(c => `${c.command_tag}=${c.command_value} → ${c.feedback_tag}=${c.expected_feedback} · ${c.requires_confirmation ? 'NEEDS CONFIRMATION — observation only' : 'configured feedback'}`).join('; ') : 'No configured completion mapping. Read signals in the same group are shown as context; no automatic success is inferred.';
+  $('write-feedback-mapping').textContent = mappings.length ? mappings.map(c => `${c.command_tag}=${c.command_value} → ${c.feedback_tag}=${c.expected_feedback} · ${c.requires_confirmation ? 'NEEDS CONFIRMATION — observation only' : 'configured feedback'}`).join('; ') : 'No configured completion mapping. Same-group signals provide context. The console does not infer success.';
   const nearby = reads().filter(t => related(tag,t));
   const direct = new Set(mappings.map(c => c.feedback_tag));
   // Both door position signals stay visible when inspecting either door command.

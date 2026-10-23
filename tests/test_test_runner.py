@@ -45,6 +45,7 @@ def test_existing_feedback_is_blocked(tmp_path):
         client.values['Tank01_DoorOpened'] = 1
         result = await runner.run('door-open')
         assert result['result'] == 'BLOCKED'
+        assert result['write_dispatched'] is False
         assert client.values['Tank01_DoorOpenRemote'] == 0
     asyncio.run(run())
 
@@ -187,4 +188,172 @@ def test_revocation_during_feedback_prevents_pass_and_reset(tmp_path):
         assert result['result'] == 'BLOCKED'
         assert client.values['Tank01_DoorOpenRemote'] == 1
         assert client.values['Tank01_TempSV'] == 0
+    asyncio.run(run())
+
+
+def candidate_setup(tmp_path, timeout=150):
+    client, runner, logs = setup(tmp_path, timeout)
+    case = runner.cases['door-open']
+    case.update(id='candidate', name='Tank 01 Filter mapping under test', command_tag='Tank01_FilterRemote',
+                feedback_tag='Tank01_FilterStatus', requires_confirmation=True)
+    runner.cases = {'candidate':case}
+    return client, runner, logs
+
+
+def test_candidate_requires_explicit_opt_in_and_observed_is_not_pass(tmp_path):
+    async def run():
+        from datetime import datetime
+        client, runner, logs = candidate_setup(tmp_path)
+        with pytest.raises(ValueError,match='requires supplier confirmation'):
+            await runner.run('candidate')
+        original = client.read_signals
+        reads = 0
+        async def feedback():
+            nonlocal reads
+            reads += 1
+            if reads >= 3: client.values['Tank01_FilterStatus'] = 1
+            return await original()
+        client.read_signals = feedback
+        result = await runner.run('candidate', mapping_under_test=True, end_mode='hold')
+        assert result['result'] == 'OBSERVED' and result['actual_feedback'] == 1
+        assert result['mapping_under_test'] is True and result['end_mode'] == 'hold'
+        assert result['command_address'] == client.by_name['Tank01_FilterRemote']['device_address']
+        receipt = result['write_response']
+        assert receipt['written'] is True
+        assert datetime.fromisoformat(receipt['console_accepted_at']).tzinfo is not None
+        assert datetime.fromisoformat(receipt['console_command_baseline_utc']) < datetime.fromisoformat(receipt['console_accepted_at'])
+        assert runner.cases['candidate']['requires_confirmation'] is True
+        assert client.values['Tank01_FilterRemote'] == 1
+        writes = [e for e in logs.get() if e['event']=='WRITE']
+        assert len(writes)==1 and writes[0]['value']==1
+        events = logs.get('tests')
+        assert all(e['mapping_under_test'] is True and e['end_mode']=='hold' for e in events)
+        assert not any(e.get('result')=='PASS' for e in events)
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('kwargs', [
+    {'mapping_under_test':None}, {'mapping_under_test':0}, {'mapping_under_test':1},
+    {'mapping_under_test':'true'}, {'mapping_under_test':'false'}, {'mapping_under_test':[]},
+    {'end_mode':None}, {'end_mode':True}, {'end_mode':[]}, {'end_mode':'auto'}, {'end_mode':'pulse'},
+])
+def test_invalid_test_modes_never_dispatch(tmp_path, kwargs):
+    async def run():
+        client, runner, logs = candidate_setup(tmp_path)
+        with pytest.raises(ValueError,match='mapping_under_test must be|end_mode must be'):
+            await runner.run('candidate', **kwargs)
+        assert client.values['Tank01_FilterRemote']==0
+        assert not any(e['event']=='WRITE' for e in logs.get())
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('mapping_under_test', [False, True])
+def test_door_hold_is_rejected_before_dispatch(tmp_path, mapping_under_test):
+    async def run():
+        client, runner, _ = setup(tmp_path)
+        with pytest.raises(ValueError,match='Door commands require manual0'):
+            await runner.run('door-open', mapping_under_test=mapping_under_test, end_mode='hold')
+        assert client.values['Tank01_DoorOpenRemote']==0
+    asyncio.run(run())
+
+
+def test_mapping_under_test_rejects_configured_reset_instead_of_inferring_a_cycle(tmp_path):
+    async def run():
+        client, runner, logs = candidate_setup(tmp_path)
+        runner.cases['candidate']['reset_command'] = {'tag_name':'Tank01_FilterRemote','value':0}
+        with pytest.raises(ValueError,match='do not support automatic reset'):
+            await runner.run('candidate', mapping_under_test=True)
+        assert client.values['Tank01_FilterRemote']==0
+        assert not any(e['event']=='WRITE' for e in logs.get())
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('guard', ['preexisting','final_baseline','stale','remote','feedback_stale','feedback_remote','authorize'])
+def test_candidate_opt_in_keeps_existing_transition_and_write_guards(tmp_path, guard):
+    async def run():
+        from datetime import datetime, timedelta, timezone
+        client, runner, logs = candidate_setup(tmp_path)
+        original = client.read_signals
+        reads = 0
+        async def feedback():
+            nonlocal reads
+            reads += 1
+            if guard=='preexisting' or guard=='final_baseline' and reads>=2 or reads>=3:
+                client.values['Tank01_FilterStatus']=1
+            if guard=='remote' or guard=='feedback_remote' and reads>=3: client.values['Remote']=0
+            poll = await original()
+            if guard=='stale' or guard=='feedback_stale' and reads>=3:
+                poll['timestamp']=(datetime.now(timezone.utc)-timedelta(seconds=10)).isoformat()
+            return poll
+        def authorize():
+            if guard=='authorize' and reads>=3: raise ValueError('Write mode revoked')
+        client.read_signals=feedback
+        result=await runner.run('candidate', authorize=authorize, mapping_under_test=True, end_mode='hold')
+        assert result['result']=='BLOCKED'
+        assert result['mapping_under_test'] is True
+        if guard in ('feedback_stale','feedback_remote','authorize'):
+            assert client.values['Tank01_FilterRemote']==1
+            assert result['write_response']['written'] is True
+        else:
+            assert client.values['Tank01_FilterRemote']==0
+        assert not any(e['event']=='WRITE' and e['value']==0 for e in logs.get())
+    asyncio.run(run())
+
+
+def test_candidate_cached_feedback_waits_for_new_source_snapshot(tmp_path):
+    async def run():
+        client, runner, _ = candidate_setup(tmp_path)
+        original=client.read_signals
+        reads=0
+        baseline=None
+        async def feedback():
+            nonlocal reads, baseline
+            reads+=1
+            if reads>=3: client.values['Tank01_FilterStatus']=1
+            poll=await original()
+            if reads==2: baseline=poll['timestamp']
+            if reads==3: poll['timestamp']=baseline
+            return poll
+        client.read_signals=feedback
+        result=await runner.run('candidate',mapping_under_test=True)
+        assert result['result']=='OBSERVED' and reads>=4
+    asyncio.run(run())
+
+
+def test_candidate_slow_feedback_deadline_keeps_command_without_auto_clear(tmp_path):
+    async def run():
+        client, runner, logs = candidate_setup(tmp_path,timeout=10)
+        original=client.read_signals
+        reads=0
+        async def feedback():
+            nonlocal reads
+            reads+=1
+            if reads>=3: await asyncio.sleep(.1)
+            return await original()
+        client.read_signals=feedback
+        result=await asyncio.wait_for(runner.run('candidate',mapping_under_test=True),.2)
+        assert result['result']=='TIMEOUT'
+        assert client.values['Tank01_FilterRemote']==1
+        assert not runner.lock.locked()
+        assert not any(e['event']=='WRITE' and e['value']==0 for e in logs.get())
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('acknowledgement',[None,[], 'raise'])
+def test_acted_write_with_bad_acknowledgement_keeps_dispatch_provenance(tmp_path,acknowledgement):
+    async def run():
+        client, runner, logs = candidate_setup(tmp_path)
+        original=client.write_signal
+        async def acted_without_ack(name,value):
+            await original(name,value)
+            if acknowledgement=='raise': raise ValueError('Reply processing failed after the write')
+            return acknowledgement
+        client.write_signal=acted_without_ack
+        result=await runner.run('candidate',mapping_under_test=True,end_mode='hold')
+        assert client.values['Tank01_FilterRemote']==1
+        assert result['write_dispatched'] is True
+        assert result['result']=='COMMUNICATION ERROR'
+        assert not result.get('write_response')
+        assert not any(event['event']=='WRITE' and event['value']==0 for event in logs.get())
+        assert not runner.lock.locked()
     asyncio.run(run())

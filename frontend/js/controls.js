@@ -1,3 +1,4 @@
+import {go} from './router.js';
 import {$, node, valueText, metadataNumber} from './dom.js';
 import {post, enableMode, disableMode, modeEnabled} from './api.js';
 import {beginWriteObservation, finishWriteObservation} from './write-feedback.js';
@@ -8,7 +9,13 @@ export function updateControls(nextTags, nextPoll, nextStatus) {
     tags = nextTags;
     const writable = tags.filter(t => t.read_write === 'W').sort((a,b) => a.tag_name.localeCompare(b.tag_name));
     const select = $('write-tag'), prior = select.value;
-    select.replaceChildren(...writable.map(t => { const option = node('option', '', `${t.tag_name} — ${t.description}`); option.value = t.tag_name; return option; }));
+    select.replaceChildren();
+    for (const [label,items] of [['Numeric setpoints',writable.filter(t => t.data_type !== 'Bool')],['Bool commands',writable.filter(t => t.data_type === 'Bool')]]) {
+      if (!items.length) continue;
+      const group = node('optgroup'); group.label = label;
+      group.append(...items.map(t => { const option = node('option', '', `${t.tag_name} — ${t.description}`); option.value = t.tag_name; return option; }));
+      select.append(group);
+    }
     if (writable.some(t => t.tag_name === prior)) select.value = prior;
   }
   if (nextPoll) poll = nextPoll;
@@ -38,6 +45,18 @@ export function validate(tag, raw) {
   if (tag.low_limit != null && value < tag.low_limit) throw new Error(`Below low limit ${tag.low_limit}`);
   if (tag.high_limit != null && value > tag.high_limit) throw new Error(`Above high limit ${tag.high_limit}`);
   return value;
+}
+export function prepareWrite(tagName, value) {
+  const tag = tags.find(item => item.tag_name === tagName);
+  if (!tag || tag.read_write !== 'W') return false;
+  if (value !== undefined) {
+    try { validate(tag, String(value)); } catch { return false; }
+    $('write-value').value = String(value);
+  }
+  $('write-tag').value = tag.tag_name;
+  $('write-tag').dispatchEvent(new Event('change'));
+  go('write');
+  return true;
 }
 export function confirmWrite(title, fields, action) {
   const dialog = $('confirm-dialog'); dialog.returnValue = ''; $('confirm-title').textContent = title;

@@ -69,3 +69,106 @@ acceptance invalidates completion timing and an uncertain clear stays unknown.
 Reloaded in-flight operations become unknown without replay. Preparation notes
 create an audit record on first input; the completion timer still starts only
 at Confirm Send 1.
+
+
+## Feedback visibility, catalogue recovery and card design
+
+The Feedback tests module receives the latest poll alongside status. A stable
+result panel precedes the 50 case cards and displays the active test, expected
+and live values, source freshness and current command readback. Backend results
+alone determine PASS. Case cards no longer rebuild on every poll, preserving
+keyboard focus; the live status region changes only when its phase changes.
+Technical transport details use disclosure. Completed feedback never changes
+another page's route or keyboard focus.
+
+`controls.prepareWrite` validates and fills the Value write form for raw-tag
+selection without dispatching. Feedback tests' manual-zero action instead uses
+the existing confirmation dialog and write API in place, with current
+mode/freshness/Remote and captured identity checks. Its accepted receipt and
+strictly later command-zero observation are separate from the original test
+result. Value write observation history also retains the clear receipt. The existing Review/confirmation and backend guards remain
+the sole write path. `command-guidance.js` owns source-qualified value/procedure
+descriptions for the selected Bool command, with an exact manual family whitelist
+and address-qualified Tank 01 evidence. It does not authorize resets or mappings.
+
+Catalogue recovery tracks successful loading separately from an empty catalogue.
+After an initial failure, healthy communication starts a deduplicated background
+retry. A successful empty list stops retries. Explicit empty/error/filter messages
+and manual Retry/Clear filters actions prevent the Commands page appearing broken.
+
+The card design follows [NN/g's visibility of system status](https://www.nngroup.com/articles/visibility-system-status/)
+and [Carbon's inline feedback guidance](https://www.carbondesignsystem.com/building-blocks/core/components/notification/guidelines):
+results stay near the task and persist, with the next action beside the evidence.
+Configured is neutral, running and OBSERVED are blue, backend PASS is green, attention is amber
+and failure is red. Status words accompany color, following [WCAG use of color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html).
+The status region supports [WCAG status messages](https://www.w3.org/WAI/WCAG22/Understanding/status-messages.html)
+without repeated phase announcements on unchanged polls.
+
+| Card status | Foreground / background | Calculated text contrast |
+| --- | --- | ---: |
+| Configured | #334155 / #f1f5f9 | 9.45:1 |
+| Running | #155d7a / #eaf4f8 | 6.53:1 |
+| PASS | #167653 / #e8f5f0 | 5.00:1 |
+| Attention | #7a4b00 / #fff4d6 | 6.76:1 |
+| Failure | #a52c32 / #fff0ee | 6.30:1 |
+
+These checked card pairs exceed [WCAG's 4.5:1 normal-text minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html).
+Blue focus indicators exceed the [3:1 non-text threshold](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html)
+against white. This is a scoped palette check, not a whole-application accessibility
+certification or a screen-reader usability study.
+
+
+The checklist's end-state toggle captures explicit operator intent with the
+existing Send 1 confirmation. Manual 0 is the initial default; doors cannot
+select Hold. Hold records a local Keep decision only after accepted 1 and a
+fresh command readback strictly newer than browser, final pre-write and receipt
+timestamps. It dispatches no extra request. The record-aware guard uses the
+attempt's tag and address, so changing selection cannot apply another command's
+intent. Clear intent prevents a later automatic Keep decision. Existing
+unclassified mappings and physical-procedure warnings remain unchanged.
+
+
+Manual-derived cases retain `requires_confirmation=true`. The test endpoint
+accepts an explicit `mapping_under_test` Boolean for a supervised run and an
+`end_mode` choice of `manual0` or `hold`; default requests remain conservative.
+Both paths share baseline, fresh Remote, authorization, command-lock and deadline
+checks. A candidate match is OBSERVED, while a configured mapping can PASS.
+The result and audit retain the selected mode and mapping status. Write receipts
+include acceptance and final command-baseline timestamps for later command-bit
+observations. Neither the runtime opt-in nor an observed value certifies a
+physical outcome, changes configuration, or infers an automatic reset.
+
+
+Feedback tests share the existing checklist attempt records for pending commands,
+Hold intent and manual clears. A request is recorded before dispatch so reloading
+an unfinished run leaves an unknown pending outcome rather than replaying it.
+Accepted test receipts feed the same record-aware Hold and zero-readback checks.
+Candidate OBSERVED never becomes a confirmed completion timer. A live list of
+configured command bits currently at 1 keeps active values visible across case
+changes; stale observations remain labelled as such. It does not infer that every
+1 is an operator-approved Hold request.
+
+
+The command inventory uses the same manual-clear path as the active test. Stable
+rows retain keyboard focus during polls. Each clear captures its own tag, address
+and API context; it does not replace the active test. Untracked command bits get
+zero-only cleanup records in the existing checklist store, without invented
+write-1 evidence. A later clear intent invalidates earlier receipt fields.
+Verification follows the matching shared record, so an uncertain retry cannot
+reuse an older acknowledgement.
+
+Write validation reports dispatch provenance explicitly. The runner marks the
+transport boundary through the service's callback. A malformed response after
+that boundary remains uncertain, even when no accepted receipt exists. The
+browser treats only explicit `write_dispatched=false` as proof of pre-dispatch
+rejection. Single-write receipts include `console_command_address` from the
+final validated tag. Manual 0/1 checks that identity before recording acceptance
+for either value. A missing or mismatched receipt stays unknown and pending. It
+cannot qualify as Hold at 1 or a verified clear. Older receipts can use the
+matching legacy `device_address` field when the trusted field is absent.
+
+Manual hints are distinct from selected modes and confirmed rules. Always On
+and Remote On descriptions supply 47 Hold hints in the bundled catalogue.
+Auto polarity and RemoteStart behavior supply no recommendation. The exact
+operator-confirmed Tank 01 addresses supply two confirmed Manual 0 rules.
+The marker never changes a confirmed active attempt or dispatches a write.

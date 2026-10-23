@@ -38,14 +38,14 @@ async def no_cache(request: Request, call_next):
 async def plc_error(request: Request, exc: PLCError):
     from fastapi.responses import JSONResponse
     body = {'error': exc.message, 'detail': logs.scrub(exc.detail), 'http_status': exc.status}
-    if getattr(exc, 'write_dispatched', None) is False: body['write_dispatched'] = False
+    if type(getattr(exc, 'write_dispatched', None)) is bool: body['write_dispatched'] = exc.write_dispatched
     return JSONResponse(status_code=exc.status, content=body)
 
 @app.exception_handler(HTTPException)
 async def http_error(request: Request, exc: HTTPException):
     from fastapi.responses import JSONResponse
     body = {'detail': logs.scrub(exc.detail)}
-    if request.url.path in ('/api/write', '/api/write/batch') and exc.status_code == 403:
+    if request.url.path in ('/api/write', '/api/write/batch', '/api/test/run') and exc.status_code == 403 and getattr(exc, 'write_dispatched', None) is not True:
         body['write_dispatched'] = False
     return JSONResponse(status_code=exc.status_code, content=body, headers=exc.headers)
 
@@ -54,7 +54,7 @@ async def validation_error(request: Request, exc: ValidationError):
     from fastapi.responses import JSONResponse
     logs.add('VALIDATION', result='BLOCKED', error=str(exc))
     body = {'error': str(exc), 'http_status': 400}
-    if request.url.path in ('/api/write', '/api/write/batch'): body['write_dispatched'] = False
+    if request.url.path in ('/api/write', '/api/write/batch', '/api/test/run') and getattr(exc, 'write_dispatched', None) is not True: body['write_dispatched'] = False
     return JSONResponse(status_code=400, content=body)
 
 def require_local(request: Request):
@@ -179,7 +179,8 @@ async def test_cases(): return {'tests': cases}
 @app.post('/api/test/run')
 async def test_run(request: Request, body: dict):
     require_mode(request)
-    result = await runner.run(body.get('id'), authorize=lambda: require_mode(request))
+    result = await runner.run(body.get('id'), authorize=lambda: require_mode(request),
+                              mapping_under_test=body.get('mapping_under_test', False), end_mode=body.get('end_mode', 'manual0'))
     result['write_response'] = logs.scrub(result.get('write_response'))
     return result
 
