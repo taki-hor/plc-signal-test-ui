@@ -1,4 +1,4 @@
-import {$, setText, formatTime} from './dom.js';
+import {$, node, setText, formatTime} from './dom.js';
 export function renderStatus(status, writeMode) {
   setText('api-state', status.supplier_api_connected ? 'CONNECTED' : 'DISCONNECTED');
   $('api-state').className = status.supplier_api_connected ? 'good' : 'bad';
@@ -11,6 +11,9 @@ export function renderStatus(status, writeMode) {
   setText('last-api', formatTime(status.last_successful_request));
   setText('poll-time', formatTime(status.supplier_timestamp));
   setText('data-age', status.data_age_ms == null ? 'UNKNOWN' : `${(status.data_age_ms / 1000).toFixed(1)} s`);
+  const offset = status.timestamp_offset_seconds ?? 0;
+  $('clock-offset-detail').classList.toggle('hidden', offset === 0);
+  setText('clock-offset', `${offset > 0 ? '+' : ''}${offset} s`);
   const healthy = status.supplier_api_connected && status.data_fresh && status.plc_mode === 'REMOTE';
   const badge = $('global-health'); badge.textContent = healthy ? 'READY TO VERIFY' : status.supplier_api_connected ? 'ATTENTION REQUIRED' : 'CONNECTION ERROR';
   badge.className = `pill ${healthy ? '' : status.supplier_api_connected ? 'amber' : 'red'}`;
@@ -25,5 +28,11 @@ export function renderStatus(status, writeMode) {
   setText('write-banner-title', writeMode ? 'WRITE TEST MODE ENABLED' : 'READ-ONLY MODE');
   setText('write-banner-note', writeMode ? 'Manual commands require confirmation. Mode expires after 30 minutes.' : 'Monitoring is active. Physical commands are locked.');
   setText('mode-btn', writeMode ? 'Disable write mode' : 'Enable write test mode');
+  const checks = [['Write test mode', writeMode], ['API connected', status.supplier_api_connected], ['Data fresh', status.data_fresh], ['PLC Remote', status.plc_mode === 'REMOTE']];
+  const open = checks.every(([, ok]) => ok);
+  for (const gate of document.querySelectorAll('[data-gate]')) {
+    gate.className = `write-gate ${open ? 'open' : 'locked'}`;
+    gate.replaceChildren(node('strong', '', open ? 'WRITES AVAILABLE' : 'WRITES LOCKED'), ...checks.map(([label, ok]) => node('span', `gate-check${ok ? ' ok' : ''}`, label)));
+  }
   return healthy;
 }

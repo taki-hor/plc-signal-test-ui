@@ -41,3 +41,76 @@ The supplier API defaults to host `127.0.0.1`, port `8000`. Its PowerShell examp
 ## Limits of mock evidence
 
 Mock mode verifies application behavior and log output only. It does not prove Wi-Fi reachability, supplier authentication, PLC write acceptance, physical actuation, or safety behavior. The current catalog has no writable Float tag, so that field test is pending a supplier catalog update.
+
+
+## Read-only field verification — 2026-10-22
+
+The live console read all 362 supplier tags across five samples: 277 Bool,
+69 Word, eight SignedWord and eight Float, including 221 R and 141 W metadata
+entries. There were no missing, null or invalid values and zero supplier read
+failures; four distinct poll snapshots were observed. Reading W-tag values
+sends no write command. This initial phase was read only; physical writes and command-hold rules
+were established only for the later Tank 01 tests recorded below. The 36 unconfirmed
+command/feedback mappings remain blocked. See [verification-2026-10-22.md](verification-2026-10-22.md).
+
+
+## Tank 01 physical follow-up
+
+The operator approved separate open/close tests and confirmed the command rule:
+hold 1 during movement, then write 0 after physical completion. Open operated
+and later feedback agreed, but the original five-second software window timed
+out. Close passed in 8.704 seconds under the subsequently agreed thirty-second
+window, with physical closure confirmed. Both command bits were verified 0
+after clearing; the door was closed. Only Tank 01 open/close definitions were
+changed to timeout_ms=30000. Other tanks require their own readiness and command
+semantics confirmation. The original TIMEOUT remains in the evidence record.
+
+
+Tank 01 repeat results: the approved 30-second open case passed in 6.625 seconds,
+with physical opening confirmed and M300 clear verified. A separately approved
+restore-close passed in 8.453 seconds, with physical closure confirmed and M301
+clear verified. Both directions have software PASS and operator confirmation.
+At the end of these agent-operated tests, Tank 01 was closed with both
+commands 0; no other tank was operated by the agent. The combined per-step JSON/CSV summary is saved in the local artifacts directory.
+
+## Command hold and reset findings
+
+Recorded 2026-10-22 against [HKPU PLC API User Manual, PD-03726,
+29-SEP-2026, version 1.0](source/HKPU_PLC_API_User_Manual_PD-03726_2026-09-29.pdf).
+Page 5 accepts Bool values 0/1 and reports `written=true` for a successful write.
+It does not specify an automatic command reset or a complete per-tag hold/pulse
+protocol. The connection-lock reset on page 2 is unrelated to command-bit reset.
+
+These five groups cover all 102 writable Bool tags in the bundled baseline.
+Counts describe that snapshot; live metadata remains the runtime authority.
+A description is evidence of the intended function, not proof of PLC timing,
+polarity, interlocks or reset behavior.
+
+| Group | Bool tags | Manual evidence | Hold/reset finding |
+| --- | ---: | --- | --- |
+| `MainInlet`, `*_FillWaterOn`, `*_AirAgitationOn`, `Tank07_CoolerOn` | 26 | Descriptions identify Always On requests; examples on pages 8–10 and 14. | A maintained ON request is the working interpretation: keep 1 while requesting ON and use 0 to withdraw that request. This is inferred from the descriptions, not a documented PLC truth table or guaranteed stop. |
+| `*_FillWaterAuto`, `*_AirAgitationAuto`, `Tank07_CoolerAuto` | 25 | Auto settings; examples on pages 9–10 and 13–14. | These suggest maintained mode selections. Exact bit polarity and mode interactions are not specified. Sending 0 must not be interpreted as a guaranteed equipment stop. |
+| `*_FilterRemote`, `*_HeaterRemote`, `*_USRemote`, `*_SwingRemote`, `*_RectRemote`, `*_SprayRemote` | 21 | Remote On descriptions; examples on pages 9–11, 14 and 17. | Maintained run/enable requests are a working interpretation. Whether 1 must stay high and what 0 does still require supplier/PLC confirmation. |
+| `*_DoorOpenRemote`, `*_DoorCloseRemote` | 14 | Remote commands and separate actual opened/closed feedback; examples on page 9. | The manual identifies command/feedback signals but does not define command duration/reset rules. The separately confirmed Tank 01 procedure is recorded below. It does not establish the rule for every tank. |
+| `*_RemoteStart` | 16 | Remote Start descriptions; example on page 9. | Unclassified: no pulse width, edge/level trigger, hold duration or reset rule is stated. The manual alone does not establish whether to keep 1 or reset to 0. |
+
+For the supervised Tank 01 tests, the operator explicitly confirmed: hold 1
+while the door moves, then send 0 after physical completion. Open/close feedback
+and subsequent command clear were observed. This procedure comes from operator
+confirmation and those tests, rather than an explicit manual instruction. The
+software completion timer and physical travel time remain different measures.
+
+Sending 0 removes a request only where the PLC logic implements that meaning.
+Auto mode, another request, or PLC interlocks may still control the equipment.
+The 39 numeric writable tags (31 Word and eight SignedWord in this baseline)
+are engineering setpoints; the Bool hold/reset table does not define a rule to
+reset those values to zero.
+
+The UI's Keep at 1 option is an explicit operator decision after an accepted
+write and later fresh readback of 1. It sends no additional write, keeps the
+state visible, and permits the next guided test. Eligibility of a non-door tag
+for this option does not confirm its hold behavior; RemoteStart remains
+unclassified. Door commands retain the guided clear-to-0 workflow. No pulse or
+reset is inferred, and the 36 unconfirmed command/feedback mappings remain
+blocked. Record supplier-confirmed rules before promoting a tag's behavior or
+mapping to confirmed status.

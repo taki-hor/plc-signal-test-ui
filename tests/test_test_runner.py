@@ -89,3 +89,102 @@ def test_unconfirmed_candidates_stay_blocked(tmp_path):
             await runner.run('door-open')
         assert client.values['Tank01_DoorOpenRemote'] == 0
     asyncio.run(run())
+
+
+
+def test_feedback_change_in_final_validation_blocks_command(tmp_path):
+    async def run():
+        client, runner, _ = setup(tmp_path)
+        original = client.read_signals
+        reads = 0
+        async def changed_before_write():
+            nonlocal reads
+            reads += 1
+            if reads >= 2: client.values['Tank01_DoorOpened'] = 1
+            return await original()
+        client.read_signals = changed_before_write
+        result = await runner.run('door-open')
+        assert result['result'] == 'BLOCKED'
+        assert client.values['Tank01_DoorOpenRemote'] == 0
+    asyncio.run(run())
+
+
+def test_feedback_snapshot_must_be_newer_than_command_acceptance(tmp_path):
+    async def run():
+        from datetime import datetime, timedelta, timezone
+        client, runner, _ = setup(tmp_path)
+        original = client.read_signals
+        reads = 0
+        async def cached_feedback():
+            nonlocal reads
+            reads += 1
+            if reads >= 3: client.values['Tank01_DoorOpened'] = 1
+            poll = await original()
+            if reads == 3:
+                poll['timestamp'] = (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat()
+            if reads >= 4:
+                poll['id'], poll['poll_count'] = 1, 1
+            return poll
+        client.read_signals = cached_feedback
+        result = await runner.run('door-open')
+        assert result['result'] == 'PASS' and reads >= 4
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('delay', [0.03, 1])
+def test_feedback_read_cannot_pass_or_hang_past_deadline(tmp_path, delay):
+    async def run():
+        client, runner, _ = setup(tmp_path, timeout=10)
+        original = client.read_signals
+        reads = 0
+        async def slow_feedback():
+            nonlocal reads
+            reads += 1
+            if reads >= 3:
+                await asyncio.sleep(delay)
+                client.values['Tank01_DoorOpened'] = 1
+            return await original()
+        client.read_signals = slow_feedback
+        result = await asyncio.wait_for(runner.run('door-open'), 0.2)
+        assert result['result'] == 'TIMEOUT'
+        assert result['actual_feedback'] is None
+        assert not runner.lock.locked()
+    asyncio.run(run())
+
+
+def test_leaving_remote_during_feedback_blocks_pass(tmp_path):
+    async def run():
+        client, runner, _ = setup(tmp_path)
+        original = client.read_signals
+        reads = 0
+        async def local_feedback():
+            nonlocal reads
+            reads += 1
+            if reads >= 3:
+                client.values.update(Remote=0, Local=1, Tank01_DoorOpened=1)
+            return await original()
+        client.read_signals = local_feedback
+        result = await runner.run('door-open')
+        assert result['result'] == 'BLOCKED' and 'left Remote' in result['error']
+    asyncio.run(run())
+
+
+def test_revocation_during_feedback_prevents_pass_and_reset(tmp_path):
+    async def run():
+        client, runner, _ = setup(tmp_path)
+        runner.cases['door-open']['reset_command'] = {'tag_name':'Tank01_TempSV', 'value':25}
+        original = client.read_signals
+        reads = 0
+        async def feedback():
+            nonlocal reads
+            reads += 1
+            if reads >= 3: client.values['Tank01_DoorOpened'] = 1
+            return await original()
+        def authorize():
+            if reads >= 3: raise ValueError('Write mode revoked')
+        client.read_signals = feedback
+        result = await runner.run('door-open', authorize=authorize)
+        assert result['result'] == 'BLOCKED'
+        assert client.values['Tank01_DoorOpenRemote'] == 1
+        assert client.values['Tank01_TempSV'] == 0
+    asyncio.run(run())

@@ -1,6 +1,7 @@
 import json
 import secrets
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, Response
@@ -16,7 +17,8 @@ settings = Settings()
 logs = LogService(ROOT / 'logs' / 'events.jsonl', settings.api_key)
 client = MockPLCClient(ROOT / 'config' / 'mock-tags.json') if settings.mock_mode else PLCClient(settings.base_url, settings.api_key, settings.timeout)
 baseline = [Tag.parse(tag) for tag in json.loads((ROOT / 'config' / 'mock-tags.json').read_text())['tags']]
-service = SignalService(client, logs, settings.stale_ms, baseline=None if settings.mock_mode else baseline)
+service = SignalService(client, logs, settings.stale_ms, baseline=None if settings.mock_mode else baseline,
+                        timestamp_timezone=settings.timestamp_timezone, timestamp_offset_seconds=settings.timestamp_offset_seconds)
 cases = json.loads((ROOT / 'config' / 'test-cases.json').read_text())['tests']
 safety = json.loads((ROOT / 'config' / 'safety-config.json').read_text())
 runner = TestRunner(service, logs, cases)
@@ -35,13 +37,25 @@ async def no_cache(request: Request, call_next):
 @app.exception_handler(PLCError)
 async def plc_error(request: Request, exc: PLCError):
     from fastapi.responses import JSONResponse
-    return JSONResponse(status_code=exc.status, content={'error': exc.message, 'detail': logs.scrub(exc.detail), 'http_status': exc.status})
+    body = {'error': exc.message, 'detail': logs.scrub(exc.detail), 'http_status': exc.status}
+    if getattr(exc, 'write_dispatched', None) is False: body['write_dispatched'] = False
+    return JSONResponse(status_code=exc.status, content=body)
+
+@app.exception_handler(HTTPException)
+async def http_error(request: Request, exc: HTTPException):
+    from fastapi.responses import JSONResponse
+    body = {'detail': logs.scrub(exc.detail)}
+    if request.url.path in ('/api/write', '/api/write/batch') and exc.status_code == 403:
+        body['write_dispatched'] = False
+    return JSONResponse(status_code=exc.status_code, content=body, headers=exc.headers)
 
 @app.exception_handler(ValidationError)
 async def validation_error(request: Request, exc: ValidationError):
     from fastapi.responses import JSONResponse
     logs.add('VALIDATION', result='BLOCKED', error=str(exc))
-    return JSONResponse(status_code=400, content={'error': str(exc), 'http_status': 400})
+    body = {'error': str(exc), 'http_status': 400}
+    if request.url.path in ('/api/write', '/api/write/batch'): body['write_dispatched'] = False
+    return JSONResponse(status_code=400, content=body)
 
 def require_local(request: Request):
     if not request.client or request.client.host not in ('127.0.0.1', '::1'):
@@ -61,16 +75,24 @@ def require_mode(request: Request):
 async def index(): return FileResponse(ROOT / 'frontend' / 'index.html')
 
 @app.get('/api/status')
-async def status():
+async def status(request: Request):
+    try:
+        require_mode(request)
+        write_enabled = True
+    except HTTPException:
+        write_enabled = False
     age = service.age_ms()
+    stamp = service.poll_time()
     return {'backend_status': 'RUNNING', 'supplier_api_connected': service.last_success is not None and service.last_error is None,
             'mode': 'MOCK' if settings.mock_mode else 'REAL', 'plc_mode': 'REMOTE' if service.remote() else ('LOCAL' if service.last_poll and service.last_poll.get('Local') == 1 else 'UNKNOWN'),
             'api_address': 'MOCK' if settings.mock_mode else settings.base_url, 'last_successful_request': service.last_success,
             'supplier_timestamp': service.last_poll.get('timestamp') if service.last_poll else None, 'data_age_ms': age,
+            'supplier_timestamp_utc': stamp.isoformat() if stamp is not None else None,
             'data_fresh': service.fresh(), 'tags_ok': service.last_poll.get('tags_ok') if service.last_poll else None,
             'tags_failed': service.last_poll.get('tags_failed') if service.last_poll else None,
             'last_error': logs.scrub(service.last_error), 'poll_interval_ms': settings.poll_ms, 'stale_after_ms': settings.stale_ms,
-            'write_mode_default': 'OFF', 'catalog_warnings': logs.scrub(service.catalog_warnings)}
+            'timestamp_offset_seconds': service.timestamp_offset_seconds,
+            'write_mode_default': 'OFF', 'write_mode_enabled': write_enabled, 'catalog_warnings': logs.scrub(service.catalog_warnings)}
 
 @app.get('/api/tags')
 async def tags(): return logs.scrub({'tags': [tag.__dict__ for tag in await service.load_tags()]})
@@ -93,12 +115,39 @@ async def disable_mode(request: Request):
     logs.add('WRITE_MODE', result='DISABLED')
     return {'write_mode': 'OFF'}
 
+def read_baseline(poll, writes):
+    """Read-only evidence from the final validated snapshot; no inferred mappings."""
+    values = {name: poll.get(name) for name, tag in service.tags.items() if tag.read_write == 'R'}
+    mappings = [{key: case[key] for key in ('command_tag', 'command_value', 'feedback_tag', 'expected_feedback', 'requires_confirmation')}
+                for case in cases if case['feedback_tag'] in values and
+                any(item['tag_name'] == case['command_tag'] and item['value'] == case['command_value'] for item in writes)]
+    return {'supplier_timestamp': poll['timestamp'], 'supplier_timestamp_utc': service.poll_time(poll).isoformat(),
+            'values': values, 'mappings': mappings}
+
 @app.post('/api/write')
 async def write(request: Request, body: dict):
     require_mode(request)
     tag_name = body.get('tag_name')
     if not isinstance(tag_name, str): raise ValidationError('tag_name is required')
-    return logs.scrub(await service.write(tag_name, body.get('value')))
+    if service.command_lock.locked(): raise ValidationError('Another write or command test is running')
+    async with service.command_lock:
+        case = next((c for c in cases if c['command_tag'] == tag_name and c['command_value'] == body.get('value') and not c.get('requires_confirmation')), None)
+        feedback = {}
+        command_baseline_utc = None
+        reads = None
+        def capture_baseline(poll):
+            nonlocal command_baseline_utc, reads
+            command_baseline_utc = service.poll_time(poll).isoformat()
+            reads = read_baseline(poll, [{'tag_name': tag_name, 'value': body.get('value')}])
+            if not case: return
+            tag = service.tags.get(case['feedback_tag'])
+            if tag and tag.read_write == 'R':
+                feedback.update(feedback_tag=tag.tag_name, expected_feedback=case['expected_feedback'],
+                                value_before=poll.get(tag.tag_name), supplier_timestamp_utc=command_baseline_utc)
+        response = await service.write(tag_name, body.get('value'), authorize=lambda: require_mode(request), before_write=capture_baseline)
+        return logs.scrub({**response, 'console_accepted_at': datetime.now(timezone.utc).isoformat() if response.get('written') is True else None,
+                           'console_command_baseline_utc': command_baseline_utc, 'console_feedback_baseline': feedback or None,
+                           'console_read_baseline': reads})
 
 @app.post('/api/write/batch')
 async def write_batch(request: Request, body: dict):
@@ -109,7 +158,20 @@ async def write_batch(request: Request, body: dict):
     if not isinstance(writes, list) or any(not isinstance(item, dict) for item in writes):
         raise ValidationError('writes must be a list of objects')
     if len(writes) > safety['max_batch_items']: raise ValidationError('Batch exceeds configured maximum')
-    return logs.scrub(await service.write_batch(writes))
+    if service.command_lock.locked(): raise ValidationError('Another write or command test is running')
+    async with service.command_lock:
+        reads = None
+        def capture_baseline(poll):
+            nonlocal reads
+            reads = read_baseline(poll, writes)
+        response = await service.write_batch(writes, authorize=lambda: require_mode(request), before_write=capture_baseline)
+        results = response.get('writes', [])
+        accepted = isinstance(results, list) and len(results) == len(writes) and all(
+            any(isinstance(result, dict) and result.get('tag_name') == item['tag_name'] and
+                result.get('value') == item['value'] and result.get('written') is True for result in results) for item in writes)
+        return logs.scrub({**response, 'console_batch_accepted': accepted,
+                           'console_accepted_at': datetime.now(timezone.utc).isoformat() if accepted else None,
+                           'console_read_baseline': reads})
 
 @app.get('/api/test/cases')
 async def test_cases(): return {'tests': cases}
@@ -117,7 +179,7 @@ async def test_cases(): return {'tests': cases}
 @app.post('/api/test/run')
 async def test_run(request: Request, body: dict):
     require_mode(request)
-    result = await runner.run(body.get('id'))
+    result = await runner.run(body.get('id'), authorize=lambda: require_mode(request))
     result['write_response'] = logs.scrub(result.get('write_response'))
     return result
 

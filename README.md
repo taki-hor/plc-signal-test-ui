@@ -1,6 +1,6 @@
 # Anodizing PLC Communication & Signal Test Console
 
-An engineering console for qualifying the supplier REST API and recording command/feedback evidence before AGV or robot integration. It is **not** the production controller or a safety system. Real PLC testing remains pending until the supplier API is reachable and the line engineer authorizes field tests.
+An engineering console for qualifying the supplier REST API and recording command/feedback evidence before AGV or robot integration. It is **not** the production controller or a safety system. Live read testing and the first operator-supervised Tank 01 tests are recorded in [verification-2026-10-22.md](docs/verification-2026-10-22.md). Further physical tests require their own target, command/reset rules and operator readiness confirmation.
 
 ## Source and architecture
 
@@ -67,19 +67,38 @@ The user-requested command `uvicorn server.app:app --host 0.0.0.0 --port 8080` p
 | `PLC_REQUEST_TIMEOUT` | HTTP timeout seconds |
 | `PLC_UI_POLL_INTERVAL_MS` | Browser poll interval; minimum 250 ms |
 | `PLC_STALE_AFTER_MS` | Maximum accepted supplier data age |
+| `PLC_TIMESTAMP_TIMEZONE` | Confirmed supplier timezone for timestamps without an offset, e.g. `Asia/Hong_Kong`; blank rejects them |
+| `PLC_TIMESTAMP_OFFSET_SECONDS` | Temporary signed whole seconds added for freshness and event-time comparison; default `0` |
 | `PLC_MOCK_MODE` | `true` for the generated mock catalog |
 
 `.env` is ignored by Git. Supplier errors are redacted before logs or browser responses. Logs are written to ignored `logs/events.jsonl` and kept in a bounded in-memory view for export. The latest 10,000 persisted entries are restored into the export view after restart.
 
 ## Operating modes and write safety
 
-The page starts in **READ-ONLY MODE** on every load. Refresh loses the in-memory write token; backend restart invalidates all tokens. To write, use **Enable write test mode**. A token expires after 30 minutes. Every manual single or batch write opens a confirmation dialog. The batch endpoint also requires the exact confirmation text. Writes check current `/tags/list` metadata, type/limits, a fresh `/tags/read` snapshot, and `Remote=1` before the supplier API is called. `Local` and `Remote` are displayed from catalog tags. Supplier HTTP write acceptance is recorded separately from physical feedback.
+The page starts in **READ-ONLY MODE** on every load. Refresh loses the in-memory write token; backend restart invalidates all tokens. To write, use **Enable write test mode**. A token expires after 30 minutes. Every manual single or batch write opens a confirmation dialog. The batch endpoint also requires the exact confirmation text. Writes check current `/tags/list` metadata, type/limits, a fresh `/tags/read` snapshot, and `Remote=1` before the supplier API is called. `Local` and `Remote` are displayed from catalog tags. Supplier HTTP write acceptance is recorded separately from physical feedback. The mode token is rechecked after network validation immediately before dispatch, including configured resets. A shared command lock rejects overlapping writes and tests while monitoring continues. Disabling write mode prevents commands not yet dispatched; it cannot recall an already submitted command.
 
 The console does not pulse, clear, toggle, or reset commands unless an explicit `reset_command` is placed in a configured test case. No tests or writes run on page load. Emergency stop remains outside this application. A catalog `W` marker alone is not proof of safe field behavior; the line engineer must confirm each physical test area and equipment state.
 
+## 0/1 command checklist
+
+The checklist lists every live writable Bool tag (currently 102), with search,
+tank/group filters, **Send 1…** and **Send 0…**. Each send uses one confirmation
+popup. A timer runs from Confirm Send 1 to fresh configured completion feedback;
+API response time and later 0 readback are shown separately. New attempt leaves
+the timer at zero. Non-door commands can explicitly be kept at 1 after verified
+readback, with a visible active-state record. Detailed logs update automatically. Enter physical observations in Notes; **API CYCLE
+COMPLETE** is not a physical test PASS. Nothing automatically clears or retries.
+History stays in this browser for the selected API and mode and exports to
+CSV/JSON; refresh always starts with write mode off. Numeric setpoints and all
+141 writable tags remain available on the Value write page. See the
+[user guide](docs/user-guide.md#01-command-checklist) for the procedure and limits. The
+[hold/reset findings](docs/signal-test-plan.md#command-hold-and-reset-findings)
+distinguish manual descriptions, the tested Tank 01 procedure and unspecified
+RemoteStart behavior.
+
 ## Command/feedback tests
 
-`config/test-cases.json` includes door open/close pairs whose names and descriptions explicitly identify command and actual door position. Other plausible pairs are visible as **NEEDS CONFIRMATION** and blocked until a supplier/engineer reviews their semantics and sets `requires_confirmation` to `false`. A configured test checks baseline feedback, writes one engineering value, then polls until feedback changes to the expected value or timeout. No reset is inferred. Results and communication records can be exported as CSV or JSON.
+`config/test-cases.json` includes door open/close pairs whose names and descriptions explicitly identify command and actual door position. Other plausible pairs are visible as **NEEDS CONFIRMATION** and blocked until a supplier/engineer reviews their semantics and sets `requires_confirmation` to `false`. A configured test checks baseline feedback again at the final pre-dispatch read, writes one engineering value, and requires a newer poll timestamp at or after command acceptance before awarding PASS. Poll timestamps use the configured timezone and temporary clock correction; cyclic poll_count values are not used as a sequence. Each feedback read is bounded by the remaining test deadline, and late feedback cannot pass. Revoked write mode or leaving Remote mode stops verification. No reset is inferred. Results and communication records can be exported as CSV or JSON.
 
 The snapshot contains eight Float tags, all read-only. A physical writable Float test is unavailable until the supplier exposes one as `W` in `/tags/list`. SignedWord represents a signed 16-bit register; writes accept negative engineering values within live limits. The supplier performs scaling: `Tank01_TempAdj=-5.0` with multiplier `0.1` sends `-5.0`, and `Tank01_TempSV=25.0` sends `25.0`.
 
@@ -106,8 +125,10 @@ curl --fail-with-body http://127.0.0.1:8080/api/signals
 curl --fail-with-body http://127.0.0.1:8080/api/status
 ```
 
+If the supplier omits a timestamp offset, set `PLC_TIMESTAMP_TIMEZONE=Asia/Hong_Kong` only after confirming that clock timezone. Existing timezone offsets are honored. Supplier and console clocks must also agree: timezone configuration does not correct clock drift. For a temporary test with a measured supplier clock delay of 44 seconds, set `PLC_TIMESTAMP_OFFSET_SECONDS=44` in `.env` and restart `./start`. The UI displays the correction; raw supplier timestamps and the 3-second stale-data limit are preserved. **Reset the offset to `0` and restart after synchronizing the API PC clock.** An incorrect offset can mark data stale or apparently in the future. Remeasure it if either clock changes.
+
 `/api/tags` must parse all live supplier tags, including SignedWord, before any write test. Confirm API connected, Remote/Local state, timezone-aware timestamp and freshness, live counts, no parsing errors, and catalog warnings with the supplier. Keep the initial validation read only. Enable write test mode only after the engineer reviews these results and authorizes the physical test.
 
 ## Verification
 
-Run `pytest -q` in the activated virtual environment. If the shell inherits ROS's unrelated Python plugins, use `env -u PYTHONPATH pytest -q`. A mock-only failure can be injected through `POST /api/mock/fault` from loopback; the next read returns a mock communication error. This endpoint returns 404 in real mode. See [signal-test-plan.md](docs/signal-test-plan.md) for the commissioning sequence, [user-guide.md](docs/user-guide.md) for UI use, and [mock-verification-report.md](docs/mock-verification-report.md) for observed mock evidence.
+Run `pytest -q` in the activated virtual environment. Browser regressions use an isolated loopback fake API and run when Firefox and geckodriver are installed; otherwise they are explicitly skipped. They never use the line API. See [verification-2026-10-22.md](docs/verification-2026-10-22.md) for the live read-only signal test and bug-fix evidence. If the shell inherits ROS's unrelated Python plugins, use `env -u PYTHONPATH pytest -q`. A mock-only failure can be injected through `POST /api/mock/fault` from loopback; the next read returns a mock communication error. This endpoint returns 404 in real mode. See [signal-test-plan.md](docs/signal-test-plan.md) for the commissioning sequence, [user-guide.md](docs/user-guide.md) for UI use, and [mock-verification-report.md](docs/mock-verification-report.md) for observed mock evidence.

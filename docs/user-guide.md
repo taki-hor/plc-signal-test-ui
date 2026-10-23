@@ -2,18 +2,161 @@
 
 Open the dashboard on the backend workstation at `http://localhost:8080`. The banner must read **READ-ONLY MODE** after every page load. **MOCK MODE** appears prominently when `PLC_MOCK_MODE=true`.
 
-The connection panel distinguishes API connection, `Remote` mode, supplier poll timestamp, data age, and tag success/failure counts. A green connection with amber stale data is not ready for writes. Use **Refresh now** to reload metadata and the latest poll.
+The left sidebar separates the console into pages. **Read signals** (Live signals, Tank view, Alarms) only display supplier poll values. **Write signals** (0/1 commands, Value write, Feedback tests) hold every control that can send a command; each of these pages shows a write gate listing write test mode, API connection, data freshness and PLC Remote, and stays locked until all four are met. **Records** holds the Tag catalog and Evidence log. The status bar and write-mode banner stay visible on every page. Pages can be bookmarked, e.g. `http://localhost:8080/#/commands`.
 
-Use Live signals for name/description/address search and type or permission filters. Choose a tank for its catalog-defined signals. The Alarm section shows raw Bool values; the supplier must confirm polarity. In Raw tag browser, enable Advanced mode to see PLC addresses, multipliers, and limits. Read-only rows have no write action.
+The status bar and Overview page distinguish API connection, `Remote` mode, supplier poll timestamp, data age, and tag success/failure counts. A green connection with amber stale data is not ready for writes. Live values and connection status refresh automatically at `PLC_UI_POLL_INTERVAL_MS` (currently 1 second); no button click is needed. **Refresh now** also reloads the catalog, test definitions, and logs. The communication log has its own **Refresh log** button. Failed, malformed or overdue refreshes remove the healthy state and disable write/test controls. The overdue timer uses the stale-data limit; read requests also have a 10-second transport timeout. A temporary clock correction is displayed separately from the raw supplier poll time.
 
-Both type filters include Bool, Word, SignedWord and Float. The current static mock snapshot is 362 tags (141 W, 221 R); real counts come from the live API. For Tank01_TempAdj, Advanced mode shows D4010, SignedWord, W, multiplier 0.1, low −999.0 and high 999.9. Manual write shows the same allowed range and accepts −5 or −10.5 as engineering values within those limits. No multiplier conversion is applied by this console.
+Use Live signals for name/description/address search and type or permission filters. Choose a tank for its catalog-defined signals. The Alarms page shows raw Bool values; the supplier must confirm polarity. In Tag catalog, enable Advanced mode to see PLC addresses, multipliers, and limits. Read-only rows have no write action.
+
+Both type filters include Bool, Word, SignedWord and Float. The current static mock snapshot is 362 tags (141 W, 221 R); real counts come from the live API. For Tank01_TempAdj, Advanced mode shows D4010, SignedWord, W, multiplier 0.1, low −999.0 and high 999.9. Value write shows the same allowed range and accepts −5 or −10.5 as engineering values within those limits. No multiplier conversion is applied by this console.
 
 The 29-SEP-2026 supplier baseline also shows Tank07_AmpereSV at D1362 with multiplier 0.1 and 0–200 A limits; Tank07 current/voltage multipliers are 0.1. SwingSV limits for Tank03/05/10/14 are 5–120 CPM. Tank16_Conductivity (D1142, Float, R, multiplier 1.0) replaces Tank16_PH; Tank09_WaterFlow is added at D1036. All eight TempAdj tags use SignedWord with −999.0 to 999.9 limits.
 
 Health warnings display catalog differences without changing the live metadata. Export communication logs for expected/live details and supplier review. **SUPPLIER CONFIRMATION REQUIRED: Tank08_WaterFlow and Tank09_WaterFlow both use D1036 in the latest manual.** This warning permits read-only startup. Treat it as unresolved field metadata until the supplier confirms it.
 
-For a manual write, select a writable tag, enter an engineering value, then click **Review write**. Confirm the tag, address, current value, and new value in the dialog. A supplier `written=true` response means the API accepted the request; inspect a physical feedback signal or run a configured verification test to prove effect. Batch writes use a JSON array of `{ "tag_name": "...", "value": 0 }` objects and an extra batch confirmation.
+## 0/1 command checklist
 
-To run a command/feedback case, first enable write test mode, then click **Run test** on a configured case and confirm the command. The runner blocks if feedback already has the expected value, if data is stale, if `Remote` is not active, or if the mapping is marked as unconfirmed. Tests never start automatically. No automatic command reset is configured in the initial cases.
+Use the **0/1 commands** page for writable Bool commands (currently 102). Search by name,
+description or PLC address, filter by tank/group, and choose a command. Numeric
+setpoints remain on the **Value write** page, which still includes all 141 writable tags.
+
+1. Enable write test mode when ready. Select the command, click **Send 1…**, and
+   check the tag, address, current value and requested value in the single
+   confirmation popup. **Cancel** or Escape sends nothing.
+2. Watch the equipment. **1 → completion** starts only when you confirm
+   **Send 1…**. It stops at **CONFIRMED** when a fresh API poll reports the
+   configured opened/closed signal at its expected value. The backend records
+   that signal's value in the final read before dispatch. A cached poll or a
+   signal already complete before the write cannot prove a new transition.
+   API response time for 1 and 0 is displayed separately. Enter physical
+   observations or any problem in Notes.
+3. For a door command, wait for movement to finish, then **Send 0…** and confirm
+   the clear. The completion timer stays frozen while you do this. Other
+   checklist commands remain locked until a later poll verifies 0. The on-screen
+   hint names the pending command; **Send 0…** remains available for clearing it.
+4. For a maintained non-door state, you can explicitly choose **Keep at 1
+   (non-door)** after a later fresh poll shows 1. This records your decision
+   without sending another write. The state stays visible in an active-state
+   banner and other tests become available. Send 0 when the state should end;
+   clearing a previously sent command remains possible while another command is
+   pending. Door commands cannot use Keep at 1. No pulse, retry, automatic clear
+   or repeated enforcement of 1 is performed.
+5. **API CYCLE COMPLETE** means both writes were accepted and a fresh poll later
+   than the pre-clear snapshot and the clear receipt shows 0. Completion feedback,
+   API response, and the clear cycle are separate evidence. **KEPT AT 1** records
+   an intentional end state; it does not complete a 1→0 cycle or qualify physical
+   operation. Neither label replaces your physical checks.
+
+Keep at 1 records your chosen end state; it does not certify that a tag is a
+maintained command. The [hold/reset findings](signal-test-plan.md#command-hold-and-reset-findings)
+separate manual descriptions, the operator-confirmed Tank 01 sequence and
+unclassified RemoteStart behavior. Sending 0 is not a guaranteed equipment stop
+when Auto or other PLC logic remains active.
+
+A new readback must be later than the backend's final pre-write snapshot as
+well as the write receipt. A cached snapshot cannot qualify just because the
+supplier clock is slightly ahead. If a pending receipt from an older backend
+lacks this evidence, the UI leaves it unverified and shows a recovery hint.
+Update/restart the backend, check the actual state and use a newly confirmed
+manual 0 when required. Completed historical records are preserved.
+
+Notes are saved from the first input, even before any command. Switching tags
+or reloading preserves these preparation notes without starting the timer.
+
+**New attempt** prepares a blank record and leaves the timer at 00:00. It does
+not send anything. Older attempts retain their original logs; completion timing
+not collected by the previous UI is shown as **NOT RECORDED**, never reconstructed
+from your later Send 0. An unused blank attempt cannot create more blank attempts.
+
+A rejected request marked **BLOCKED before dispatch** does not require a false
+Send 0. Re-enable write test mode and retry; the rejection remains in history.
+The console also recovers the old local “write mode disabled or expired” 403
+records. A supplier catalog/read failure before dispatch is also marked BLOCKED,
+including communication errors; no write was sent. A failure after write
+transport begins, or an outcome lost on reload, remains pending for inspection
+and manual clearing. Reloading starts with write mode off;
+the page checks the backend token's status to detect expiry or a backend restart.
+Other clients and the separate Value write form are outside the guided sequence.
+
+If Send 0 starts before completion feedback has been observed, the monitor
+shows **CLEARING** and cannot award a completion time while that request is
+unresolved. An accepted clear records **CLEARED BEFORE COMPLETION**. A clear
+proven blocked before dispatch resumes observation; an uncertain clear records
+**CLEAR OUTCOME UNKNOWN**. Reloading an unfinished Send 1 or Send 0 similarly
+records an unknown outcome, keeps the possible command pending, and sends
+nothing automatically.
+
+Leaving or reloading the page while completion feedback is still **WAITING**
+records **MONITORING INTERRUPTED**, with no completion time. A later matching
+signal cannot resume that interrupted measurement. The accepted command and
+its history remain pending so you can re-enable write mode and explicitly
+send 0 when ready. Completion timing already confirmed before leaving is
+preserved.
+
+Only confirmed mappings provide completion timing. Unknown mappings show **NO
+CONFIRMED MAPPING**. An already-set signal, lost monitoring or early clear does not produce a
+completion time. The manual checklist observes live feedback until completion
+or an interruption; it does not award the configured verification runner’s
+PASS result. Use Command → feedback for the configured tests and their deadlines. Network and polling
+delay are included; this is **not mechanical travel time**. Expand each event for
+UTC time, elapsed time since Send 1, API latency, command/feedback values,
+Remote/Local state and raw/normalized supplier timestamps. The full attempt
+elapsed time is retained separately for history. Log details remain open through
+live updates.
+
+**Export checklist & log CSV** or **Export JSON** includes untested commands and
+all attempts. **New attempt** preserves earlier records and becomes available
+once a possibly active command has verified 0 readback or the request was
+definitively blocked before dispatch. Notes, results and logs are saved
+in this browser's local storage, separately for each supplier API and real/mock
+mode. They contain no API key or write token and do not enable writes on reload.
+They are not shared between browsers and are lost if browser data is cleared;
+export your test evidence regularly. Existing backend communication logs remain
+separate. No unconfirmed command/feedback mapping is enabled by this checklist.
+
+## Other write and verification controls
+
+For a manual write, select a writable tag, enter an engineering value, then click **Review write**. Confirm the tag, address, current value, and new value in the dialog. A supplier `written=true` response means the API accepted the request; inspect a physical feedback signal or run a configured verification test to prove effect. Escape and Cancel close the review without issuing a command, including after an earlier confirmed write. Batch writes use a JSON array of `{ "tag_name": "...", "value": 0 }` objects and an extra batch confirmation.
+
+### Read signals on Value write
+
+**Read signals & feedback** shows every live catalog tag marked read-only (221 in
+the bundled snapshot). The selected command's mapped feedback and other read
+signals in its group appear first. Door commands show both **DoorOpened** and
+**DoorClosed** above the table. Search by name, description or address, or choose
+**Selected command's group** to narrow the table. Monitoring works in read-only
+mode and never sends a command.
+
+Each confirmed manual single or batch write creates a **Write record**. The backend
+captures all read-only values in its final validated snapshot before dispatch.
+**Before write**, **Recorded after**, and **Live value** distinguish that baseline,
+the retained subsequent observation, and the current poll. UTC timestamps identify
+the baseline, API receipt and recorded observation. A recorded observation must be
+fresh and strictly newer than both the baseline and write acceptance.
+For a numeric setpoint test, wait for the desired live reading and use
+**Record current read values** to replace the retained after snapshot. This reads
+the current telemetry only; it sends no command and does not certify a mapping
+or resume interrupted completion monitoring.
+
+For a configured mapping, **EXPECTED FEEDBACK OBSERVED** means a newer API snapshot
+reports the expected value, after a baseline that did not already have it. This
+records API evidence; observe the physical equipment as well. An already-set signal
+stays **ALREADY SET BEFORE WRITE**. Candidate mappings stay **NEEDS CONFIRMATION**,
+and no completion mapping is inferred for a manual reset to 0 or a numeric setpoint.
+Those writes can still record the surrounding read signals. No automatic reset,
+retry or second write is performed.
+
+Feedback history retains the last 50 manual requests in this browser, separately
+for each API and mock/real mode, with no credential or write token. Select the
+original writable tag and its **Write record** to revisit its evidence, including
+batch records containing that tag. Reload, stale or disconnected data, leaving
+Remote mode, or a subsequent Value write interrupts unfinished completion
+observation; it cannot resume and claim a transition across that gap. Completed
+records remain available. A blocked or uncertain write is retained as such, with
+no invented readback. **Export feedback JSON/CSV** saves all retained records and
+their read values; these browser records are separate from the backend log and
+are lost if browser data is cleared. Export them before clearing browser storage.
+
+To run a command/feedback case, first enable write test mode, then click **Run test** on a configured case and confirm the command. The runner blocks if feedback already has the expected value, if data is stale, if `Remote` is not active, or if the mapping is marked as unconfirmed. Only one write or test can run at a time; overlapping commands are rejected. Disabling write mode blocks commands still in validation and any configured reset not yet dispatched. PASS requires fresh feedback from a newer snapshot at or after command acceptance; late feedback produces TIMEOUT. Tests never start automatically. No automatic command reset is configured in the initial cases.
 
 Use Log & export to choose all, communication, or test entries, then export CSV or JSON. The log includes UTC timestamps and an expandable technical detail for each entry. Do not interpret mock results as real PLC qualification.

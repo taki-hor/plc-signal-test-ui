@@ -10,7 +10,7 @@ export function updateVerifier(nextCases, nextStatus) {
     row.append(node('h3','',test.name),node('span',`pill ${test.requires_confirmation ? 'amber' : ''}`,test.requires_confirmation ? 'NEEDS CONFIRMATION' : 'CONFIGURED'));
     card.append(row,node('p','',`WRITE ${test.command_tag} = ${test.command_value}\nEXPECT ${test.feedback_tag} = ${test.expected_feedback}\nTIMEOUT ${(test.timeout_ms/1000).toFixed(1)} s`));
     const button = node('button','button small primary','Run test'); button.type = 'button';
-    button.disabled = running || test.requires_confirmation || !modeEnabled() || !status?.data_fresh || status?.plc_mode !== 'REMOTE';
+    button.disabled = running || test.requires_confirmation || !modeEnabled() || !status?.supplier_api_connected || !status?.data_fresh || status?.plc_mode !== 'REMOTE';
     button.addEventListener('click', () => runTest(test)); card.append(button); list.append(card);
   }
 }
