@@ -357,3 +357,141 @@ def test_acted_write_with_bad_acknowledgement_keeps_dispatch_provenance(tmp_path
         assert not any(event['event']=='WRITE' and event['value']==0 for event in logs.get())
         assert not runner.lock.locked()
     asyncio.run(run())
+
+
+@pytest.mark.parametrize('timeout_ms', [None, True, False, '30000', 1000.0, [], {}, 0, 999, 300001])
+def test_invalid_timeout_override_never_dispatches_or_changes_case(tmp_path, timeout_ms):
+    async def run():
+        client, runner, logs = setup(tmp_path)
+        with pytest.raises(ValueError, match='timeout_ms must be an integer from 1000 to 300000'):
+            await runner.run('door-open', timeout_ms=timeout_ms)
+        assert runner.cases['door-open']['timeout_ms'] == 1200
+        assert client.values['Tank01_DoorOpenRemote'] == 0
+        assert not logs.get()
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('timeout_ms', [1000, 300000])
+def test_timeout_override_boundaries_are_recorded_without_changing_defaults(tmp_path, timeout_ms):
+    async def run():
+        import csv
+        import io
+        client, runner, logs = setup(tmp_path)
+        client.feedback_delay_s = 0
+        result = await runner.run('door-open', timeout_ms=timeout_ms)
+        assert result['result'] == 'PASS' and result['timeout_ms'] == timeout_ms
+        assert runner.cases['door-open']['timeout_ms'] == 1200
+        events = [e for e in logs.get('tests') if e['event'] in ('TEST_START', 'TEST_FINISH')]
+        assert len(events) == 2 and all(e['timeout_ms'] == timeout_ms for e in events)
+        rows = list(csv.DictReader(io.StringIO(logs.export('tests', 'csv')[0])))
+        assert all(row['timeout_ms'] == str(timeout_ms) for row in rows if row['event'] in ('TEST_START', 'TEST_FINISH'))
+    asyncio.run(run())
+
+
+def test_concurrent_timeout_override_does_not_mutate_active_or_later_default_run(tmp_path):
+    async def run():
+        client, runner, logs = setup(tmp_path)
+        client.feedback_delay_s = 0
+        entered, release = asyncio.Event(), asyncio.Event()
+        original = client.list_tags
+        async def gated_tags():
+            entered.set()
+            await release.wait()
+            return await original()
+        client.list_tags = gated_tags
+        pending = asyncio.create_task(runner.run('door-open', timeout_ms=1000))
+        try:
+            await asyncio.wait_for(entered.wait(), 1)
+            with pytest.raises(ValueError, match='Another write or command dispatch is running'):
+                await runner.run('door-open', timeout_ms=300000)
+            assert runner.cases['door-open']['timeout_ms'] == 1200
+        finally:
+            release.set()
+        first = await asyncio.wait_for(pending, 1)
+        assert first['result'] == 'PASS' and first['timeout_ms'] == 1000
+        client.values['Tank01_DoorOpened'] = 0
+        second = await runner.run('door-open')
+        assert second['result'] == 'PASS' and second['timeout_ms'] == 1200
+        assert runner.cases['door-open']['timeout_ms'] == 1200
+        assert [e['timeout_ms'] for e in logs.get('tests') if e['event'] == 'TEST_FINISH'] == [1000, 1200]
+    asyncio.run(run())
+
+
+def test_selected_timeout_is_the_observation_deadline_without_auto_clear(tmp_path):
+    async def run():
+        client, runner, logs = setup(tmp_path, timeout=30000)
+        client.feedback_delay_s = 5
+        result = await asyncio.wait_for(runner.run('door-open', timeout_ms=1000), 1.8)
+        assert result['result'] == 'TIMEOUT' and result['timeout_ms'] == 1000
+        assert 900 <= result['elapsed_ms'] < 1800
+        assert runner.cases['door-open']['timeout_ms'] == 30000
+        assert client.values['Tank01_DoorOpenRemote'] == 1
+        assert not any(e['event'] == 'WRITE' and e['value'] == 0 for e in logs.get())
+        assert not runner.lock.locked()
+    asyncio.run(run())
+
+
+def test_feedback_diagnostics_record_actual_command_and_modes_from_the_same_observation(tmp_path):
+    async def run():
+        import csv
+        import io
+        client, runner, logs = setup(tmp_path)
+        client.feedback_delay_s = 0
+        original = runner.service.read
+        async def own_poll():
+            poll = await original()
+            if asyncio.current_task().get_coro().__qualname__ == own_poll.__qualname__:
+                poll = {**poll, 'Tank01_DoorOpenRemote':0, 'Remote':1, 'Local':0}
+                runner.service.last_poll = {**poll, 'Tank01_DoorOpenRemote':1, 'Remote':0, 'Local':1}
+            return poll
+        runner.service.read = own_poll
+        result = await runner.run('door-open')
+        assert result['result'] == 'PASS' and result['actual_feedback'] == 1
+        assert result['command'] == 'Tank01_DoorOpenRemote=1' and result['write_response']['value'] == 1
+        assert {key:result[key] for key in ('command_readback','Remote','Local')} == {'command_readback':0,'Remote':1,'Local':0}
+        assert runner.service.last_poll['Tank01_DoorOpenRemote'] == 1
+        assert runner.service.last_poll['Remote'] == 0 and runner.service.last_poll['Local'] == 1
+        observations = [entry for entry in logs.get('tests') if entry['event'] == 'TEST_FEEDBACK']
+        assert len(observations) == 1
+        assert {key:observations[0][key] for key in ('command_readback','Remote','Local')} == {'command_readback':0,'Remote':1,'Local':0}
+        rows = list(csv.DictReader(io.StringIO(logs.export('tests','csv')[0])))
+        row = next(row for row in rows if row['event'] == 'TEST_FEEDBACK')
+        assert [row[key] for key in ('command_readback','Remote','Local')] == ['0','1','0']
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('tag_name', ['Tank01_FilterRemote', 'Tank01_FilterStatus'])
+@pytest.mark.parametrize('field,value', [('data_type', 'Word'), ('multiplier', 0.1)])
+def test_changed_signal_interpretation_cannot_award_feedback_at_the_same_address(tmp_path, tag_name, field, value):
+    async def run():
+        client, runner, logs = candidate_setup(tmp_path, timeout=1000)
+        entered, release = asyncio.Event(), asyncio.Event()
+        original = client.read_signals
+        async def gated_observation():
+            if asyncio.current_task().get_coro().__qualname__ == 'SignalService.read':
+                entered.set()
+                await release.wait()
+            return await original()
+        client.read_signals = gated_observation
+        pending = asyncio.create_task(runner.run('candidate', mapping_under_test=True))
+        try:
+            await asyncio.wait_for(entered.wait(), 1)
+            assert runner.service.active_tests and not runner.lock.locked()
+            address = client.by_name[tag_name]['device_address']
+            client.by_name[tag_name][field] = value
+            await runner.service.load_tags()
+            assert runner.service.tags[tag_name].device_address == address
+            client.values['Tank01_FilterStatus'] = 1
+            release.set()
+            result = await asyncio.wait_for(pending, 1)
+            assert result['result'] == 'BLOCKED' and 'metadata changed' in result['error']
+            assert result['write_dispatched'] is True and result['write_response']['written'] is True
+            assert client.values['Tank01_FilterRemote'] == 1
+            assert not runner.service.active_tests and not runner.lock.locked()
+            assert not any(e.get('result') in ('PASS', 'OBSERVED') for e in logs.get('tests'))
+            assert not any(e['event'] == 'WRITE' and e['value'] == 0 for e in logs.get())
+        finally:
+            release.set()
+            if not pending.done(): pending.cancel()
+            await asyncio.gather(pending, return_exceptions=True)
+    asyncio.run(run())

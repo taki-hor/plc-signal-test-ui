@@ -45,7 +45,7 @@ class LogService:
         rows = self.get(kind)
         if format == 'json':
             return json.dumps(rows, ensure_ascii=False, indent=2), 'application/json'
-        columns = ['timestamp', 'event', 'test_name', 'command', 'mapping_under_test', 'end_mode', 'write_dispatched', 'expected_feedback', 'actual_feedback', 'result', 'elapsed_ms', 'http_status', 'error', 'tag_name', 'value']
+        columns = ['timestamp', 'event', 'run_id', 'test_name', 'command', 'mapping_under_test', 'end_mode', 'write_dispatched', 'expected_feedback', 'actual_feedback', 'command_readback', 'Remote', 'Local', 'result', 'elapsed_ms', 'timeout_ms', 'http_status', 'error', 'tag_name', 'value']
         out = io.StringIO()
         writer = csv.DictWriter(out, fieldnames=columns, extrasaction='ignore')
         writer.writeheader()

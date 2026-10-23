@@ -1,6 +1,6 @@
 import {$, node, groupFor, fillGroups, valueText, metadataNumber} from './dom.js';
 import {prepareWrite} from './controls.js';
-let tags = [], poll = null, health = null, selectedTank = null;
+let tags = [], poll = null, health = null, selectedTank = null, browserSignature = null;
 export function setSignalData(nextTags, nextPoll) {
   if (nextTags) {
     tags = nextTags; fillGroups($('signal-group'), tags); fillGroups($('browser-group'), tags); initTanks();
@@ -123,15 +123,24 @@ function renderAlarms() {
 function renderBrowser() {
   const query = $('browser-search').value.trim().toLowerCase(), type = $('browser-type').value, rw = $('browser-rw').value, group = $('browser-group').value, sort = $('browser-sort').value;
   const matched = tags.filter(t => searchMatch(t, query) && (type === 'all' || t.data_type === type) && (rw === 'all' || t.read_write === rw) && (group === 'all' || groupFor(t) === group)).sort((a,b) => String(a[sort]).localeCompare(String(b[sort])));
-  const body = $('tag-table'); body.replaceChildren();
-  for (const tag of matched) {
-    const tr = node('tr');
-    const cells = [tag.tag_name, tag.description, tag.device_address, tag.data_type, tag.read_write, metadataNumber(tag.multiplier), metadataNumber(tag.low_limit), metadataNumber(tag.high_limit), valueText(poll?.[tag.tag_name]), signalStatus(tag)];
-    cells.forEach((value, index) => { const td = node('td', [2,5,6,7].includes(index) ? 'advanced-col' : index === 1 ? 'description' : '', value); if (index === 0) td.title = tag.tag_name; if (index === 1) td.title = tag.description; tr.append(td); });
-    const action = node('td');
-    if (tag.read_write === 'W') { const button = node('button', 'button small secondary', 'Select'); button.type = 'button'; button.addEventListener('click', () => prepareWrite(tag.tag_name)); action.append(button); }
-    tr.append(action); body.append(tr);
+  const body = $('tag-table'), signature = JSON.stringify(matched);
+  if (signature !== browserSignature) {
+    body.replaceChildren();
+    for (const tag of matched) {
+      const tr = node('tr');
+      const cells = [tag.tag_name, tag.description, tag.device_address, tag.data_type, tag.read_write, metadataNumber(tag.multiplier), metadataNumber(tag.low_limit), metadataNumber(tag.high_limit), '', ''];
+      cells.forEach((value, index) => { const td = node('td', [2,5,6,7].includes(index) ? 'advanced-col' : index === 1 ? 'description' : '', value); if (index === 0) td.title = tag.tag_name; if (index === 1) td.title = tag.description; tr.append(td); });
+      const action = node('td');
+      if (tag.read_write === 'W') { const button = node('button', 'button small secondary', 'Select'); button.type = 'button'; button.setAttribute('aria-label',`Select ${tag.tag_name} for write`); button.addEventListener('click', () => prepareWrite(tag.tag_name)); action.append(button); }
+      tr.append(action); body.append(tr);
+    }
+    browserSignature = signature;
   }
+  matched.forEach((tag,index) => {
+    for (const [column,value] of [[8,valueText(poll?.[tag.tag_name])],[9,signalStatus(tag)]]) {
+      const cell = body.rows[index].cells[column]; if (cell.textContent !== value) cell.textContent = value;
+    }
+  });
   $('browser-count').textContent = `Showing ${matched.length} of ${tags.length} tags`;
 }
 export function initSignalEvents() {

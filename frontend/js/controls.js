@@ -2,8 +2,12 @@ import {go} from './router.js';
 import {$, node, valueText, metadataNumber} from './dom.js';
 import {post, enableMode, disableMode, modeEnabled} from './api.js';
 import {beginWriteObservation, finishWriteObservation} from './write-feedback.js';
-let tags = [], poll = null, status = null;
+let tags = [], poll = null, status = null, valueIdentity = null;
 function canWrite() { return modeEnabled() && status?.supplier_api_connected && status?.data_fresh && status?.plc_mode === 'REMOTE'; }
+export function writeIdentity(tag, context) {
+  return tag && context?.api_address && context?.mode ?
+    JSON.stringify([context.api_address,context.mode,tag.tag_name,tag.device_address,tag.data_type,tag.read_write,tag.multiplier]) : null;
+}
 export function updateControls(nextTags, nextPoll, nextStatus) {
   if (nextTags) {
     tags = nextTags;
@@ -25,8 +29,18 @@ export function updateControls(nextTags, nextPoll, nextStatus) {
   renderSelected();
 }
 function selected() { return tags.find(t => t.tag_name === $('write-tag').value); }
+function renderValueControl(tag, defaultInvalid = false) {
+  const bool = tag?.data_type === 'Bool', input = $('write-value');
+  input.classList.toggle('hidden',bool); $('write-bool-control').classList.toggle('hidden',!bool);
+  if (bool) $('write-value-label').removeAttribute('for'); else $('write-value-label').htmlFor = 'write-value';
+  if (bool && defaultInvalid && (input.value.trim() === '' || ![0,1].includes(Number(input.value)))) input.value = '0';
+  const value = input.value.trim() === '' ? null : Number(input.value);
+  $('write-bool-zero').checked = bool && value === 0; $('write-bool-one').checked = bool && value === 1;
+}
 function renderSelected() {
-  const tag = selected(), detail = $('write-detail'); detail.replaceChildren();
+  const tag = selected(), identity = tag ? JSON.stringify([tag.tag_name,tag.device_address,tag.data_type]) : null;
+  renderValueControl(tag,identity !== valueIdentity); valueIdentity = identity;
+  const detail = $('write-detail'); detail.replaceChildren();
   if (!tag) { detail.textContent = 'No writable signals in catalog.'; return; }
   const grid = node('div', 'detail-grid');
   const allowed = `${metadataNumber(tag.low_limit, 'unbounded')} to ${metadataNumber(tag.high_limit, 'unbounded')}`;
@@ -68,20 +82,38 @@ export function confirmWrite(title, fields, action) {
 }
 export function initControls(onChange) {
   $('write-tag').addEventListener('change', renderSelected);
+  $('write-value').addEventListener('input', () => renderValueControl(selected()));
+  for (const id of ['write-bool-zero','write-bool-one']) $(id).addEventListener('change', () => {
+    if (selected()?.data_type !== 'Bool' || !$(id).checked) return;
+    $('write-value').value = $(id).value; renderValueControl(selected());
+  });
   $('mode-btn').addEventListener('click', async () => {
     $('mode-btn').disabled = true;
     try {
       if (modeEnabled()) { const disabling = disableMode(); onChange(); await disabling; }
-      else if (window.confirm('Enable WRITE TEST MODE for 30 minutes? Commands may actuate equipment.')) await enableMode();
-    } catch (error) { $('write-result').textContent = error.message; }
+      else {
+        if (!window.confirm('Enable WRITE TEST MODE for 30 minutes? Commands may actuate equipment.')) return;
+        await enableMode();
+      }
+      $('mode-error').textContent = ''; $('mode-error').classList.add('hidden');
+    } catch (error) {
+      $('mode-error').textContent = `Write mode request failed: ${error.message}`;
+      $('mode-error').classList.remove('hidden');
+    }
     finally { $('mode-btn').disabled = false; onChange(); }
   });
   $('write-submit').addEventListener('click', () => {
     if (!canWrite()) { onChange(); return; }
     const tag = selected();
     try {
+      renderValueControl(tag);
       const value = validate(tag, $('write-value').value);
+      const reviewed = writeIdentity(tag,status);
       confirmWrite('Confirm PLC write', [['Signal',tag.tag_name],['Address',tag.device_address],['Current value',valueText(poll?.[tag.tag_name])],['New value',value]], async () => {
+        const current = selected();
+        if (!reviewed || writeIdentity(current,status) !== reviewed) {
+          $('write-result').textContent = 'Write blocked: signal, permissions or API context changed. Review the command again.'; onChange(); return;
+        }
         if (!canWrite()) { $('write-result').textContent = 'Write blocked: fresh Remote data and write test mode are required.'; onChange(); return; }
         const observation = beginWriteObservation([{tag_name:tag.tag_name,value}]);
         try { const response = await post('/api/write', {tag_name: tag.tag_name, value}); finishWriteObservation(observation,response); $('write-result').textContent = response.written === true ? `WRITE ACCEPTED · ${response.tag_name} = ${response.value}. Watch the read signals and feedback below.` : `WRITE FAILED · Supplier did not confirm written=true for ${tag.tag_name}.`; onChange(); }
@@ -101,7 +133,11 @@ export function initControls(onChange) {
         names.add(item.tag_name);
         return {tag_name: item.tag_name, value: validate(tag, String(item.value))};
       });
+      const reviewed = validated.map(item => writeIdentity(tags.find(tag => tag.tag_name === item.tag_name),status));
       confirmWrite('Confirm batch PLC write', [['Item count',validated.length],['Signals',validated.map(w => `${w.tag_name}=${w.value}`).join(', ')],['Confirmation','CONFIRM BATCH WRITE']], async () => {
+        if (validated.some((item,index) => !reviewed[index] || writeIdentity(tags.find(tag => tag.tag_name === item.tag_name),status) !== reviewed[index])) {
+          $('batch-result').textContent = 'Batch blocked: signal, permissions or API context changed. Review the commands again.'; onChange(); return;
+        }
         if (!canWrite()) { $('batch-result').textContent = 'Batch blocked: fresh Remote data and write test mode are required.'; onChange(); return; }
         const observation = beginWriteObservation(validated);
         try { const response = await post('/api/write/batch', {writes:validated, confirmation:'CONFIRM BATCH WRITE'}); finishWriteObservation(observation,response); $('batch-result').textContent = response.console_batch_accepted === true ? `BATCH ACCEPTED · ${validated.length} items. Watch the read signals and feedback above.` : 'BATCH OUTCOME REQUIRES REVIEW · Supplier did not confirm every item as written.'; onChange(); }

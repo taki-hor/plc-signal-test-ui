@@ -1,4 +1,4 @@
-import {$, node, groupFor, valueText, formatTime} from './dom.js';
+import {$, node, groupFor, valueText, formatTime, setText} from './dom.js';
 
 let tags = [], poll = null, status = null, cases = [], records = [], storageKey = null;
 let selectedTag = null, selectedRecord = '';
@@ -7,6 +7,13 @@ const selected = () => tags.find(t => t.tag_name === $('write-tag').value);
 const reads = () => tags.filter(t => t.read_write === 'R');
 const includes = (r, name) => r.writes.some(w => w.tag_name === name);
 const currentRecord = () => records.find(r => r.id === selectedRecord);
+function operatorResult(r) {
+  if (r?.operatorResult === 'fail' || r?.operatorResult === 'unchecked') return r.operatorResult;
+  const stamp = r?.operatorCompletedAt;
+  const valid = typeof stamp === 'number' ? Number.isFinite(stamp) && stamp > 0 : typeof stamp === 'string' && stamp.trim() !== '' && Number.isFinite(Date.parse(stamp));
+  return valid ? 'pass' : 'unchecked';
+}
+const operatorLabel = result => result === 'pass' ? 'Pass' : result === 'fail' ? 'Fail' : 'Not checked';
 function persist() {
   if (!storageKey) return;
   try { localStorage.setItem(storageKey, JSON.stringify(records)); }
@@ -84,6 +91,23 @@ function observe() {
     }
   }
 }
+function canSetResult(r) {
+  return Boolean(r && records.includes(r) && !records.some(item => item.state === 'SENDING') &&
+    r.state !== 'BLOCKED BEFORE DISPATCH' && (r.accepted_at || ['OUTCOME UNKNOWN','ACCEPTANCE NOT CONFIRMED','MISSING BASELINE'].includes(r.state)));
+}
+function setOperatorResult(value) {
+  const r = currentRecord();
+  if (!canSetResult(r) || !['unchecked','pass','fail'].includes(value) || operatorResult(r) === value) return;
+  const at = new Date().toISOString(), previous = operatorResult(r), previousAt = r.operatorResultAt ?? r.operatorCompletedAt ?? null,
+    previousComplete = r.operatorCompletedAt ?? null;
+  Object.assign(r,{operatorResult:value,operatorResultAt:at,operatorCompletedAt:value === 'pass' ? at : null});
+  if (!Array.isArray(r.operatorEvents)) r.operatorEvents = [];
+  r.operatorEvents.push({action:`Marked ${operatorLabel(value)} by operator`,at,
+    write_id:r.id,mode:status?.mode,api_address:status?.api_address,writes:structuredClone(r.writes),
+    api_result:r.state,operator_result:value,operator_result_at:at,previous_operator_result:previous,
+    previous_operator_result_at:previousAt,previous_operator_completed_at:previousComplete,write_sent:false});
+  persist(); render();
+}
 function canCapture(r) {
   const stamp = Date.parse(status?.supplier_timestamp_utc);
   return Boolean(r?.accepted_at && r.before?.values && status?.supplier_api_connected && status.data_fresh &&
@@ -113,20 +137,26 @@ function render() {
   const tag = selected(), name = tag?.tag_name;
   if (name !== selectedTag) { selectedTag = name; selectedRecord = records.findLast(r => includes(r,name))?.id ?? ''; }
   const available = records.filter(r => includes(r,name)).slice().reverse();
-  const select = $('write-feedback-record'), optionVersion = available.map(r => `${r.id}:${r.state}`).join('|');
+  const select = $('write-feedback-record'), optionVersion = available.map(r => `${r.id}:${r.state}:${operatorResult(r)}:${r.operatorResultAt ?? r.operatorCompletedAt ?? ''}`).join('|');
   if (select.dataset.version !== optionVersion) {
     select.dataset.version = optionVersion;
     const live = node('option','','Live values only'); live.value = '';
-    select.replaceChildren(live, ...available.map(r => { const opt = node('option','',`${formatTime(r.requested_at)} · ${r.writes.map(w => `${w.tag_name}=${w.value}`).join(', ')} · ${r.state}`); opt.value = r.id; return opt; }));
+    select.replaceChildren(live, ...available.map(r => { const opt = node('option','',`${formatTime(r.requested_at)} · ${r.writes.map(w => `${w.tag_name}=${w.value}`).join(', ')} · ${r.state} · ${operatorLabel(operatorResult(r))}`); opt.value = r.id; return opt; }));
   }
   select.value = selectedRecord;
-  const r = currentRecord();
+  const r = currentRecord(), human = operatorResult(r), choice = $('write-feedback-operator-result');
+  const operatorState = $('write-feedback-operator-state');
+  setText('write-feedback-operator-state',!r ? 'NO RECORD SELECTED' : human === 'pass' ? 'PASS — YOUR CHECK' : human === 'fail' ? 'FAIL — YOUR CHECK' : 'AWAITING YOUR CHECK');
+  operatorState.className = 'pill manual-result-badge'; operatorState.dataset.cardResult = human;
+  operatorState.title = r && human !== 'unchecked' ? `Your ${operatorLabel(human)} result set at ${formatTime(r.operatorResultAt ?? r.operatorCompletedAt)}` : 'Only your physical check sets this result.';
+  if (document.activeElement !== choice) choice.value = human;
+  choice.disabled = !canSetResult(r);
   $('write-feedback-capture').disabled = !canCapture(r);
   const fresh = Boolean(status?.supplier_api_connected && status.data_fresh && poll?.timestamp === status.supplier_timestamp);
   $('write-feedback-health').textContent = fresh ? 'LIVE · FRESH' : 'STALE / NO DATA';
   $('write-feedback-health').className = `pill ${fresh ? '' : 'amber'}`;
   const mappings = cases.filter(c => c.command_tag === name);
-  $('write-feedback-mapping').textContent = mappings.length ? mappings.map(c => `${c.command_tag}=${c.command_value} → ${c.feedback_tag}=${c.expected_feedback} · ${c.requires_confirmation ? 'NEEDS CONFIRMATION — observation only' : 'configured feedback'}`).join('; ') : 'No configured completion mapping. Same-group signals provide context. The console does not infer success.';
+  $('write-feedback-mapping').textContent = mappings.length ? mappings.map(c => `${c.command_tag}=${c.command_value} → ${c.feedback_tag}=${c.expected_feedback} · ${c.requires_confirmation ? 'Mapping under test — observe the equipment' : 'Local pair'}`).join('; ') : 'No configured completion mapping. Same-group signals provide context. The console does not infer success.';
   const nearby = reads().filter(t => related(tag,t));
   const direct = new Set(mappings.map(c => c.feedback_tag));
   // Both door position signals stay visible when inspecting either door command.
@@ -136,8 +166,8 @@ function render() {
     const card = node('div','feedback-signal'); card.dataset.feedbackTag = item.tag_name;
     card.append(node('span','',item.tag_name),node('strong',fresh ? '' : 'warn',valueText(poll?.[item.tag_name])),node('small','',item.description)); container.append(card);
   }
-  $('write-feedback-result').textContent = !r ? 'No write record selected. Live monitoring sends no commands.' :
-    `${r.state} · ${r.feedback.map(f => `${f.feedback_tag}: ${f.state}`).join(' · ')}${r.reason ? ` · ${r.reason}` : ''}`;
+  setText('write-feedback-result',!r ? 'No write record selected. Live monitoring sends no commands.' :
+    `${r.state} · ${r.feedback.map(f => `${f.feedback_tag}: ${f.state}`).join(' · ')}${r.reason ? ` · ${r.reason}` : ''}`);
   $('write-feedback-times').textContent = !r ? '' : `Before: ${r.before?.supplier_timestamp_utc ?? 'not recorded'} · API accepted: ${r.accepted_at ?? 'not confirmed'} · Recorded after: ${r.after?.supplier_timestamp_utc ?? 'not recorded'}${r.after?.source ? ` · ${r.after.source}` : ''}`;
   const query = $('write-feedback-search').value.trim().toLowerCase(), scope = $('write-feedback-scope').value;
   const items = reads().filter(t => (scope === 'all' || related(tag,t)) && [t.tag_name,t.description,t.device_address].some(v => v.toLowerCase().includes(query)))
@@ -154,10 +184,11 @@ function exportRecords(format) {
   let content, type;
   if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(),api_address:status?.api_address,mode:status?.mode,records},null,2); type = 'application/json'; }
   else {
-    const columns = ['write_id','requested_at','commands','result','read_tag','before','before_timestamp_utc','after','after_timestamp_utc','api_accepted_at','feedback_evidence'];
-    const rows = records.flatMap(r => Object.keys(r.before?.values ?? {}).map(name => [r.id,r.requested_at,r.writes.map(w => `${w.tag_name}=${w.value}`).join('; '),r.state,name,r.before.values[name],r.before.supplier_timestamp_utc,r.after?.values[name],r.after?.supplier_timestamp_utc,r.accepted_at,JSON.stringify(r.feedback.filter(f => f.feedback_tag === name))]));
+    const columns = ['write_id','requested_at','commands','result','read_tag','before','before_timestamp_utc','after','after_timestamp_utc','api_accepted_at','feedback_evidence','operator_result','operator_result_at','operator_completed_at','operator_events'];
+    const operatorFields = r => [operatorResult(r),r.operatorResultAt ?? r.operatorCompletedAt ?? '',r.operatorCompletedAt ?? '',JSON.stringify(r.operatorEvents ?? [])];
+    const rows = records.flatMap(r => Object.keys(r.before?.values ?? {}).map(name => [r.id,r.requested_at,r.writes.map(w => `${w.tag_name}=${w.value}`).join('; '),r.state,name,r.before.values[name],r.before.supplier_timestamp_utc,r.after?.values[name],r.after?.supplier_timestamp_utc,r.accepted_at,JSON.stringify(r.feedback.filter(f => f.feedback_tag === name)),...operatorFields(r)]));
     // Include blocked/unknown writes even when no receipt snapshot exists.
-    for (const r of records.filter(r => !r.before)) rows.push([r.id,r.requested_at,r.writes.map(w => `${w.tag_name}=${w.value}`).join('; '),r.state]);
+    for (const r of records.filter(r => !r.before)) rows.push([r.id,r.requested_at,r.writes.map(w => `${w.tag_name}=${w.value}`).join('; '),r.state,...Array(7).fill(''),...operatorFields(r)]);
     const cell = v => { let s = String(v ?? ''); if (typeof v === 'string' && /^[=+@\-\t\r]/.test(s)) s = "'"+s; return '"'+s.replaceAll('"','""')+'"'; };
     content = [columns,...rows].map(row => columns.map((_,i) => cell(row[i])).join(',')).join('\r\n'); type = 'text/csv';
   }
@@ -170,5 +201,8 @@ export function initWriteFeedback() {
   $('write-feedback-record').addEventListener('change',() => { selectedRecord = $('write-feedback-record').value; render(); });
   for (const format of ['json','csv']) $(`write-feedback-export-${format}`).addEventListener('click',() => exportRecords(format));
   $('write-feedback-capture').addEventListener('click',captureCurrent);
+  $('write-feedback-operator-result').addEventListener('change',() => {
+    const choice = $('write-feedback-operator-result'); setOperatorResult(choice.value); choice.value = operatorResult(currentRecord());
+  });
   window.addEventListener('pagehide',() => interrupt('Page left before feedback was observed'));
 }

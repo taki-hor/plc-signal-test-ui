@@ -129,7 +129,7 @@ async def write(request: Request, body: dict):
     require_mode(request)
     tag_name = body.get('tag_name')
     if not isinstance(tag_name, str): raise ValidationError('tag_name is required')
-    if service.command_lock.locked(): raise ValidationError('Another write or command test is running')
+    if service.command_lock.locked(): raise ValidationError('Another write or command dispatch is running')
     async with service.command_lock:
         case = next((c for c in cases if c['command_tag'] == tag_name and c['command_value'] == body.get('value') and not c.get('requires_confirmation')), None)
         feedback = {}
@@ -158,17 +158,23 @@ async def write_batch(request: Request, body: dict):
     if not isinstance(writes, list) or any(not isinstance(item, dict) for item in writes):
         raise ValidationError('writes must be a list of objects')
     if len(writes) > safety['max_batch_items']: raise ValidationError('Batch exceeds configured maximum')
-    if service.command_lock.locked(): raise ValidationError('Another write or command test is running')
+    if service.command_lock.locked(): raise ValidationError('Another write or command dispatch is running')
     async with service.command_lock:
         reads = None
         def capture_baseline(poll):
             nonlocal reads
             reads = read_baseline(poll, writes)
         response = await service.write_batch(writes, authorize=lambda: require_mode(request), before_write=capture_baseline)
-        results = response.get('writes', [])
-        accepted = isinstance(results, list) and len(results) == len(writes) and all(
+        if not isinstance(response, dict):
+            error = PLCError(502, 'Supplier batch response is not an object. Inspect the commands before retrying.')
+            error.write_dispatched = True
+            raise error
+        results = response.get('results', response.get('writes', []))
+        count = response.get('count', None if 'results' in response else len(writes))
+        accepted = type(count) is int and count == len(writes) and isinstance(results, list) and len(results) == len(writes) and all(
             any(isinstance(result, dict) and result.get('tag_name') == item['tag_name'] and
-                result.get('value') == item['value'] and result.get('written') is True for result in results) for item in writes)
+                type(result.get('value')) in (int, float) and result['value'] == item['value'] and
+                result.get('written') is True for result in results) for item in writes)
         return logs.scrub({**response, 'console_batch_accepted': accepted,
                            'console_accepted_at': datetime.now(timezone.utc).isoformat() if accepted else None,
                            'console_read_baseline': reads})
@@ -179,8 +185,9 @@ async def test_cases(): return {'tests': cases}
 @app.post('/api/test/run')
 async def test_run(request: Request, body: dict):
     require_mode(request)
+    options = {'timeout_ms': body['timeout_ms']} if 'timeout_ms' in body else {}
     result = await runner.run(body.get('id'), authorize=lambda: require_mode(request),
-                              mapping_under_test=body.get('mapping_under_test', False), end_mode=body.get('end_mode', 'manual0'))
+                              mapping_under_test=body.get('mapping_under_test', False), end_mode=body.get('end_mode', 'manual0'), **options)
     result['write_response'] = logs.scrub(result.get('write_response'))
     return result
 

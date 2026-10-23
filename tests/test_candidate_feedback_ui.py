@@ -30,7 +30,7 @@ def open_candidate(browser):
     _, _, _, js, wait_for = browser
     js("document.querySelector('[data-nav=verify]').click()")
     wait_for("return !document.getElementById('verify').classList.contains('hidden')")
-    js("document.querySelector('[data-test-id="+CASE+"] button').click()")
+    js("document.querySelector('[data-test-id="+CASE+"] button[data-run-test]').click()")
     assert js("return document.querySelectorAll('dialog[open]').length") == 1
     assert js('return window.testRequests') == []
 
@@ -41,7 +41,7 @@ def test_candidates_are_available_as_mappings_under_test_not_configured_passes(b
     js("document.querySelector('[data-nav=verify]').click()")
     wait_for("return document.querySelectorAll('[data-test-id] button[data-needs-confirmation=true]').length===36")
     assert js("return [...document.querySelectorAll('[data-test-id] button[data-needs-confirmation=true]')].every(button=>!button.disabled)")
-    assert js("return [...document.querySelectorAll('[data-test-id] button[data-needs-confirmation=true]')].every(button=>{const badge=button.closest('[data-test-id]').querySelector('.test-status');return badge.dataset.state==='MAPPING UNDER TEST'&&badge.textContent.includes('MAPPING UNDER TEST')})")
+    assert js("return [...document.querySelectorAll('[data-test-id] button[data-needs-confirmation=true]')].every(button=>{const badge=button.closest('[data-test-id]').querySelector('.test-status');return badge.dataset.state==='MAPPING UNDER TEST'&&badge.textContent.toUpperCase().includes('MAPPING UNDER TEST')})")
     assert not state['writes'] and js('return window.testRequests') == []
 
 
@@ -52,8 +52,8 @@ def test_candidate_opt_in_and_end_mode_are_sent_only_after_single_confirmation(b
     open_candidate(browser)
     assert 'mapping' in js("return document.getElementById('confirm-body').textContent").lower()
     assert 'under test' in js("return document.getElementById('confirm-body').textContent").lower()
-    assert js("return document.getElementById('test-mode-manual').checked")
-    if mode=='hold': js("document.getElementById('test-mode-hold').click()")
+    assert js("return document.getElementById('test-mode-hold').checked")
+    js("document.getElementById('test-mode-hold').click()" if mode=='hold' else "document.getElementById('test-mode-manual').click()")
     assert not state['writes'] and js('return window.testRequests') == []
     js("document.getElementById('confirm-yes').click()")
     wait_for("return document.getElementById('test-result-state').textContent.startsWith('OBSERVED')")
@@ -72,7 +72,7 @@ def test_cancelled_candidate_confirmation_never_runs_or_writes(browser,mode):
     time.sleep(.2)
     assert js('return window.testRequests') == []
     assert not state['writes']
-    assert js("return document.getElementById('test-result-state').textContent") == 'Choose a configured test below. Its progress and result appear here.'
+    assert js("return document.getElementById('test-result-state').textContent") == 'No run selected. Review the pair, then run a test when ready.'
 
 
 @pytest.mark.parametrize('legacy_receipt',[False,True])
@@ -287,8 +287,8 @@ def test_reload_shows_pending_manual_clear_even_when_current_command_is_zero(bro
     js("document.getElementById('mode-btn').click()")
     wd(prefix+'/alert/accept',{})
     wait_for("return document.getElementById('write-banner-title').textContent==='WRITE TEST MODE ENABLED'")
-    assert js("return [...document.querySelectorAll('#test-list button')].every(button=>button.disabled)")
-    js("document.querySelector('[data-test-id=tank01-door-open] button').click()")
+    assert js("return document.querySelector('[data-test-id=tank01-filterremote] button[data-run-test]').disabled&&!document.querySelector('[data-test-id=tank01-door-open] button[data-run-test]').disabled")
+    js("document.querySelector('[data-test-id=tank01-filterremote] button[data-run-test]').click()")
     assert not js("return document.getElementById('confirm-dialog').open")
     assert js('return window.testRequests') == []
     assert js("return performance.getEntriesByType('resource').filter(entry=>['/api/write','/api/test/run'].includes(new URL(entry.name).pathname)).length") == 0
@@ -309,7 +309,7 @@ def test_acted_candidate_with_unconfirmed_ack_remains_pending_and_can_be_cleared
     assert not record.get('oneRejectedAt') and not record.get('holdOneAt')
     assert record['feedbackState']=='OUTCOME UNKNOWN'
     assert js("return document.getElementById('test-active-command-list').textContent.includes('Pending manual clear: Tank01_FilterRemote')")
-    assert js("return [...document.querySelectorAll('#test-list button')].every(button=>button.disabled)")
+    assert js("return document.querySelector('[data-test-id=tank01-filterremote] button[data-run-test]').disabled&&!document.querySelector('[data-test-id=tank01-door-open] button[data-run-test]').disabled")
     assert not js("return document.getElementById('test-send-zero').disabled")
     assert not state['writes']
 
@@ -336,5 +336,5 @@ def test_wrong_or_missing_clear_address_never_verifies_zero_or_drops_pending_rec
     record=js("return JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST')).at(-1)")
     assert record['zeroRequestedAt'] and not record.get('zeroSeenAt')
     assert js("return document.getElementById('test-active-command-list').textContent.includes('Pending manual clear: Tank01_FilterRemote')")
-    assert js("return [...document.querySelectorAll('#test-list button')].every(button=>button.disabled)")
+    assert js("return document.querySelector('[data-test-id=tank01-filterremote] button[data-run-test]').disabled&&!document.querySelector('[data-test-id=tank01-door-open] button[data-run-test]').disabled")
     assert state['writes'] == [{'tag_name':COMMAND,'value':0}]

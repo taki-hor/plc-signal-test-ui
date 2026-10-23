@@ -399,3 +399,126 @@ def test_test_endpoint_rejects_invalid_modes_before_writing(console, options):
             assert console.client.values['Tank01_DoorOpenRemote']==0
             assert not any(e['event']=='WRITE' for e in console.logs.get())
     asyncio.run(run())
+
+
+@pytest.mark.parametrize('timeout_ms', [None, True, False, '30000', 1000.0, [], {}, 0, 999, 300001])
+def test_test_endpoint_rejects_invalid_timeout_before_writing(console, timeout_ms):
+    async def run():
+        transport = httpx.ASGITransport(app=console.app, client=('127.0.0.1', 1234))
+        async with httpx.AsyncClient(transport=transport, base_url='http://console.test') as browser:
+            token = (await browser.post('/api/mode/enable')).json()['write_token']
+            response = await browser.post('/api/test/run', headers={'X-Write-Token': token},
+                                          json={'id': 'tank01-door-open', 'timeout_ms': timeout_ms})
+            assert response.status_code == 400 and response.json()['write_dispatched'] is False
+            assert 'timeout_ms must be an integer' in response.json()['error']
+            assert console.client.values['Tank01_DoorOpenRemote'] == 0
+            assert not any(e['event'] in ('WRITE', 'TEST_START') for e in console.logs.get())
+    asyncio.run(run())
+
+
+def test_test_endpoint_override_and_omission_keep_bundled_defaults_and_audit_effective_limit(console):
+    async def run():
+        import csv
+        import io
+        console.client.feedback_delay_s = 0
+        transport = httpx.ASGITransport(app=console.app, client=('127.0.0.1', 1234))
+        async with httpx.AsyncClient(transport=transport, base_url='http://console.test') as browser:
+            before = (await browser.get('/api/test/cases')).json()
+            token = (await browser.post('/api/mode/enable')).json()['write_token']
+            headers = {'X-Write-Token': token}
+            for body, expected in [({'id': 'tank01-door-open', 'timeout_ms': 1000}, 1000),
+                                   ({'id': 'tank01-door-close'}, 15000)]:
+                response = await browser.post('/api/test/run', headers=headers, json=body)
+                assert response.status_code == 200
+                assert response.json()['result'] == 'PASS' and response.json()['timeout_ms'] == expected
+            assert (await browser.get('/api/test/cases')).json() == before
+            assert all(case['timeout_ms'] == 15000 for case in before['tests'])
+            rows = list(csv.DictReader(io.StringIO((await browser.get('/api/logs/export?kind=tests&format=csv')).text)))
+            assert [row['timeout_ms'] for row in rows if row['event'] == 'TEST_FINISH'] == ['1000', '15000']
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('shape', ['results', 'legacy_writes', 'both'])
+def test_batch_acceptance_matches_documented_results_and_preserves_legacy_shape(console, shape):
+    async def run():
+        requested = [{'tag_name':'Tank01_TempSV','value':25}, {'tag_name':'Tank01_TempAdj','value':-5.0}]
+        items = [{'tag_name':item['tag_name'],'value':item['value'],'written':True} for item in reversed(requested)]
+        supplied = {'writes':items} if shape == 'legacy_writes' else {'results':items,'count':2}
+        if shape == 'both': supplied['writes'] = []
+        calls = []
+        async def documented(writes):
+            calls.append(writes)
+            return supplied
+        console.client.write_batch = documented
+        transport = httpx.ASGITransport(app=console.app, client=('127.0.0.1',1234))
+        async with httpx.AsyncClient(transport=transport, base_url='http://console.test') as browser:
+            token = (await browser.post('/api/mode/enable')).json()['write_token']
+            response = await browser.post('/api/write/batch', headers={'X-Write-Token':token},
+                                          json={'writes':requested,'confirmation':'CONFIRM BATCH WRITE'})
+            assert response.status_code == 200
+            body = response.json()
+            assert body['console_batch_accepted'] is True and body['console_accepted_at']
+            assert body['console_read_baseline']['supplier_timestamp_utc']
+            assert body['writes' if shape == 'legacy_writes' else 'results'] == items
+            assert calls == [requested]
+            assert 'mock-secret-canary' not in response.text
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('supplied', [
+    {'results':[],'count':0},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':1,'written':True}]},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':1,'written':True}],'count':'1'},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':1,'written':True}],'count':1.0},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':1,'written':True}],'count':True},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':1,'written':True}],'count':2},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':1,'written':False}],'count':1},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':1,'written':1}],'count':1},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':0,'written':True}],'count':1},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':True,'written':True}],'count':1},
+    {'results':[{'tag_name':'Tank01_FilterRemote','value':'1','written':True}],'count':1},
+    {'results':[{'tag_name':'Tank01_HeaterRemote','value':1,'written':True}],'count':1},
+    {'results':[None],'count':1},
+    {'results':{},'count':1},
+    {'results':None,'count':1,'writes':[{'tag_name':'Tank01_FilterRemote','value':1,'written':True}]},
+    {'results':[],'count':0,'writes':[{'tag_name':'Tank01_FilterRemote','value':1,'written':True}]},
+    {'writes':[{'tag_name':'Tank01_FilterRemote','value':1,'written':True}],'count':'1'},
+])
+def test_documented_batch_partial_malformed_or_rejected_evidence_never_confirms_acceptance(console, supplied):
+    async def run():
+        calls = []
+        async def incomplete(writes):
+            calls.append(writes)
+            return supplied
+        console.client.write_batch = incomplete
+        requested = [{'tag_name':'Tank01_FilterRemote','value':1}]
+        transport = httpx.ASGITransport(app=console.app, client=('127.0.0.1',1234))
+        async with httpx.AsyncClient(transport=transport, base_url='http://console.test') as browser:
+            token = (await browser.post('/api/mode/enable')).json()['write_token']
+            response = await browser.post('/api/write/batch', headers={'X-Write-Token':token},
+                                          json={'writes':requested,'confirmation':'CONFIRM BATCH WRITE'})
+            assert response.status_code == 200
+            assert response.json()['console_batch_accepted'] is False
+            assert response.json()['console_accepted_at'] is None
+            assert calls == [requested]
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('supplied', [None, [], 'malformed'])
+def test_non_object_batch_reply_preserves_uncertain_dispatched_outcome(console, supplied):
+    async def run():
+        calls = []
+        async def malformed(writes):
+            calls.append(writes)
+            return supplied
+        console.client.write_batch = malformed
+        requested = [{'tag_name':'Tank01_FilterRemote','value':1}]
+        transport = httpx.ASGITransport(app=console.app, client=('127.0.0.1',1234))
+        async with httpx.AsyncClient(transport=transport, base_url='http://console.test') as browser:
+            token = (await browser.post('/api/mode/enable')).json()['write_token']
+            response = await browser.post('/api/write/batch', headers={'X-Write-Token':token},
+                                          json={'writes':requested,'confirmation':'CONFIRM BATCH WRITE'})
+            assert response.status_code == 502 and response.json()['write_dispatched'] is True
+            assert 'not an object' in response.json()['detail']
+            assert calls == [requested]
+    asyncio.run(run())

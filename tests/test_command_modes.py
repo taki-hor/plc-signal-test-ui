@@ -43,6 +43,8 @@ def test_default_manual_zero_does_not_automatically_keep_or_clear(browser):
     assert record['endMode'] == 'manual0' and not record.get('holdOneAt')
     assert js("return document.getElementById('bool-mode-manual').disabled&&document.getElementById('bool-mode-hold').disabled")
     choose_command(browser,'Tank01_DoorOpenRemote')
+    assert not js("return document.getElementById('bool-one').disabled")
+    choose_command(browser,FILTER)
     assert js("return document.getElementById('bool-one').disabled")
     assert state['writes'] == [{'tag_name':FILTER,'value':1}]
 
@@ -234,7 +236,7 @@ def test_operator_issue_prevents_automatic_hold(browser):
     wait_for("return document.getElementById('bool-value').textContent==='1'")
     time.sleep(.3)
     assert last_record(browser)['issueAt'] and not last_record(browser).get('holdOneAt')
-    assert js("return document.getElementById('bool-result').textContent") == 'ISSUE'
+    assert js("return document.getElementById('bool-operator-state').textContent") == 'FAIL — YOUR CHECK'
     assert state['writes'] == [{'tag_name':FILTER,'value':1}]
 
 
@@ -322,5 +324,49 @@ def test_manual_write_requires_matching_receipt_address_before_verifying_readbac
         if value==1: assert record['feedbackState']=='OUTCOME UNKNOWN'
         assert js("return !document.getElementById('bool-pending').classList.contains('hidden')")
         choose_command(browser,'Tank01_HeaterRemote')
+        assert not js("return document.getElementById('bool-one').disabled")
+        choose_command(browser,FILTER)
         assert js("return document.getElementById('bool-one').disabled")
     assert state['writes']==[{'tag_name':FILTER,'value':v} for v in ([1] if value==1 else [1,0])]
+
+
+def test_hold_readback_does_not_mark_complete_and_human_mark_works_read_only(browser):
+    state, _, _, js, wait_for = browser
+    choose_command(browser,FILTER)
+    choose_hold(browser)
+    checklist_write(browser,1)
+    wait_for("return document.getElementById('bool-result').textContent==='KEPT AT 1'")
+    assert js("return document.getElementById('bool-operator-state').textContent==='AWAITING YOUR CHECK'")
+    assert not last_record(browser).get('operatorCompletedAt')
+    js("document.getElementById('mode-btn').click()")
+    wait_for("return document.getElementById('write-banner-title').textContent==='READ-ONLY MODE'")
+    assert not js("return document.getElementById('bool-mark-complete').disabled")
+    js("document.getElementById('bool-mark-complete').click()")
+    saved=last_record(browser)
+    assert saved['operatorCompletedAt'] and saved['holdOneAt'] and not saved.get('zeroRequestedAt')
+    assert js("return document.getElementById('bool-operator-state').textContent==='PASS — YOUR CHECK'")
+    assert js("return document.getElementById('bool-result').textContent==='KEPT AT 1'")
+    assert not js("return document.getElementById('bool-held').classList.contains('hidden')")
+    assert state['writes']==[{'tag_name':FILTER,'value':1}]
+
+
+def test_correcting_failed_judgement_does_not_resume_interrupted_automatic_hold(browser):
+    state, _, _, js, wait_for=browser
+    start_frozen_hold(browser)
+    js("document.getElementById('bool-issue').click()")
+    failed=last_record(browser)
+    assert failed['operatorResult']=='fail' and failed['issueAt'] and failed['holdInterruptedAt']
+    js("document.getElementById('bool-mark-complete').click()")
+    corrected=last_record(browser)
+    assert corrected['operatorResult']=='pass' and corrected['operatorCompletedAt'] and not corrected['issueAt']
+    assert corrected['holdInterruptedAt']==failed['holdInterruptedAt']
+    state['freeze_stamp']=None
+    wait_for("return document.getElementById('bool-value').textContent==='1'")
+    time.sleep(.5)
+    assert not last_record(browser).get('holdOneAt')
+    assert not js("return document.getElementById('bool-pending').classList.contains('hidden')")
+    choose_command(browser,'Tank01_HeaterRemote')
+    assert not js("return document.getElementById('bool-one').disabled")
+    choose_command(browser,FILTER)
+    assert js("return document.getElementById('bool-one').disabled")
+    assert state['writes']==[{'tag_name':FILTER,'value':1}]

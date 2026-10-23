@@ -46,14 +46,15 @@ def test_bridge_preserves_other_tag_notes_and_pending_manual_zero_across_reload(
     js("document.getElementById('bool-notes').value='Another command draft';document.getElementById('bool-notes').dispatchEvent(new Event('input'))")
     begin(browser)
     js("window.bridge.finishFeedbackTest(null,null);window.bridge.finishFeedbackClear(null,null)")
-    assert not js('return Boolean(window.bridge.beginFeedbackClear(window.feedbackRecord))')
+    assert not js('return Boolean(window.bridge.beginFeedbackTest('+json.dumps(FILTER)+'))')
     state['values'][FILTER['command_tag']]=1
     js('window.bridge.finishFeedbackTest(window.feedbackRecord,'+json.dumps(receipt(browser))+')')
     wait_for("return !document.getElementById('bool-pending').classList.contains('hidden')")
     assert js("return document.getElementById('bool-notes').value")=='Another command draft'
     assert stored(js)[-1]['feedbackState']=='OBSERVED'
     assert stored(js)[-1]['note']=='' and not stored(js)[-1].get('feedback_elapsed_ms')
-    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(FILTER)+')')
     wd(prefix+'/refresh',{})
     wait_for("return document.getElementById('freshness').textContent==='FRESH'")
     choose_command(browser,FILTER['command_tag'])
@@ -88,7 +89,8 @@ def test_blocked_test_releases_busy_but_unknown_write_stays_pending(browser):
     js("window.bridge.finishFeedbackTest(window.feedbackRecord,null,{message:'Request outcome lost',status:502})")
     record=stored(js)[-1]
     assert record['feedbackState']=='OUTCOME UNKNOWN' and not record.get('oneAcceptedAt') and not record.get('holdOneAt')
-    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(FILTER)+')')
     assert js('return Boolean(window.bridge.beginFeedbackClear(window.feedbackRecord))')
     js("window.bridge.finishFeedbackClear(window.feedbackRecord,null,{message:'Clear blocked',writeDispatched:false})")
     assert not state['writes']
@@ -105,7 +107,8 @@ def test_clear_intent_moves_a_held_record_back_to_pending_until_verified(browser
     js('window.bridge.finishFeedbackClear(window.feedbackRecord,null,'+json.dumps({'message':'Clear failure',**({'writeDispatched':False} if blocked else {})})+')')
     wait_for("return !document.getElementById('bool-pending').classList.contains('hidden')")
     assert js("return document.getElementById('bool-held').classList.contains('hidden')")
-    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(FILTER)+')')
     assert stored(js)[-1]['zeroRequestedAt'] and not stored(js)[-1].get('zeroSeenAt')
     assert not state['writes']
 
@@ -140,7 +143,163 @@ def test_unproven_blocked_outcome_remains_pending_even_when_command_is_one(brows
     record=stored(js)[-1]
     assert record['oneRequestedAt'] and not record.get('oneRejectedAt')
     assert record['feedbackState']=='OUTCOME UNKNOWN' and not record.get('holdOneAt')
-    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(FILTER)+')')
     assert js('return Boolean(window.bridge.beginFeedbackClear(window.feedbackRecord))')
     js("window.bridge.finishFeedbackClear(window.feedbackRecord,null,{message:'No clear sent',writeDispatched:false})")
+    assert not state['writes']
+
+
+def test_parallel_feedback_records_finish_out_of_order_without_replacing_each_other(browser):
+    state, _, _, js, _=browser
+    begin(browser)
+    js('window.firstFeedback=window.feedbackRecord;window.secondFeedback=window.bridge.beginFeedbackTest('+json.dumps(HEATER)+',"manual0")')
+    assert js('return Boolean(window.secondFeedback)')
+    assert js('return window.bridge.isFeedbackRunning(window.firstFeedback)&&window.bridge.isFeedbackRunning(window.secondFeedback)')
+    second={**receipt(browser,HEATER), 'run_id':'heater-run'}
+    js('window.bridge.finishFeedbackTest(window.secondFeedback,'+json.dumps(second)+')')
+    assert js('return window.bridge.isFeedbackRunning(window.firstFeedback)&&!window.bridge.isFeedbackRunning(window.secondFeedback)')
+    first={**receipt(browser,FILTER,'TIMEOUT'), 'run_id':'filter-run'}
+    js('window.bridge.finishFeedbackTest(window.firstFeedback,'+json.dumps(first)+')')
+    records=stored(js)
+    assert [(r['tag_name'],r['feedbackState'],r['backendRunId']) for r in records]==[
+        (FILTER['command_tag'],'TIMEOUT','filter-run'),(HEATER['command_tag'],'OBSERVED','heater-run')]
+    assert all(not r.get('operatorCompletedAt') for r in records)
+    assert not state['writes']
+
+
+def test_parallel_pending_records_protect_same_address_shared_feedback_and_opposed_door(browser):
+    state, _, _, js, _=browser
+    begin(browser)
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(FILTER)+')')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    shared={**HEATER,'feedback_tag':FILTER['feedback_tag']}
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(shared)+')')
+    alias=[{**t,'device_address':'M320'} if t['tag_name']==HEATER['command_tag'] else t for t in TAGS]
+    js('window.bridge.updateChecklist('+json.dumps(alias)+',null,null)')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    js('window.bridge.updateChecklist('+json.dumps(TAGS)+',null,null)')
+    opened=next(c for c in CASES if c['id']=='tank01-door-open')
+    closed=next(c for c in CASES if c['id']=='tank01-door-close')
+    other=next(c for c in CASES if c['id']=='tank03-door-open')
+    js('window.doorFeedback=window.bridge.beginFeedbackTest('+json.dumps(opened)+')')
+    assert js('return Boolean(window.doorFeedback)')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(closed)+')')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(other)+')')
+    assert not state['writes']
+
+
+@pytest.mark.parametrize('outcome',['accepted','blocked','unknown'])
+def test_clear_and_late_feedback_keep_their_own_outcomes(browser,outcome):
+    state, _, _, js, wait_for=browser
+    case=next(c for c in CASES if c['id']=='tank01-door-open')
+    begin(browser,case)
+    state['freeze_stamp']=state['last_poll']
+    accepted=receipt(browser,case,'PASS')
+    assert js('return Boolean(window.bridge.beginFeedbackClear(window.feedbackRecord))')
+    js('window.bridge.finishFeedbackTest(window.feedbackRecord,'+json.dumps(accepted)+')')
+    assert stored(js)[-1]['feedbackState']=='CLEARING'
+    if outcome=='accepted':
+        clear={'written':True,'console_command_address':'M300','console_accepted_at':datetime.now(timezone.utc).isoformat(),
+               'console_command_baseline_utc':state['last_poll']}
+        js('window.bridge.finishFeedbackClear(window.feedbackRecord,'+json.dumps(clear)+')')
+    else:
+        failure={'message':'Injected clear failure',**({'writeDispatched':False} if outcome=='blocked' else {})}
+        js('window.bridge.finishFeedbackClear(window.feedbackRecord,null,'+json.dumps(failure)+')')
+    record=stored(js)[-1]
+    assert record['oneAcceptedAt']
+    assert record['feedbackState']=={'accepted':'CLEARED BEFORE COMPLETION','blocked':'CONFIRMED','unknown':'CLEAR OUTCOME UNKNOWN'}[outcome]
+    assert not record.get('operatorCompletedAt')
+    if outcome=='blocked': assert record['feedback_elapsed_ms']>=0
+    else: assert 'feedback_elapsed_ms' not in record
+    assert bool(record.get('feedbackInterruptedByClearAt'))==(outcome!='blocked')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(case)+')')
+    if outcome=='accepted':
+        assert not stored(js)[-1].get('zeroSeenAt')
+        state['freeze_stamp']=None
+        wait_for('return window.bridge.canStartFeedbackTest('+json.dumps(case)+')')
+        assert stored(js)[-1]['zeroSeenAt']
+    assert not state['writes']
+
+
+def test_late_feedback_after_accepted_clear_keeps_verified_zero_evidence(browser):
+    state, _, _, js, wait_for=browser
+    case=next(c for c in CASES if c['id']=='tank01-door-open')
+    begin(browser,case)
+    accepted=receipt(browser,case,'PASS')
+    assert js('return Boolean(window.bridge.beginFeedbackClear(window.feedbackRecord))')
+    clear={'written':True,'console_command_address':'M300','console_accepted_at':datetime.now(timezone.utc).isoformat(),
+           'console_command_baseline_utc':state['last_poll']}
+    js('window.bridge.finishFeedbackClear(window.feedbackRecord,'+json.dumps(clear)+')')
+    wait_for('return Boolean(JSON.parse(localStorage.getItem('+json.dumps(KEY)+')).at(-1).zeroSeenAt)')
+    zero=stored(js)[-1]['zeroSeenAt']
+    js('window.bridge.finishFeedbackTest(window.feedbackRecord,'+json.dumps(accepted)+')')
+    record=stored(js)[-1]
+    assert record['zeroSeenAt']==zero and record['oneAcceptedAt'] and record['zeroAcceptedAt'] and record['finishedAt']
+    assert record['feedbackState']=='CLEARED BEFORE COMPLETION'
+    assert not record.get('feedback_elapsed_ms') and not record.get('operatorCompletedAt')
+    assert not js('return window.bridge.isFeedbackRunning(window.feedbackRecord)')
+    assert not state['writes']
+
+
+def test_one_feedback_finish_cannot_release_another_clear_dispatch_lock(browser):
+    state, _, _, js, _=browser
+    begin(browser)
+    js('window.firstFeedback=window.feedbackRecord;window.secondFeedback=window.bridge.beginFeedbackTest('+json.dumps(HEATER)+')')
+    assert js('return Boolean(window.bridge.beginFeedbackClear(window.firstFeedback))')
+    js('window.bridge.finishFeedbackTest(window.secondFeedback,'+json.dumps(receipt(browser,HEATER))+')')
+    third=next(c for c in CASES if c['id']=='tank03-filterremote')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(third)+')')
+    js('window.bridge.finishFeedbackClear(window.firstFeedback,null,{writeDispatched:false,message:"No clear dispatched"})')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(third)+')')
+    assert stored(js)[0]['feedbackState']=='SENDING' and stored(js)[1]['feedbackState']=='OBSERVED'
+    assert not state['writes']
+
+
+def test_unrelated_manual_write_is_available_during_feedback_wait(browser):
+    from test_frontend_safety import checklist_write
+    state, _, _, js, _=browser
+    begin(browser)
+    choose_command(browser,'MainInlet')
+    assert not js("return document.getElementById('bool-one').disabled")
+    checklist_write(browser,1)
+    js('window.bridge.finishFeedbackTest(window.feedbackRecord,'+json.dumps(receipt(browser,FILTER,'TIMEOUT'))+')')
+    records=stored(js)
+    assert records[0]['tag_name']==FILTER['command_tag'] and records[0]['feedbackState']=='TIMEOUT'
+    assert records[1]['tag_name']=='MainInlet' and records[1]['oneAcceptedAt']
+    assert state['writes']==[{'tag_name':'MainInlet','value':1}]
+
+
+def test_parallel_reload_preserves_unknown_records_without_replaying_or_globally_blocking(browser):
+    state, wd, prefix, js, wait_for=browser
+    begin(browser)
+    js('window.secondFeedback=window.bridge.beginFeedbackTest('+json.dumps(HEATER)+')')
+    assert js('return Boolean(window.secondFeedback)')
+    wd(prefix+'/refresh',{})
+    wait_for("return document.getElementById('freshness').textContent==='FRESH'")
+    records=stored(js)
+    assert len(records)==2 and all(r['feedbackState']=='OUTCOME UNKNOWN' for r in records)
+    js("document.getElementById('mode-btn').click()")
+    wd(prefix+'/alert/accept',{})
+    js,_=bridge(browser)
+    third=next(c for c in CASES if c['id']=='tank03-filterremote')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(third)+')')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(FILTER)+')')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert not state['writes']
+
+
+def test_blocked_clear_restores_a_deferred_unknown_feedback_outcome(browser):
+    state, _, _, js, _=browser
+    begin(browser)
+    assert js('return Boolean(window.bridge.beginFeedbackClear(window.feedbackRecord))')
+    js('window.bridge.finishFeedbackTest(window.feedbackRecord,null,{message:"Feedback request lost"})')
+    assert stored(js)[-1]['feedbackState']=='CLEARING'
+    js('window.bridge.finishFeedbackClear(window.feedbackRecord,null,{message:"No clear dispatched",writeDispatched:false})')
+    record=stored(js)[-1]
+    assert record['feedbackState']=='OUTCOME UNKNOWN' and not record.get('oneAcceptedAt')
+    assert not js('return window.bridge.isFeedbackRunning(window.feedbackRecord)')
+    assert js('return window.bridge.canStartFeedbackTest('+json.dumps(HEATER)+')')
+    assert not js('return window.bridge.canStartFeedbackTest('+json.dumps(FILTER)+')')
     assert not state['writes']

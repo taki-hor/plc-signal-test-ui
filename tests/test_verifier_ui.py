@@ -33,15 +33,16 @@ def start_test(browser, case_id='tank01-door-open', accept=True, mode='manual0')
     _, _, _, js, wait_for = browser
     js("document.querySelector('[data-nav=verify]').click()")
     wait_for("return !document.getElementById('verify').classList.contains('hidden')")
-    js("document.querySelector('[data-test-id="+case_id+"] button').click()")
+    js("document.querySelector('[data-test-id="+case_id+"] button[data-run-test]').click()")
     assert js("return document.getElementById('confirm-dialog').open")
     if mode=='hold': js("document.getElementById('test-mode-hold').click()")
+    else: js("document.getElementById('test-mode-manual')?.click()")
     if accept: js("document.getElementById('confirm-yes').click()")
     else: js("document.getElementById('confirm-dialog').close('cancel')")
 
 
 @pytest.mark.parametrize('action,elapsed',[('open',5828),('close',7918)])
-def test_completed_result_is_above_cases_visible_and_focused(browser,action,elapsed):
+def test_completed_result_is_in_detail_pane_visible_and_focused(browser,action,elapsed):
     state, wd, prefix, js, wait_for = browser
     wd(prefix+'/window/rect',{'width':1440,'height':1000})
     response={'result':'PASS','test_name':'Tank01 Door '+action.title(),'command':'Tank01_Door'+action.title()+'Remote=1',
@@ -51,7 +52,7 @@ def test_completed_result_is_above_cases_visible_and_focused(browser,action,elap
     start_test(browser,'tank01-door-'+action)
     wait_for("return document.getElementById('test-result-state').textContent.startsWith('PASS')")
     assert js("return document.querySelectorAll('#test-list .test-card').length") == 50
-    assert js("return Boolean(document.getElementById('test-result').compareDocumentPosition(document.getElementById('test-list')) & Node.DOCUMENT_POSITION_FOLLOWING)")
+    assert js("const picker=document.getElementById('test-picker').getBoundingClientRect(),workspace=document.getElementById('test-workspace').getBoundingClientRect();return picker.right<=workspace.left&&document.getElementById('test-workspace').contains(document.getElementById('test-result'))")
     assert js("const r=document.getElementById('test-result').getBoundingClientRect();return r.top>=0&&r.top<innerHeight&&r.bottom>0")
     assert js("return document.activeElement.id") == 'test-result'
     assert str(elapsed)+' ms' in js("return document.querySelector('.test-backend-result').textContent")
@@ -125,7 +126,7 @@ def test_cancelled_confirmation_does_not_start_a_test(browser):
     start_test(browser,accept=False)
     time.sleep(.3)
     assert js('return window.testRequests') == []
-    assert js("return document.getElementById('test-result-state').textContent") == 'Choose a configured test below. Its progress and result appear here.'
+    assert js("return document.getElementById('test-result-state').textContent") == 'No run selected. Review the pair, then run a test when ready.'
     assert not state['writes']
 
 
@@ -184,7 +185,7 @@ def test_candidate_non_door_cases_explain_their_under_test_status_before_confirm
     intercept_test(browser)
     js("document.querySelector('[data-nav=verify]').click()")
     wait_for("return document.querySelectorAll('#test-list button[data-needs-confirmation=true]').length===36")
-    assert js("return [...document.querySelectorAll('#test-list button[data-needs-confirmation=true]')].every(button=>!button.disabled&&document.getElementById(button.getAttribute('aria-describedby')).textContent.includes('Mapping under test'))")
+    assert js("return [...document.querySelectorAll('#test-list button[data-needs-confirmation=true]')].every(button=>!button.disabled&&button.getAttribute('aria-describedby').split(' ').some(id=>document.getElementById(id)?.textContent.includes('Mapping under test')))")
     js("document.querySelector('#test-list button[data-needs-confirmation=true]').click()")
     assert js("return document.getElementById('confirm-dialog').open")
     js("document.getElementById('confirm-dialog').close('cancel')")
@@ -303,8 +304,8 @@ def test_manual_zero_inflight_blocks_double_send_and_other_feedback_tests(browse
     js("document.getElementById('test-send-zero').click();document.getElementById('confirm-yes').click()")
     assert state['clear_entered'].wait(2)
     wait_for("return document.getElementById('test-clear-state').textContent==='SENDING 0'")
-    assert js("return document.getElementById('test-send-zero').disabled&&[...document.querySelectorAll('#test-list button')].every(button=>button.disabled)")
-    js("document.getElementById('test-send-zero').click();document.querySelector('[data-test-id=tank01-door-close] button').click()")
+    assert js("return document.getElementById('test-send-zero').disabled&&[...document.querySelectorAll('#test-list button[data-run-test]')].every(button=>button.disabled)")
+    js("document.getElementById('test-send-zero').click();document.querySelector('[data-test-id=tank01-door-close] button[data-run-test]').click()")
     assert not js("return document.getElementById('confirm-dialog').open")
     assert js('return window.testRequests') == [{'id':'tank01-door-open','end_mode':'manual0'}]
     state['clear_release'].set()

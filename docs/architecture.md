@@ -15,7 +15,7 @@ Anodizing PLC
 
 `server/plc_client.py` owns the supplier transport contract: `list_tags`, `read_signals`, `read_signal`, `write_signal`, `write_batch`, and `wait_for_signal`. It transmits engineering values unchanged; the supplier performs multiplier conversion. `MockPLCClient` implements the same methods with a generated catalog snapshot. `signal_service.py` parses metadata, checks writable type and limits, requires a fresh timezone-aware supplier timestamp and `Remote=1`, and logs every request. `test_runner.py` records baseline feedback, accepted write, feedback polling and result. `log_service.py` writes redacted JSONL and exports CSV/JSON. `app.py` serves the one-page UI and local endpoints.
 
-The browser gets no supplier credential. The API key is set only in the backend HTTP header and is redacted from logs/errors. The backend serves same-origin static files, does not enable CORS, and accepts write/test/mode POSTs only from a loopback client. Write tokens exist only in memory and expire. A browser refresh discards its token; a backend restart clears the token map. Authorization callbacks recheck the token after awaited validation immediately before supplier single, batch and configured reset writes. A service command lock is shared by the write routes and the complete test runner to reject interfering local commands.
+The browser gets no supplier credential. The API key is set only in the backend HTTP header and is redacted from logs/errors. The backend serves same-origin static files, does not enable CORS, and accepts write/test/mode POSTs only from a loopback client. Write tokens exist only in memory and expire. A browser refresh discards its token; a backend restart clears the token map. Authorization callbacks recheck the token after awaited validation immediately before supplier single, batch and configured reset writes. A service command lock serializes actual write dispatches. Feedback observation releases that lock; active-run reservations reject conflicting commands while allowing independent observations.
 
 Supplier `GET /api/v1/tags/read` is one polling snapshot, with flat tag values and `timestamp`, `tags_ok`, `tags_failed`. Connection health is shown separately from supplier data freshness. A successful HTTP call cannot make stale PLC data healthy. Missing timestamps fail closed for writes. Timestamps without an offset also fail closed unless the confirmed supplier timezone is explicitly set with `PLC_TIMESTAMP_TIMEZONE`. Offset-aware timestamps retain their supplied timezone. `PLC_TIMESTAMP_OFFSET_SECONDS` is a temporary signed correction applied to freshness and event-time comparisons; it defaults to zero and is exposed in status and the UI. Raw supplier timestamps remain unchanged and frozen snapshots still exceed the stale-data limit. Reset the correction after synchronizing the supplier host clock. The console does not access PLC addresses directly; addresses are display metadata.
 
@@ -33,8 +33,9 @@ Safety functions, emergency stop, PLC interlocks, and physical commissioning aut
 
 The 0/1 checklist uses the existing guarded single-write endpoint and confirmation
 dialog. Its browser-local records are scoped by supplier API and real/mock mode;
-they store no credentials, write token or automatic actions. A possibly active 1 blocks other guided commands until verified 0 or an
-explicit, verified non-door Keep at 1 decision. Local pre-dispatch rejections do
+they store no credentials, write token or automatic actions. A possibly active 1
+blocks conflicting guided commands until verified 0 or an explicit, verified
+non-door Keep at 1 decision. Unrelated commands remain available. Local pre-dispatch rejections do
 not create a false clear requirement; uncertain transport failures do. The backend adds a UTC
 `console_accepted_at` receipt and `console_command_baseline_utc` from the final
 validated pre-dispatch snapshot to every single write, including unmapped tags
@@ -73,20 +74,22 @@ at Confirm Send 1.
 
 ## Feedback visibility, catalogue recovery and card design
 
-The Feedback tests module receives the latest poll alongside status. A stable
-result panel precedes the 50 case cards and displays the active test, expected
-and live values, source freshness and current command readback. Backend results
-alone determine PASS. Case cards no longer rebuild on every poll, preserving
-keyboard focus; the live status region changes only when its phase changes.
+The Feedback tests module receives the latest poll alongside status. Its picker
+lists all 50 pairs beside a selected-pair workspace and active-run result. On
+narrow screens the workspace follows the picker in the page scroll. Each run
+retains expected/live values, freshness, command readback, result and timer.
+Backend results describe API observations. Human Pass/Fail remains separate.
+Case rows remain mounted through polling, preserving keyboard focus. Status
+text changes only when its displayed value changes.
 Technical transport details use disclosure. Completed feedback never changes
 another page's route or keyboard focus.
 
-`controls.prepareWrite` validates and fills the Value write form for raw-tag
+`controls.prepareWrite` validates and fills the Setpoints & batch form for raw-tag
 selection without dispatching. Feedback tests' manual-zero action instead uses
 the existing confirmation dialog and write API in place, with current
 mode/freshness/Remote and captured identity checks. Its accepted receipt and
 strictly later command-zero observation are separate from the original test
-result. Value write observation history also retains the clear receipt. The existing Review/confirmation and backend guards remain
+result. Setpoints & batch observation history also retains the clear receipt. The existing Review/confirmation and backend guards remain
 the sole write path. `command-guidance.js` owns source-qualified value/procedure
 descriptions for the selected Bool command, with an exact manual family whitelist
 and address-qualified Tank 01 evidence. It does not authorize resets or mappings.
@@ -172,3 +175,94 @@ and Remote On descriptions supply 47 Hold hints in the bundled catalogue.
 Auto polarity and RemoteStart behavior supply no recommendation. The exact
 operator-confirmed Tank 01 addresses supply two confirmed Manual 0 rules.
 The marker never changes a confirmed active attempt or dispatches a write.
+
+
+### Human results, wait limits and feedback picker
+
+API evidence never sets human completion. The command checklist keeps accepted
+writes, later command readback and feedback timing separate from `operatorResult`
+and `operatorResultAt`. A manual Pass supplies `operatorCompletedAt`. Fail and
+Not checked remove completion. Explicit earlier human issue records remain Fail,
+while old API-only cycles stay unchecked. Corrections retain their prior choices
+and timestamps in audit events. An interrupted Hold cannot resume merely because
+the operator corrects a result. Pending-clear locks and API evidence remain unchanged.
+
+Feedback tests use the same record as Manual 0/1. The result dropdown saves only
+on an explicit change event. It sends no write request. Value-write observations
+retain their separate browser history and explicit human completion controls.
+Both export paths include human evidence. Server logs remain API evidence.
+
+The bundled observation default is 15000 ms. `/api/test/run` accepts an optional
+integer `timeout_ms` from 1000 through 300000. Validation occurs before dispatch.
+An override is local to the run and does not mutate configured cases. Results and
+TEST_START/TEST_FINISH/CSV retain the effective limit. The browser captures the
+chosen seconds in confirmation and allows 30 additional seconds for request
+overhead. Changing the field during a run cannot change its deadline.
+
+The native Feedback tank selector filters mounted pair rows. It follows the
+Manual 0/1 pattern. Search and human-result filters reach every pair. The shared
+command bar and active results remain outside filtering. Selection and keyboard
+focus survive polling and unchanged catalogue refreshes.
+Feedback mode initially follows a qualified Hold hint. Doors and commands
+without a hint default to Manual 0. Each write still requires confirmation.
+
+
+### Parallel feedback observations
+
+The service command lock covers validation and actual write dispatch, not the
+feedback wait. A small active-test registry protects command tag/address,
+opposing door actuator and feedback identity resources. Independent tests and
+manual writes can proceed while an observer waits. Short overlapping dispatches
+are rejected rather than queued. Configured automatic-reset cases retain
+exclusive behavior; none of the bundled cases configures a reset.
+
+An explicit same-command 0 can pass the resource guard. It interrupts the
+observer at the transport boundary, including a pending feedback read. Rejected
+preflight does not interrupt it. Captured command and feedback identities are
+checked during observation. Freshness and Remote checks use that observer's
+own reply, never another run's latest snapshot. Interrupted observers cannot award later PASS or
+perform a configured reset. Each backend run supplies `run_id` to its result
+and logs for correlation.
+
+The checklist tracks feedback requests by record. It applies per-command and
+resource conflicts to pending/unknown records, preserves every clear record,
+and accepts out-of-order replies only into their captured record. A late test
+reply cannot replace newer clear evidence or resume interrupted monitoring.
+
+The Feedback page keeps a session collection of attempts and an active view.
+The Test run selector changes only that view. Promise callbacks update their
+own attempt without changing selection or focus. Each run retains its captured
+mode, deadline, request elapsed time, API result and browser-local human result.
+Reload preserves pending checklist evidence without replaying writes.
+
+
+### Manual-style feedback workbench and HCI review
+
+Feedback uses the Manual 0/1 frame: a compact left browser and right workspace.
+Review-only selection is separate from Run. The shared command bar is a singleton
+outside the pages and appears only on the three write routes. Its intent labels
+use scoped records and never infer physical operation from a command bit. Active
+unresolved names stay visible across metadata changes. A clear must still match
+the captured address. Current readbacks have independent stale labels.
+
+Compact software authorization lives beside Refresh now. The status summary
+separates monitoring readiness from test authorization. Native controls retain
+labels, keyboard behavior and visible focus. Explicit keyboard selection reaches
+the workspace directly, and Choose another returns to the picker. Manual and
+Feedback lists/logs use page scrolling. The advanced value comparison table
+retains bounded table scrolling with a keyboard-accessible region label.
+
+Human choices use unchecked/pass/fail in both history models. Only explicit
+choices set decision timestamps. Valid legacy human completion timestamps remain
+Pass; old API outcomes do not. Fail and Not checked preserve earlier decisions
+in events. These updates never alter API state, timers, command intent or writes.
+
+Batch acceptance prefers the supplier's documented `results`/`count`. Invalid,
+partial, mismatched or malformed documented results cannot fall back to a valid
+legacy `writes` member. Legacy/mock replies remain supported only when the
+results member is absent. Malformed post-dispatch replies remain uncertain.
+
+Test diagnostics copy command_readback, Remote and Local from the same poll as
+actual_feedback. They do not add PLC requests or infer missing historical values.
+The source audit distinguishes listed tag metadata, local pair inference and
+operator physical checks. It does not convert operator Pass into supplier sign-off.

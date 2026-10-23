@@ -129,7 +129,7 @@ def test_inventory_confirmation_rechecks_guards_and_the_captured_pending_identit
     checklist_write(browser,1)
     state['values'][TAG]=0
     show_inventory(browser,value=None)
-    wait_for("return document.querySelector('[data-clear-tag="+TAG+"] .test-status').textContent==='Pending 0'")
+    wait_for("return document.querySelector('[data-clear-tag="+TAG+"] .test-status').textContent==='Needs 0'")
     before=list(state['writes'])
     js(button()+'.click()')
     assert js("return document.getElementById('confirm-dialog').open")
@@ -208,3 +208,22 @@ def test_unknown_commands_retry_does_not_reuse_the_inventorys_older_zero_receipt
     assert not records(browser)[-1].get('zeroSeenAt')
     assert js("return document.getElementById('test-clear-state').textContent")=='CLEAR MONITORING INTERRUPTED'
     assert state['writes']==[{'tag_name':TAG,'value':0}]
+
+
+@pytest.mark.parametrize('metadata_case,current_value',[('address',0),('address',1),('missing',1)])
+def test_unresolved_request_stays_visible_and_cannot_clear_a_remapped_or_missing_tag(browser,metadata_case,current_value):
+    state,_,_,js,wait_for=browser
+    choose_command(browser,TAG);checklist_write(browser,1)
+    state['values'][TAG]=current_value
+    show_inventory(browser,value=None)
+    before=list(state['writes'])
+    change=("data.tags=data.tags.map(tag=>tag.tag_name==='Tank03_FillWaterOn'?{...tag,device_address:'M999'}:tag);"
+            if metadata_case=='address' else "data.tags=data.tags.filter(tag=>tag.tag_name!=='Tank03_FillWaterOn');")
+    js("window.changedIntentFetch=window.fetch;window.fetch=async function(url,options){const response=await window.changedIntentFetch(url,options);if(url!=='/api/tags')return response;const data=await response.json();"+change+"return new Response(JSON.stringify(data),{status:200,headers:{'Content-Type':'application/json'}})};document.getElementById('refresh-btn').click()")
+    wait_for("return document.querySelector('[data-clear-tag="+TAG+"] .command-intent').textContent==='Needs review'")
+    assert js("return document.querySelector('[data-clear-tag="+TAG+"]').getClientRects().length>0")
+    assert js('return '+button()+'.disabled')
+    js(button()+'.click()')
+    assert not js("return document.getElementById('confirm-dialog').open")
+    assert not records(browser)[-1].get('zeroRequestedAt')
+    assert state['writes']==before

@@ -244,7 +244,11 @@ def test_binary_checklist_timer_persistence_and_exports(browser):
     assert js("return document.querySelector('#bool-log details').open")
     checklist_write(browser, 0)
     wait_for("return document.getElementById('bool-read-zero').dataset.verified==='true'")
-    wait_for("return document.getElementById('bool-result').textContent==='API CYCLE COMPLETE'")
+    wait_for("return document.getElementById('bool-result').textContent==='API CYCLE RECORDED'")
+    assert js("return document.getElementById('bool-operator-state').textContent==='AWAITING YOUR CHECK'")
+    assert js("return document.getElementById('bool-progress').textContent.startsWith('0 / 102 tests marked complete')")
+    js("document.getElementById('bool-mark-complete').click()")
+    assert js("return document.getElementById('bool-operator-state').textContent==='PASS — YOUR CHECK'")
     js("document.getElementById('bool-notes').value='=SUM(1,2)'; document.getElementById('bool-notes').dispatchEvent(new Event('input')); document.getElementById('bool-notes').dispatchEvent(new Event('change'))")
     assert len(state['writes']) == 2
     js("window.exportBlob=null; URL.createObjectURL=blob=>{window.exportBlob=blob;return 'blob:offline-test'}; HTMLAnchorElement.prototype.click=function(){}; document.getElementById('bool-export-csv').click()")
@@ -254,16 +258,21 @@ def test_binary_checklist_timer_persistence_and_exports(browser):
     assert 'API accepted 1' in exported and 'API accepted 0' in exported and 'Later supplier poll verified command 0' in exported
     assert "'=SUM(1,2)" in exported and 'offline-test-token' not in exported
     assert 'console_accepted_at' in exported.splitlines()[0] and 'zero_baseline_supplier_timestamp_utc' in exported.splitlines()[0]
+    assert 'operator_result' in exported.splitlines()[0] and 'operator_result_at' in exported.splitlines()[0]
     js("document.getElementById('bool-export-json').click(); window.exportText=null; window.exportBlob.text().then(t=>window.exportText=t)")
     wait_for('return window.exportText!==null')
     data = json.loads(js('return window.exportText'))
     assert len(data['checklist']) == 102 and len(data['attempts']) == 1
     assert all(e['elapsed_ms'] >= 0 for e in data['attempts'][0]['events'])
-    assert data['attempts'][0]['zeroSeenAt'] and data['attempts'][0]['finishedAt']
+    assert data['attempts'][0]['zeroSeenAt'] and data['attempts'][0]['finishedAt'] and data['attempts'][0]['operatorCompletedAt']
+    entry = next(item for item in data['checklist'] if item['tag_name']=='Tank01_DoorOpenRemote')
+    assert entry['result']=='COMPLETE' and entry['operator_completed_at']==data['attempts'][0]['operatorCompletedAt']
+    assert entry['operator_result']=='pass' and entry['operator_result_at']==data['attempts'][0]['operatorResultAt']
+    assert entry['api_result']=='API CYCLE RECORDED' and entry['api_cycle_complete']
     url = wd(prefix + '/url')
     wd(prefix + '/url', {'url':url})
     wait_for("return document.querySelectorAll('[data-command-tag]').length===102")
-    wait_for("return document.getElementById('bool-progress').textContent.startsWith('1 / 102 API cycles complete')")
+    wait_for("return document.getElementById('bool-progress').textContent.startsWith('1 / 102 tests marked complete')")
     assert js("return document.getElementById('write-banner-title').textContent==='READ-ONLY MODE'")
     assert js("return document.querySelectorAll('#command-checklist input[type=checkbox]').length") == 0
     assert len(state['writes']) == 2
@@ -289,7 +298,7 @@ def test_zero_verification_rejects_an_old_poll_even_when_value_is_zero(browser, 
     assert len(state['writes']) == 2
 
 
-def test_pending_command_blocks_other_commands_and_issue_can_be_cleared(browser):
+def test_pending_command_blocks_opposed_door_and_issue_can_be_cleared(browser):
     state, _, _, js, wait_for = browser
     choose_command(browser, 'Tank01_DoorOpenRemote')
     checklist_write(browser, 1)
@@ -297,11 +306,11 @@ def test_pending_command_blocks_other_commands_and_issue_can_be_cleared(browser)
     assert js("return document.getElementById('bool-one').disabled && document.getElementById('bool-zero').disabled")
     choose_command(browser, 'Tank01_DoorOpenRemote')
     js("document.getElementById('bool-issue').click()")
-    assert js("return document.getElementById('bool-result').textContent==='ISSUE'")
+    assert js("return document.getElementById('bool-operator-state').textContent==='FAIL — YOUR CHECK'")
     assert not js("return document.getElementById('bool-zero').disabled")
     checklist_write(browser, 0)
     wait_for("return document.getElementById('bool-read-zero').dataset.verified==='true'")
-    assert js("return document.getElementById('bool-result').textContent==='ISSUE'")
+    assert js("return document.getElementById('bool-operator-state').textContent==='FAIL — YOUR CHECK'")
     assert not js("return document.getElementById('bool-new').disabled")
     js("document.getElementById('bool-new').click()")
     assert js("return document.querySelectorAll('#command-checklist input[type=checkbox]').length") == 0
@@ -787,3 +796,143 @@ def test_value_selector_groups_setpoints_and_keeps_every_bool_accessible(browser
     wait_for("return !window.previousValueOption.isConnected&&document.querySelectorAll('#write-tag option').length===141")
     assert js("return document.getElementById('write-tag').value") == 'MainInlet'
     assert not state['writes']
+
+
+@pytest.mark.parametrize('command',['Tank01_USRemote','Tank01_HeaterRemote'])
+def test_us_and_heater_api_cycle_needs_a_human_completion_mark(browser,command):
+    state, _, _, js, wait_for = browser
+    choose_command(browser,command)
+    checklist_write(browser,1)
+    checklist_write(browser,0)
+    wait_for("return document.getElementById('bool-result').textContent==='API CYCLE RECORDED'")
+    assert js("return document.getElementById('bool-operator-state').textContent==='AWAITING YOUR CHECK'")
+    assert js("return document.getElementById('bool-progress').textContent.startsWith('0 / 102 tests marked complete')")
+    assert not js("return JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST')).at(-1).operatorCompletedAt")
+    writes=list(state['writes'])
+    js("document.getElementById('bool-filter').value='complete';document.getElementById('bool-filter').dispatchEvent(new Event('input'))")
+    assert js("return document.querySelectorAll('[data-command-tag]:not(.hidden)').length===0")
+    js("document.getElementById('bool-mark-complete').click()")
+    assert js("return document.getElementById('bool-operator-state').textContent==='PASS — YOUR CHECK'")
+    assert js("return document.getElementById('bool-result').textContent==='API CYCLE RECORDED'")
+    assert js("return document.getElementById('bool-progress').textContent.startsWith('1 / 102 tests marked complete')")
+    assert js("return document.querySelectorAll('[data-command-tag]:not(.hidden)').length===1")
+    assert state['writes']==writes
+
+
+def test_human_completion_and_undo_do_not_stop_timer_or_release_pending_command(browser):
+    state, _, _, js, wait_for = browser
+    choose_command(browser,'Tank01_DoorOpenRemote')
+    checklist_write(browser,1)
+    wait_for("return document.getElementById('bool-completion').textContent==='WAITING'")
+    record="JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST')).at(-1)"
+    js("document.getElementById('bool-mark-complete').click()")
+    assert js("return document.getElementById('bool-operator-state').textContent==='PASS — YOUR CHECK'")
+    assert js("return document.getElementById('bool-result').textContent==='NEEDS 0'")
+    before=js("return document.getElementById('bool-timer').textContent")
+    time.sleep(.3)
+    assert js("return document.getElementById('bool-timer').textContent")!=before
+    assert js('return '+record+'.feedbackState')=='WAITING'
+    assert not js('return '+record+'.feedbackStoppedAt')
+    choose_command(browser,'Tank01_DoorCloseRemote')
+    assert js("return document.getElementById('bool-one').disabled")
+    choose_command(browser,'Tank01_DoorOpenRemote')
+    state['values']['Tank01_DoorOpened']=1
+    wait_for("return document.getElementById('bool-completion').textContent==='CONFIRMED'")
+    elapsed_ms=js('return '+record+'.feedback_elapsed_ms')
+    js("document.getElementById('bool-mark-incomplete').click()")
+    assert js("return document.getElementById('bool-operator-state').textContent==='AWAITING YOUR CHECK'")
+    saved=js('return '+record)
+    assert not saved.get('operatorCompletedAt') and not saved.get('issueAt')
+    assert saved['feedback_elapsed_ms']==elapsed_ms and not saved.get('zeroRequestedAt')
+    assert any(event['action']=='Operator removed test completion' and event['write_sent'] is False for event in saved['events'])
+    assert not js("return document.getElementById('bool-pending').classList.contains('hidden')")
+    assert state['writes']==[{'tag_name':'Tank01_DoorOpenRemote','value':1}]
+
+
+def test_old_api_cycle_record_does_not_infer_human_completion_after_reload(browser):
+    state, wd, prefix, js, wait_for = browser
+    choose_command(browser,'Tank01_HeaterRemote')
+    checklist_write(browser,1)
+    checklist_write(browser,0)
+    wait_for("return document.getElementById('bool-read-zero').dataset.verified==='true'")
+    js("const key='plc-command-checklist:v1:MOCK:BROWSER TEST';const records=JSON.parse(localStorage.getItem(key));const r=records.at(-1);delete r.operatorCompletedAt;delete r.oneRequestedAt;r.events.push({action:'API cycle complete; physical result requires operator observation',at:new Date().toISOString(),elapsed_ms:100});localStorage.setItem(key,JSON.stringify(records))")
+    url=wd(prefix+'/url');wd(prefix+'/url',{'url':url})
+    wait_for("return document.querySelectorAll('[data-command-tag]').length===102")
+    choose_command(browser,'Tank01_HeaterRemote')
+    assert js("return document.getElementById('bool-result').textContent==='API CYCLE RECORDED'")
+    assert js("return document.getElementById('bool-operator-state').textContent==='AWAITING YOUR CHECK'")
+    assert js("return document.getElementById('bool-progress').textContent.startsWith('0 / 102 tests marked complete')")
+    assert js("return document.getElementById('write-banner-title').textContent==='READ-ONLY MODE'")
+    assert not js("return document.getElementById('bool-mark-complete').disabled")
+    writes=list(state['writes'])
+    js("document.getElementById('bool-mark-complete').click()")
+    assert js("return document.getElementById('bool-operator-state').textContent==='PASS — YOUR CHECK'")
+    assert state['writes']==writes
+
+
+def test_issue_revokes_human_completion_and_new_attempt_starts_unconfirmed(browser):
+    state, _, _, js, wait_for = browser
+    choose_command(browser,'Tank01_USRemote')
+    checklist_write(browser,1)
+    checklist_write(browser,0)
+    wait_for("return document.getElementById('bool-read-zero').dataset.verified==='true'")
+    js("document.getElementById('bool-mark-complete').click()")
+    assert js("return document.getElementById('bool-operator-state').textContent==='PASS — YOUR CHECK'")
+    js("document.getElementById('bool-issue').click()")
+    assert js("return document.getElementById('bool-operator-state').textContent==='FAIL — YOUR CHECK'")
+    assert js("return document.getElementById('bool-result').textContent==='API CYCLE RECORDED'")
+    saved=js("return JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST')).at(-1)")
+    assert not saved.get('operatorCompletedAt') and saved['issueAt']
+    assert any(event['action']=='Operator recorded an issue' and event.get('previous_operator_completed_at') for event in saved['events'])
+    assert js("return !document.getElementById('bool-mark-complete').disabled&&!document.getElementById('bool-mark-incomplete').disabled")
+    js("document.getElementById('bool-new').click()")
+    assert js("return document.getElementById('bool-operator-state').textContent==='NOT TESTED'")
+    assert js("return document.getElementById('bool-mark-complete').disabled")
+    saved=js("return JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST')).at(-1)")
+    assert not saved.get('operatorCompletedAt') and not saved.get('oneRequestedAt')
+    assert state['writes']==[{'tag_name':'Tank01_USRemote','value':1},{'tag_name':'Tank01_USRemote','value':0}]
+
+
+@pytest.mark.parametrize('fault',['unknown','before_dispatch'])
+def test_uncertain_or_rejected_write_cannot_be_marked_complete(browser,fault):
+    state, _, _, js, wait_for = browser
+    choose_command(browser,'Tank01_USRemote')
+    state['write_fault']=fault
+    js("document.getElementById('bool-one').click();document.getElementById('confirm-yes').click()")
+    wait_for("return document.getElementById('bool-log').textContent.includes("+json.dumps('outcome requires review' if fault=='unknown' else 'blocked before dispatch')+")")
+    assert js("return document.getElementById('bool-mark-complete').disabled")
+    js("document.getElementById('bool-mark-complete').click()")
+    saved=js("return JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST')).at(-1)")
+    assert not saved.get('operatorCompletedAt')
+    assert js("return document.getElementById('bool-progress').textContent.startsWith('0 / 102 tests marked complete')")
+    assert not state['writes']
+
+
+def test_manual_result_changes_are_reversible_and_archive_previous_failures(browser):
+    state, _, _, js, wait_for=browser
+    choose_command(browser,'Tank01_USRemote')
+    checklist_write(browser,1)
+    checklist_write(browser,0)
+    wait_for("return document.getElementById('bool-read-zero').dataset.verified==='true'")
+    writes=list(state['writes'])
+    record="JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST')).at(-1)"
+    js("document.getElementById('bool-mark-complete').click()")
+    passed=js('return '+record)
+    assert passed['operatorResult']=='pass' and passed['operatorResultAt']==passed['operatorCompletedAt']
+    js("document.getElementById('bool-issue').click()")
+    failed=js('return '+record)
+    assert failed['operatorResult']=='fail' and failed['issueAt']==failed['operatorResultAt'] and not failed['operatorCompletedAt']
+    assert js("return document.getElementById('bool-progress').textContent.startsWith('0 / 102 tests marked complete')")
+    js("document.getElementById('bool-mark-complete').click()")
+    corrected=js('return '+record)
+    assert corrected['operatorResult']=='pass' and not corrected['issueAt'] and corrected['operatorCompletedAt']
+    assert js("return document.getElementById('bool-progress').textContent.startsWith('1 / 102 tests marked complete')")
+    change=corrected['events'][-1]
+    assert change['previous_operator_result']=='fail' and change['previous_issue_at']==failed['issueAt']
+    assert change['previous_operator_result_at']==failed['operatorResultAt'] and change['write_sent'] is False
+    js("document.getElementById('bool-mark-incomplete').click()")
+    unchecked=js('return '+record)
+    assert unchecked['operatorResult']=='unchecked' and not unchecked['issueAt'] and not unchecked['operatorCompletedAt']
+    assert [event['operator_result'] for event in unchecked['events'] if 'operator_result' in event]==['pass','fail','pass','unchecked']
+    assert js("return document.getElementById('bool-result').textContent==='API CYCLE RECORDED'")
+    assert state['writes']==writes

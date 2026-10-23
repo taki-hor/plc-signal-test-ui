@@ -41,7 +41,7 @@ async function refresh() {
 function modeChanged() { if (status) renderStatus(status, modeEnabled()); updateControls(null,poll,status); updateChecklist(null,poll,status); updateVerifier(null,status,poll,tags); refreshLogs(); }
 async function start() {
   initSignalEvents(); initControls(modeChanged); initChecklist(modeChanged); initLogger(); initWriteFeedback();
-  initRouter(page => { if (page === 'logs') refreshLogs(); });
+  initRouter(page => { $('shared-write-signals').classList.toggle('hidden',!['verify','commands','write'].includes(page)); if (page === 'logs') refreshLogs(); });
   $('refresh-btn').addEventListener('click', async () => { await loadCatalog(); await refresh(); refreshLogs(); });
   await loadCatalog(); await refresh(); await refreshLogs();
   const interval = Math.max(250, status?.poll_interval_ms ?? 1000);
