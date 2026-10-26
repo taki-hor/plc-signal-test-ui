@@ -3,7 +3,8 @@
 import argparse
 import asyncio
 import csv
-from datetime import datetime
+import hashlib
+from datetime import datetime, timezone
 import inspect
 import json
 import math
@@ -67,7 +68,111 @@ def inventory(catalog=None, schema=None, pdf=None):
                       'pdf_identity':signature(source_pdf) if source_pdf else None,
                       'watched_identities':{other.tag_name:signature(other) for other in tags.values() if any(other.tag_name.startswith(prefix) for prefix in prefixes) and other.data_type=='Bool' and (other.read_write=='W' or other.tag_name.endswith('Status'))}})
     cases.sort(key=lambda c:(c['tank'],re.sub(r'(?:Auto|On|Remote)$','',c['tag_name'].split('_',1)[-1]).lower(),c['tag_name'].endswith('Auto'),c['tag_name']))
-    return {'format':'swagger-line-plan-v1','cases':cases,'catalog_count':len(tags)}
+    return {'format':'swagger-line-plan-v1','cases':cases,'catalog_count':len(tags),
+            'contract_sha256':hashlib.sha256(json.dumps(schema,sort_keys=True,separators=(',',':')).encode()).hexdigest()}
+
+
+
+
+def recovery_bound(row):
+    values=[row['recovery_after']] if row.get('recovery_after') is not None else None
+    if values is None:
+        bounds=row.get('restore_bounds')
+        if row.get('restore_acknowledged') is not True or not isinstance(bounds,list) or not bounds or not row.get('restore_received_at'):
+            raise ValueError('Unresolved restoration lacks acknowledged source timing bounds; review is required')
+        values=[*bounds,row['restore_received_at']]
+    try:
+        stamps=[datetime.fromisoformat(value.replace('Z','+00:00')) for value in values]
+        if not all(stamp.tzinfo for stamp in stamps):raise ValueError('Timezone is missing')
+        return max(stamps).astimezone(timezone.utc).isoformat()
+    except (ValueError,TypeError,AttributeError) as exc:
+        raise ValueError('Unresolved restoration requires valid timezone-aware source bounds') from exc
+
+
+def resume_plan(plan, report_path, paths, context):
+    source=Path(report_path).resolve();raw=source.read_bytes()
+    try:
+        report=json.loads(raw)
+        if report['format']!='swagger-line-test-v1' or not isinstance(report['results'],list):raise ValueError('Invalid resume report format')
+        cases={case['tag_name']:case for case in plan['cases']}
+        manifest={name:case['identity'] for name,case in cases.items()}
+        if report.get('inventory') is not None and report['inventory']!=manifest:raise ValueError('Resume inventory/schema differs from the reviewed141-tag catalog')
+        saved_context=report.get('context')
+        if saved_context is not None and saved_context!=context:raise ValueError('Resume mode or supplier origin differs from this run')
+        if saved_context is not None and report.get('inventory')!=manifest:raise ValueError('Context-bound resume report requires its complete reviewed inventory')
+        if saved_context is not None and report.get('contract_sha256')!=plan['contract_sha256']:raise ValueError('Resume Swagger contract differs from the reviewed schema')
+        settled={};recover=[];visited=set();skipped=set();seen=set();actual_names=set()
+        prior=report.get('settled_paths',[])
+        if not isinstance(prior,list) or prior and saved_context is None:raise ValueError('Invalid prior settled-path history')
+        for row in prior:
+            name,path=row['tag_name'],row['path'];case=cases.get(name)
+            if not case or path not in ('direct','app') or (name,path) in settled or row['identity']!=case['identity'] or row['result'] not in ('pass','timeout_fail'):
+                raise ValueError('Invalid settled path or metadata')
+            settled[name,path]=dict(row)
+            if row.get('recovery_required') or row.get('recovery_after') is not None:
+                settled[name,path]['recovery_after']=recovery_bound(row)
+        for row in report['results']:
+            if not isinstance(row,dict):raise ValueError('Resume result must be an object')
+            name,path=row['tag_name'],row['path'];case=cases.get(name)
+            if not case or path not in ('direct','app','not_run') or (name,path) in seen:raise ValueError('Unknown or duplicate resume tag/path')
+            seen.add((name,path))
+            if row.get('kind')!=case['kind'] or row.get('tank')!=case['tank']:raise ValueError('Resume tag kind/physical tank differs from reviewed inventory')
+            if path=='not_run':
+                if row.get('request')!='not_sent' or not isinstance(row.get('skip_reason'),str) or not row['skip_reason'] or row.get('test_acknowledged') or row.get('test_receipt') or row.get('error') or row.get('restoration_error'):
+                    raise ValueError('Blocked/unknown results require review; they are not skipped tests')
+                skipped.add(name);continue
+            if (name,path) in settled or row.get('reviewed_identity')!=case['identity']:raise ValueError('Duplicate settled path or changed command metadata')
+            actual_names.add(name);visited.add((name,path))
+            acknowledged=row.get('request')=='acknowledged' and row.get('readback')=='verified'
+            human_pass=row.get('human_result')=='pass' and acknowledged and not row.get('error')
+            mode_pass=(case['kind']=='auto' and acknowledged and row.get('restored') is True and not row.get('error') and not row.get('restoration_error'))
+            timeout_fail=(acknowledged and row.get('output')=='unconfirmed' and row.get('restored') is True and row.get('human_result')=='unchecked' and not row.get('error') and not row.get('restoration_error'))
+            if not (human_pass or mode_pass or timeout_fail):raise ValueError('Unsettled/unknown visited result requires review before resume: '+name+' ['+path+']')
+            value=row.get('original_value')
+            if type(value) not in (int,float) or not math.isfinite(value):raise ValueError('Resume result lacks a finite original value')
+            item={'tag_name':name,'path':path,'identity':case['identity'],'result':'timeout_fail' if timeout_fail else 'pass',
+                  'original_value':value,'recovery_required':row.get('restored') is not True}
+            if item['recovery_required']:item['recovery_after']=recovery_bound(row)
+            settled[name,path]=item
+        if skipped & actual_names:raise ValueError('A tag cannot be both skipped and executed in one source report')
+        for item in settled.values():
+            if item.get('recovery_required'):
+                value=item.get('original_value')
+                if type(value) not in (int,float) or not math.isfinite(value):raise ValueError('Unresolved restoration lacks an original value')
+                recover.append(item)
+        selected=[]
+        for case in plan['cases']:
+            pending=[path for path in paths if (case['tag_name'],path) not in settled]
+            if pending:selected.append({**case,'paths':pending})
+        provenance={'source_path':str(source),'source_sha256':hashlib.sha256(raw).hexdigest(),
+                    'legacy_context_unverified':saved_context is None or bool((report.get('resume') or {}).get('legacy_context_unverified')),'source_result_count':len(report['results']),
+                    'settled_pass_paths':sum(row['result']=='pass' for row in settled.values()),
+                    'settled_timeout_fail_paths':sum(row['result']=='timeout_fail' for row in settled.values()),
+                    'skipped_tags':len(skipped),'unvisited_tags':len(set(cases)-(actual_names|skipped|{row['tag_name'] for row in settled.values()})),
+                    'pending_tags':len(selected),'pending_path_tests':sum(len(case['paths']) for case in selected),
+                    'settled_paths':list(settled.values()),'recovery_required':recover}
+        return {**plan,'cases':selected,'resume':provenance}
+    except (KeyError,TypeError,AttributeError) as exc:
+        raise ValueError('Malformed resume report; no test was prepared') from exc
+
+
+async def verify_resume_recovery(service, resume, logs):
+    cases={case['tag_name']:case for case in inventory()['cases']};proof=[]
+    for item in resume.get('recovery_required',[]):
+        case=cases[item['tag_name']];after=recovery_bound(item)
+        await service.load_tags();poll=await service.read()
+        tag=service.tags.get(item['tag_name'])
+        aliases=sorted(other.tag_name for other in service.tags.values() if tag and other.device_address==tag.device_address)
+        if (not service.fresh(poll) or service.poll_time(poll)<=datetime.fromisoformat(after) or poll.get('Remote')!=1 or poll.get('Local')!=0 or not tag
+                or signature(tag)!=item['identity'] or aliases!=case['aliases']
+                or not all(SwaggerLineTest.equal(tag,poll.get(name),item['original_value']) for name in aliases)):
+            raise ValidationError('Resume blocked: prior restoration is not currently verified for '+item['tag_name']+'; no corrective write was sent')
+        check={'tag_name':item['tag_name'],'source_path':item['path'],'identity':item['identity'],
+               'original_value':item['original_value'],'supplier_utc':service.poll_time(poll).isoformat(),'after_source_restore':after,
+               'values':{name:poll.get(name) for name in aliases},'fresh':True,'Remote':1,'Local':0,'write_sent':False}
+        logs.add('TEST_SWAGGER_RESUME_RECOVERY_READ',**check);proof.append(check)
+        item['recovery_required']=False
+    return proof
 
 
 def local_origin(origin):
@@ -160,11 +265,12 @@ def validate_number(tag,value,limits):
 
 
 class SwaggerLineTest:
-    def __init__(self, services, logs, output, *, verdict=read_verdict, ready=read_ready, prompt=input, wait_seconds=15, emit=print):
+    def __init__(self, services, logs, output, *, verdict=read_verdict, ready=read_ready, prompt=input, wait_seconds=15, emit=print, context=None, resume=None):
         self.services=services;self.logs=CleanupLogs(logs);self.output=Path(output)
         for service in services.values():service.logs=self.logs
         self.verdict,self.ready,self.prompt=verdict,ready,prompt
         self.wait_seconds=wait_seconds;self.results=[]
+        self.context=context;self.resume=resume;self.recovery_checks=[];self.full_inventory=inventory()
         self.emit=lambda message:emit(logs.scrub(str(message)))
 
     def check(self,service,poll):
@@ -223,6 +329,19 @@ class SwaggerLineTest:
             remaining=deadline-asyncio.get_running_loop().time()
             try:poll=await asyncio.wait_for(service.read(),remaining)
             except TimeoutError:break
+            if poll.get('Remote')!=1 or poll.get('Local')!=0:
+                raise ValidationError('Remote/Local mode changed during observation')
+            if not service.fresh(poll):
+                rejected=phase+'_rejected_samples'
+                row[rejected]=row.get(rejected,0)+1
+                stamp=service.poll_time(poll)
+                self.logs.add('TEST_SWAGGER_SAMPLE_REJECTED',tag_name=case['tag_name'],path=row['path'],phase=phase,
+                              reason='stale_or_incomplete',fresh=False,age_ms=service.age_ms(poll),
+                              supplier_utc=stamp.isoformat() if stamp else None)
+                if phase=='test' and self.logs.error:raise OSError(self.logs.error)
+                if row[rejected]==1:self.emit('Stale/incomplete '+phase+' sample rejected; waiting for fresh readback.')
+                await asyncio.sleep(min(.25,max(0,deadline-asyncio.get_running_loop().time())))
+                continue
             metadata_error=None
             if phase=='restore':
                 self.guard(service,case,target_only=True)(poll)
@@ -333,7 +452,7 @@ class SwaggerLineTest:
             row['readback']='verified' if command else 'not_observed'
             row['output']=('mode_only' if case['kind']=='auto' else 'no_mapping' if not feedback else 'already_set' if already_set
                            else 'shared_mapping_unconfirmed' if len(case['feedback_aliases'])>1 else 'confirmed' if output else 'unconfirmed')
-            row['preconditions_changed_between_paths']=reference is not None and self.conditions(case,baseline)!=self.conditions(case,reference)
+            row['preconditions_changed_between_paths']=None if reference is None else self.conditions(case,baseline)!=self.conditions(case,reference)
             self.emit(f'{name} [{path}]: request={row["request"]}; readback={row["readback"]}; output={row["output"]}')
             if case['kind']=='auto':self.emit('Mode-bit test only. Automatic operation/trigger is unspecified; no movement is not an API failure or a physical Pass.')
             if case['kind']=='door':self.emit('Wait for movement to finish before choosing a result and clearing the command. Position feedback may stay latched.')
@@ -404,9 +523,17 @@ class SwaggerLineTest:
             summaries.append(item)
         return summaries
 
+    def report_data(self):
+        return self.logs.scrub({'format':'swagger-line-test-v1','exported_at':now(),'context':self.context,
+            'inventory':{case['tag_name']:case['identity'] for case in self.full_inventory['cases']},
+            'contract_sha256':self.full_inventory['contract_sha256'],
+            'resume':{key:value for key,value in (self.resume or {}).items() if key not in ('settled_paths','recovery_required')} or None,
+            'settled_paths':(self.resume or {}).get('settled_paths',[]),'recovery_checks':self.recovery_checks,
+            'results':self.results,'comparisons':self.comparisons(),'audit_fallback_events':self.logs.fallback})
+
     def save(self):
         try:
-            data=self.logs.scrub({'format':'swagger-line-test-v1','exported_at':now(),'results':self.results,'comparisons':self.comparisons(),'audit_fallback_events':self.logs.fallback})
+            data=self.report_data()
             temporary=self.output/'report.tmp';temporary.write_text(json.dumps(data,indent=2)+'\n');temporary.replace(self.output/'report.json')
             fields=['tag_name','tank','kind','path','request','readback','output','human_result','physical_stop_verified','restored','continue_queue','preconditions_changed_between_paths','skip_reason','error','http_error_status','error_detail','restoration_error','audit_error']
             with (self.output/'results.csv').open('w',newline='') as handle:
@@ -417,12 +544,14 @@ class SwaggerLineTest:
             if comparisons:
                 with (self.output/'comparison.csv').open('w',newline='') as handle:
                     writer=csv.DictWriter(handle,fieldnames=list(comparisons[0]));writer.writeheader();writer.writerows(comparisons)
+            return True
         except OSError as exc:
             if self.results:self.results[-1].update(audit_error=self.logs.scrub(str(exc)),continue_queue=False)
             self.emit('STOP: evidence export failed. Cleanup status above remains applicable; no next command will be sent.')
             try:
-                tmp=self.output/'report.tmp';tmp.write_text(json.dumps(self.logs.scrub({'format':'swagger-line-test-v1','results':self.results}),indent=2)+'\n');tmp.replace(self.output/'report.json')
+                tmp=self.output/'report.tmp';tmp.write_text(json.dumps(self.report_data(),indent=2)+'\n');tmp.replace(self.output/'report.json')
             except OSError:pass
+            return False
 
     async def run(self,cases):
         previous=None
@@ -434,7 +563,8 @@ class SwaggerLineTest:
                     answer=await ask(self.ready,'Move to '+label+'; press Enter/R when ready or Q to stop: ')
                     if answer.strip().lower() not in ('','r'):break
                 previous=tank
-            first_service=self.services['direct']
+            paths=case.get('paths',list(self.services))
+            first_service=self.services[paths[0]]
             try:
                 baseline=await self.prepare(first_service,case)
                 value,reason=await self.inputs(case,first_service,baseline[case['tag_name']])
@@ -447,8 +577,8 @@ class SwaggerLineTest:
                                      'human_result':'unchecked','skip_reason':reason,'finished_at':now()})
                 self.save();continue
             original=baseline[case['tag_name']];reference=None
-            for path in self.services:
-                if path!='direct':
+            for path in paths:
+                if path!=paths[0]:
                     answer=await ask(self.ready,f'{case["tag_name"]}: direct is restored. Ready to repeat through app? Enter/R or Q: ')
                     if answer.strip().lower() not in ('','r'):return self.results
                 row=await self.run_path(case,path,value,original,reference)
@@ -465,6 +595,9 @@ async def execute(plan,args):
     print('Supplier:',settings.base_url,'; comparison:',args.app_origin if args.compare_app else 'direct only')
     print('Keep other write clients inactive. Numeric values/reset rules are requested, not guessed.')
     if input('Review the exact list and stand at the first location; type RUN: ').strip()!='RUN':return
+    resume=plan.get('resume')
+    if resume and hashlib.sha256(Path(resume['source_path']).read_bytes()).hexdigest()!=resume['source_sha256']:
+        raise ValueError('Resume source changed after preview; review it again before execution')
     args.output.mkdir(parents=True,exist_ok=False)
     logs=LogService(args.output/'events.jsonl',settings.api_key)
     logs.add('TEST_SWAGGER_SESSION',api_address=settings.base_url,app_origin=args.app_origin if args.compare_app else None,plan=plan,
@@ -482,9 +615,17 @@ async def execute(plan,args):
                 if case['tag_name'] not in service.tags or signature(service.tags[case['tag_name']])!=case['identity']:
                     raise ValueError(path+' metadata differs from the reviewed inventory; no test started')
         live_schema=await clients['direct']._request('GET','/openapi.json')
+        if hashlib.sha256(json.dumps(live_schema,sort_keys=True,separators=(',',':')).encode()).hexdigest()!=plan['contract_sha256']:
+            raise ValueError('Live Swagger schema changed; review it before starting any test')
         for endpoint,method in [('/api/v1/tags/list','get'),('/api/v1/tags/read','get'),('/api/v1/tags/write','post')]:
             if method not in live_schema.get('paths',{}).get(endpoint,{}):raise ValueError('Live Swagger write/read contract changed; no test started')
-        await SwaggerLineTest(services,logs,args.output,wait_seconds=args.wait_seconds).run(plan['cases'])
+        test=SwaggerLineTest(services,logs,args.output,wait_seconds=args.wait_seconds,
+                             context={'mode':'REAL','api_address':settings.base_url},resume=resume)
+        if resume:
+            test.recovery_checks=await verify_resume_recovery(services['direct'],resume,test.logs)
+            if test.logs.error:raise OSError(test.logs.error)
+            if not test.save():raise OSError('Resume recovery proof could not be saved; no new test started')
+        await test.run(plan['cases'])
     finally:
         for client in clients.values():
             if isinstance(client,AppClient):await client.close()
@@ -498,6 +639,7 @@ def main(argv=None):
     parser.add_argument('--compare-app',action='store_true',help='Also test the local app backend path; does not click the browser')
     parser.add_argument('--app-origin',default='http://127.0.0.1:8080')
     parser.add_argument('--only',action='append',default=[])
+    parser.add_argument('--resume-report',type=Path,help='Resume skipped/unvisited path tests; keep known Pass and output-timeout Fail results')
     parser.add_argument('--wait-seconds',type=int,default=15)
     parser.add_argument('--output',type=Path,default=ROOT/'logs'/('swagger-line-test-'+uuid.uuid4().hex[:10]))
     args=parser.parse_args(argv)
@@ -506,12 +648,23 @@ def main(argv=None):
         if not 1<=args.wait_seconds<=300:raise ValueError('Wait limit must be1–300 seconds')
         plan=inventory();names={c['tag_name'] for c in plan['cases']}
         if set(args.only)-names:raise ValueError('Unknown or read-only requested tag')
+        if args.resume_report:
+            plan=resume_plan(plan,args.resume_report,['direct','app'] if args.compare_app else ['direct'],
+                             {'mode':'REAL','api_address':Settings().base_url})
+            resume=plan['resume']
+            print(f'Resume: {resume["pending_tags"]} pending tags / {resume["pending_path_tests"]} path tests; '+
+                  f'{resume["settled_pass_paths"]} known Pass and {resume["settled_timeout_fail_paths"]} timeout Fail paths retained.')
+            print('Source:',resume['source_path'],'SHA256:',resume['source_sha256'])
+            if resume['legacy_context_unverified']:print('LEGACY SOURCE: origin/mode are absent. Verify this source belongs to '+Settings().base_url+' before typing RUN.')
+            if resume['recovery_required']:print('Read-only recovery check required before any new write:',', '.join(row['tag_name'] for row in resume['recovery_required']))
         if args.only:plan['cases']=[c for c in plan['cases'] if c['tag_name'] in args.only]
         print(f'{len(plan["cases"])} writable tags; physical tank order; direct'+(' then app' if args.compare_app else ' supplier path'))
         for index,case in enumerate(plan['cases'],1):
             location=f'Tank{case["tank"]:02d}' if case['tank'] else 'Global'
             print(f'{index:03d}. {location} {case["tag_name"]} [{case["kind"]}] {case["identity"][1]}'+(' - numeric value required' if case['kind']=='numeric' else ''))
-        if args.execute:asyncio.run(execute(plan,args))
+            if args.resume_report:print('     Pending paths:',', '.join(case['paths']))
+        if args.execute and plan['cases']:asyncio.run(execute(plan,args))
+        elif args.execute:print('No pending test selected; no HTTP request or PLC write sent.')
         else:print('DRY RUN: offline inventory only. No HTTP request or PLC write sent.')
         return 0
     except (ValueError,OSError,KeyboardInterrupt,EOFError) as exc:

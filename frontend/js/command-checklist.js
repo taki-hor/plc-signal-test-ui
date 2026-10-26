@@ -231,7 +231,7 @@ function render() {
     row.progress.textContent = human === 'pass' ? '✓ Pass' : human === 'fail' ? '✕ Fail' : 'Not checked';
     renderApiBadge(row.api,item,status);
     row.progress.className = 'manual-result-badge'; row.progress.dataset.cardResult = human;
-    row.progress.title = human === 'pass' ? 'Operator verified by physical observation' : human === 'fail' ? 'Operator recorded a failed check' : 'No human result has been set';
+    row.progress.title = human === 'pass' ? 'Operator marked Pass; see the saved result source' : human === 'fail' ? 'Operator recorded a failed check' : 'No human result has been set';
   }
   $('bool-empty').classList.toggle('hidden', visible > 0);
   $('bool-empty-message').textContent = tags.length ? 'No commands match your filters.' : catalogLoaded ? 'No writable 0/1 commands are available in this catalog. Numeric setpoints are on Setpoints & batch.' : catalogError ? `Command catalog unavailable: ${catalogError}. The console will retry. You can also select Retry catalog.` : 'Loading commands…';

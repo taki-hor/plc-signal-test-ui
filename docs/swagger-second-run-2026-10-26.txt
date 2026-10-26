@@ -1,0 +1,58 @@
+SWAGGER TEST REVIEW AND SECOND RUN - 26-Oct-2026
+
+Original run: logs/swagger-line-test-3ba5af2815/report.json
+The run stopped after123 catalog entries:82 exercised,41 skipped,18 unvisited.
+All82 exercised tags had valid receipts and changed-value readback.
+Tank14_TempAdj restore0 was acknowledged; its verification saw a3244ms-old poll
+and correctly rejected it against the3000ms freshness guard. Later fresh reads
+confirmed the calibration value at its original0. The raw stopped report stays
+unchanged; related later filling states are preserved.
+
+TANK11 CONTROLLED START / SPRINKLER COMPARISON
+Local Start switch was OFF; operator was watching. FillWaterAuto=1 was preserved.
+Condition             | Spray command | SprayStatus | Physical observation
+----------------------+---------------+-------------+-----------------------------
+RemoteStart=0         | Accepted / 1  | Stayed0     | No physical Pass claimed
+RemoteStart=1         | Accepted / 1  | Reached1    | Operator confirmed sprinkler
+
+Both RemoteStart and Spray were restored0. This confirms a working conditional
+Tank11 Spray setup; it does not establish the same prerequisite for every tank.
+RemoteStart is M370; SprayRemote is M371; SprayStatus is D1112.1.
+Source: logs/tank11-start-spray-20261026T083218-187669/report.json
+
+LATEST REVIEWED OUTCOMES (INCLUDING THE CONTROLLED TANK11 TEST)
+Outcome                    | Count | Meaning
+---------------------------+-------+-------------------------------------------
+Settled Pass               | 77    | Explicit P / operator-reviewed mode checks
+Known output/status Fail   | 6     | Request/readback worked; output unconfirmed
+Skipped                    | 40    | No write was sent; still needs review/input
+Unvisited                  | 18    | Not reached before stopping
+Second-run queue           | 58    | Only skipped + unvisited
+
+The six remaining output-status failures are Tank01 Filter/Heater/US,
+Tank11 FillWaterOn, and Tank14 Filter/Heater. A low-level permissive is suspected
+for Tank14, not proven. Tank14 Alarm69/71 were1 during both failures.
+
+WEB RECORDS
+Current marks were overwritten with the latest reviewed tested outcomes; raw
+history remains. There are83 Pass,6 Fail and4 Not checked source records,
+including earlier Pass results outside this run. Auto mode Pass means the mode
+bit was verified; it does not certify an undocumented automatic action.
+Unverified TempSV, TimeSV and TempAdj cases remain in the second run for actual
+confirmation. They were not converted to API Pass from memory.
+
+SECOND RUN (FROM THE EXISTING REPOSITORY)
+.venv/bin/python tools/swagger_line_test.py --resume-report logs/swagger-resume-reviewed.json --execute
+
+The reviewed resume snapshot binds the original stopped run and later Tank11
+successes without changing either source. It keeps the original legacy-origin
+warning and requires a separate fresh, strictly later calibration0 recovery
+read before any new write. No recovery write is issued. Unrelated filling states
+are left unchanged. Use Remote/API mode and review the printed source/list at RUN.
+
+The script rejects stale verification samples and waits within the existing
+observation deadline. The3000ms limit, all write preflight guards, metadata,
+alias and Remote/Local requirements remain unchanged.
+
+Skipped numeric inputs and unknown hold/reset/alias procedures remain visible.
+This update prepares58 tests; it has not executed the second run.

@@ -86,3 +86,13 @@ def test_checks_endpoint_exposes_explicit_human_import_without_sending_writes(tm
         assert data['operator_results'][0]['physical_stop_verified'] is False
         assert all(value==0 for name,value in client.values.items() if name==TAG.tag_name)
     asyncio.run(run())
+
+
+def test_operator_declaration_keeps_explicit_api_backfill_limit(tmp_path):
+    data=document();data['records'][0]['api_backfill_allowed']=False
+    path=tmp_path/'operator.json';path.write_text(json.dumps(data))
+    rows,error=load_operator_results(path,CONTEXT,{TAG.tag_name:TAG})
+    assert error is None and rows[0]['value']=='pass' and rows[0]['api_backfill_allowed'] is False
+    data['records'][0]['api_backfill_allowed']='false';path.write_text(json.dumps(data))
+    rows,error=load_operator_results(path,CONTEXT,{TAG.tag_name:TAG})
+    assert rows==[] and error

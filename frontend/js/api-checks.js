@@ -31,7 +31,7 @@ export function apiCheckFor(tag, status) {
     {api_status:'unchecked',detail:mismatch ? 'Metadata changed; previous API evidence no longer applies.' : 'No verified API cycle is recorded for this signal.'};
   const human=tag && savedHumanDecision(tag,status), decision=tag && savedManualApiDecision(tag,status);
   const humanEvidenceAt=Number.isFinite(Date.parse(human?.observed_at)) ? human.observed_at : human?.at;
-  if (human?.value==='pass' && !mismatch && remote?.identity_valid!==false && contextValid && result.api_status!=='checked' &&
+  if (human?.value==='pass' && human.api_backfill_allowed!==false && !mismatch && remote?.identity_valid!==false && contextValid && result.api_status!=='checked' &&
       !(result.api_status==='failed' && Date.parse(result.checked_at ?? result.started_at)>=Date.parse(humanEvidenceAt))) {
     result={api_status:'checked',checked_at:human.at,source:'human',detail:'Human-confirmed test. This status was backfilled from your saved Pass; it is not a new automated API cycle.'+(human.physical_stop_verified === false ? ' Physical stop was not confirmed.' : '')};
   }

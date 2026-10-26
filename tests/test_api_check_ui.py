@@ -241,3 +241,31 @@ def test_absent_operator_store_cannot_erase_an_imported_pass_on_reload(browser):
     wait_for("return document.querySelector('[data-command-tag=Tank01_FilterRemote]')?.dataset.operatorResult==='pass'")
     assert len(js("return JSON.parse(localStorage.getItem('plc-imported-human-results:v1:MOCK:BROWSER TEST'))"))==1
     assert not state['writes']
+
+
+def test_declared_numeric_human_pass_does_not_create_api_proof(browser):
+    state,_,_,js,wait_for=browser
+    names=['Tank01_TempSV','Tank01_TimeSV','Tank01_TempAdj']
+    state['operator_results']=[{**human_record(name),'source':'Operator-declared earlier test','api_backfill_allowed':False} for name in names]
+    state['api_checks']=[record('Tank01_TimeSV','checked')]
+    js("document.querySelector('[data-nav=write]').click();document.getElementById('write-tag').value='Tank01_TempSV';document.getElementById('write-tag').dispatchEvent(new Event('change'))")
+    wait_for("return document.getElementById('write-saved-results-human').value==='pass'")
+    for name in names:
+        js("document.getElementById('write-tag').value="+json.dumps(name)+";document.getElementById('write-tag').dispatchEvent(new Event('change'))")
+        assert js("return document.getElementById('write-saved-results-human').value")=='pass'
+        expected='checked' if name=='Tank01_TimeSV' else 'unchecked'
+        assert js("return document.getElementById('write-api-state').dataset.apiState")==expected
+    imported=js("return JSON.parse(localStorage.getItem('plc-imported-human-results:v1:MOCK:BROWSER TEST'))")
+    assert all(row['api_backfill_allowed'] is False for row in imported)
+    assert not state['writes']
+
+
+def test_imported_api_backfill_permission_requires_a_boolean(browser):
+    state,_,_,js,wait_for=browser
+    seed_humans(browser,['Tank01_FilterRemote'])
+    state['operator_results']=[{**human_record('Tank01_FilterRemote'),'api_backfill_allowed':'false'}]
+    wait_for("return document.getElementById('api-check-error').textContent.includes('invalid format')")
+    assert js("return document.querySelector('[data-command-tag=Tank01_FilterRemote]').dataset.operatorResult")=='pass'
+    cached=js("return JSON.parse(localStorage.getItem('plc-imported-human-results:v1:MOCK:BROWSER TEST'))")
+    assert 'api_backfill_allowed' not in cached[0]
+    assert not state['writes']

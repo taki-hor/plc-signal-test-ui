@@ -8,6 +8,45 @@ saved `/api/v1/tags/list` response. Preview is offline and sends no request:
 .venv/bin/python tools/swagger_line_test.py
 ```
 
+## Resume only skipped and unvisited work
+
+Preview a prior report without any HTTP request:
+
+```bash
+.venv/bin/python tools/swagger_line_test.py --resume-report logs/swagger-line-test-3ba5af2815/report.json
+```
+
+Add `--execute` when ready. The inspected run selects **59 pending tags**:
+41 skipped and 18 unvisited. It preserves 75 known Pass paths (explicit human P or
+verified non-timeout Auto mode-bit checks) and 7 settled output/status timeout
+failures. Those known failures are retained for separate investigation and are
+not silently retested. Selection is per path: adding `--compare-app` still tests
+all 141 untested app paths, plus the 59 pending direct tests. Prior direct results
+remain in the source summaries; an app-only resumed test does not claim a new
+direct test or comparable historical starting conditions. The preview lists
+which paths remain for every tag. Tank ordering and readiness pauses are kept.
+
+A stopped run's explicit P may coexist with unverified restoration. Before ANY
+new write, execution performs a separate read-only recovery check for such a
+case: current original write value, write metadata, aliases, fresh data and
+Remote1/Local0 must match. It sends no corrective write and does not require
+unrelated tank states to match the old snapshot. If the value is still wrong or
+the check cannot be proved, resume stops. The original `restored=false` record
+is never rewritten; startup recovery evidence belongs to the new report.
+
+Malformed files, unknown/duplicate paths, changed schemas/metadata or a different
+recorded API target/mode are rejected. Other unresolved/error results require
+review rather than becoming skipped successes. The older report above has no
+recorded origin/mode, so the preview explicitly warns that it is a legacy source.
+Verify that source belongs to the printed supplier origin before typing RUN;
+the script never infers its historical origin from matching tag metadata.
+
+New reports record current REAL/API context, the complete 141-tag identity
+manifest, Swagger-contract hash and resume source path/SHA256. Prior settled
+paths and separate recovery checks carry forward, so a later resume does not
+re-add completed work. The source hash is checked again after RUN. Numeric test
+values and reset procedures are still requested for the pending cases.
+
 To run directly against the supplier API, from the repository:
 
 ```bash
@@ -66,7 +105,15 @@ clients inactive. Numeric/user-entered values and reset rules can be skipped;
 skipped cases remain visible in the report.
 
 Fresh complete Remote1/Local0 data, unchanged write-target metadata and later-than-receipt /
-final-baseline samples are required. Unknown write outcomes never retry the test
+final-baseline samples are required. During read-only observation after an
+acknowledged write, stale/incomplete samples are rejected and polling continues
+within the same observation deadline. They never qualify as proof and do not
+cause another write. The freshness threshold remains unchanged. A persistent
+lack of fresh restoration proof stops the queue; Remote/Local handoff or metadata
+changes still stop verification. Write preflight never waits through a stale
+sample or permits a stale-data write.
+
+Unknown write outcomes never retry the test
 value; explicit RESTORE is required, followed by a stopped queue. Cancellation
 or audit/storage errors stop subsequent testing. Authorized guarded restoration
 is still attempted after logging failure. Read-only status metadata drift does
@@ -82,5 +129,6 @@ write-token echoes are redacted. Credentials are read from existing
 settings and are not logged. Old reports, browser marks and the33 confirmed P
 imports are not replaced. This runner does not automatically import new marks.
 
-The new runner has been tested with fake PLCs/HTTP transports and previewed
-without a network connection. It has not been executed on the production line.
+The observation change is tested with fake PLCs/HTTP transports. It has not
+been re-executed on the production line; original hardware-run reports stay
+unchanged.

@@ -437,3 +437,308 @@ def test_real_app_adapter_roundtrip_uses_final_app_timestamp_bounds(tmp_path,fut
             assert row['human_result']=='unchecked'
         finally:await client.close()
     asyncio.run(run())
+
+
+def test_restore_ack_then_temporary_stale_sample_waits_for_fresh_zero_without_rewrite(tmp_path):
+    from datetime import timedelta
+    async def run():
+        client,_,runner,cases=fixture(tmp_path)
+        runner.wait_seconds=.5
+        original_write,original_read=client.write_signal,client.read_signals
+        restoring=False;restore_reads=0
+        async def write(name,value):
+            nonlocal restoring
+            response=await original_write(name,value)
+            if name=='Tank14_TempAdj' and value==0:restoring=True
+            return response
+        async def read():
+            nonlocal restore_reads
+            poll=await original_read()
+            if restoring:
+                restore_reads+=1
+                if restore_reads==1:
+                    poll['timestamp']=(datetime.now(timezone.utc)-timedelta(milliseconds=3244)).isoformat()
+            return poll
+        client.write_signal,client.read_signals=write,read
+        row=await runner.run_path(cases['Tank14_TempAdj'],'direct',900,0,None)
+        assert client.writes==[('Tank14_TempAdj',900),('Tank14_TempAdj',0)]
+        assert row['restore_acknowledged'] and row['restored'] and row['continue_queue']
+        assert row['restore_rejected_samples']==1 and row['restore_sample']['fresh'] is True
+        assert datetime.fromisoformat(row['restore_sample']['supplier_utc'])>datetime.fromisoformat(row['restore_received_at'])
+        rejected=[entry for entry in runner.logs.source.get() if entry['event']=='TEST_SWAGGER_SAMPLE_REJECTED']
+        assert len(rejected)==1 and rejected[0]['fresh'] is False and rejected[0]['age_ms']>=3244
+    asyncio.run(run())
+
+
+def test_persistent_stale_restoration_expires_without_next_command_or_rewrite(tmp_path):
+    from datetime import timedelta
+    async def run():
+        client,_,runner,cases=fixture(tmp_path,answer='900')
+        original_write,original_read=client.write_signal,client.read_signals
+        restoring=False
+        async def write(name,value):
+            nonlocal restoring
+            response=await original_write(name,value)
+            if name=='Tank14_TempAdj' and value==0:restoring=True
+            return response
+        async def read():
+            poll=await original_read()
+            if restoring:poll['timestamp']=(datetime.now(timezone.utc)-timedelta(milliseconds=3244)).isoformat()
+            return poll
+        client.write_signal,client.read_signals=write,read
+        rows=await runner.run([cases['Tank14_TempAdj'],cases['Tank14_TempSV']])
+        assert len(rows)==1 and rows[0]['restore_acknowledged']
+        assert not rows[0]['restored'] and not rows[0]['continue_queue']
+        assert client.writes==[('Tank14_TempAdj',900),('Tank14_TempAdj',0)]
+        assert 'restore_sample' not in rows[0] and rows[0]['restore_rejected_samples']>=1
+    asyncio.run(run())
+
+
+def test_local_mode_during_observation_aborts_even_when_sample_is_stale(tmp_path):
+    from datetime import timedelta
+    async def run():
+        client,_,runner,cases=fixture(tmp_path)
+        original_read=client.read_signals
+        async def read():
+            poll=await original_read();poll['Local']=1
+            poll['timestamp']=(datetime.now(timezone.utc)-timedelta(milliseconds=3244)).isoformat()
+            return poll
+        client.read_signals=read
+        await runner.services['direct'].load_tags()
+        with pytest.raises(ValueError,match='Remote/Local mode changed'):
+            await runner.observe(runner.services['direct'],cases['Tank14_TempAdj'],0,[datetime.now(timezone.utc).isoformat()],
+                                 {'path':'direct'},'restore',{'Tank14_TempAdj':0})
+        assert not client.writes
+    asyncio.run(run())
+
+
+def test_stale_final_write_preflight_still_blocks_all_test_writes(tmp_path):
+    from datetime import timedelta
+    async def run():
+        client,_,runner,cases=fixture(tmp_path)
+        original_read=client.read_signals;reads=0
+        async def read():
+            nonlocal reads
+            reads+=1;poll=await original_read()
+            if reads>=2:poll['timestamp']=(datetime.now(timezone.utc)-timedelta(milliseconds=3244)).isoformat()
+            return poll
+        client.read_signals=read
+        row=await runner.run_path(cases['Tank14_TempAdj'],'direct',900,0,None)
+        assert not client.writes and row['request']=='blocked' and not row['continue_queue']
+        assert 'test_rejected_samples' not in row
+    asyncio.run(run())
+
+
+RESUME_CONTEXT={'mode':'REAL','api_address':'http://test-line:8000'}
+
+
+def resume_fixture(tmp_path):
+    plan=inventory();cases=plan['cases'];byname={c['tag_name']:c for c in cases}
+    autos=[c for c in cases if c['kind']=='auto'][:19]
+    nonauto=[c for c in cases if c['kind']!='auto' and c['tag_name']!='Tank14_TempAdj']
+    humans=autos[:2]+nonauto[:55]+[byname['Tank14_TempAdj']]
+    human_names={c['tag_name'] for c in humans}
+    mode_only=[c for c in autos if c['tag_name'] not in human_names]
+    failures=[c for c in nonauto if c['tag_name'] not in human_names and c['feedback_tag']][:7]
+    sent=humans+mode_only+failures
+    sent_names={c['tag_name'] for c in sent}
+    skipped=[c for c in cases if c['tag_name'] not in sent_names][:41]
+    rows=[]
+    for case in sent:
+        passed=case['tag_name'] in human_names
+        rows.append({'tag_name':case['tag_name'],'tank':case['tank'],'kind':case['kind'],'path':'direct',
+                     'reviewed_identity':list(case['identity']),'request':'acknowledged','readback':'verified',
+                     'output':'mode_only' if case['kind']=='auto' else 'confirmed' if passed else 'unconfirmed',
+                     'human_result':'pass' if passed else 'unchecked','original_value':0,'restored':True})
+    for row in rows:
+        if row['tag_name']=='Tank14_TempAdj':row.update(restored=False,restoration_error='Prior stale read; restoration not verified',restore_acknowledged=True,
+                restore_bounds=['2026-10-25T00:00:00+00:00'],restore_received_at='2026-10-25T00:00:01+00:00')
+    for case in skipped:
+        rows.append({'tag_name':case['tag_name'],'tank':case['tank'],'kind':case['kind'],'path':'not_run',
+                     'request':'not_sent','skip_reason':'Value/rule skipped','human_result':'unchecked'})
+    report={'format':'swagger-line-test-v1','context':dict(RESUME_CONTEXT),'contract_sha256':plan['contract_sha256'],'inventory':{c['tag_name']:c['identity'] for c in cases},'results':rows}
+    path=tmp_path/'source-report.json';path.write_text(json.dumps(report))
+    return plan,report,path,sent_names,{c['tag_name'] for c in skipped}
+
+
+def test_resume_selects_59_skipped_unvisited_and_preserves75_pass7_timeout_fail(tmp_path):
+    from tools.swagger_line_test import resume_plan
+    plan,report,path,sent_names,skipped=resume_fixture(tmp_path)
+    selected=resume_plan(plan,path,['direct'],RESUME_CONTEXT);resume=selected['resume']
+    assert len(report['results'])==123
+    assert len(selected['cases'])==59 and resume['pending_path_tests']==59
+    assert resume['settled_pass_paths']==75 and resume['settled_timeout_fail_paths']==7
+    assert resume['skipped_tags']==41 and resume['unvisited_tags']==18
+    names={case['tag_name'] for case in selected['cases']}
+    assert not names & sent_names and skipped<=names
+    assert [case['tank'] for case in selected['cases']]==sorted(case['tank'] for case in selected['cases'])
+    assert [row['tag_name'] for row in resume['recovery_required']]==['Tank14_TempAdj']
+    assert json.loads(path.read_text())==report
+
+
+def test_compare_resume_never_skips_untested_app_paths(tmp_path):
+    from tools.swagger_line_test import resume_plan
+    plan,_,path,sent_names,_=resume_fixture(tmp_path)
+    selected=resume_plan(plan,path,['direct','app'],RESUME_CONTEXT)
+    assert len(selected['cases'])==141 and selected['resume']['pending_path_tests']==200
+    assert sum('app' in case['paths'] for case in selected['cases'])==141
+    assert sum('direct' in case['paths'] for case in selected['cases'])==59
+    assert all(case['paths']==['app'] for case in selected['cases'] if case['tag_name'] in sent_names)
+
+
+@pytest.mark.parametrize('mutation',[
+    lambda report:report.update(format='other-report'),
+    lambda report:report.update(contract_sha256='different-swagger-contract'),
+    lambda report:report['context'].update(mode='MOCK'),
+    lambda report:report['context'].update(api_address='http://different-line:8000'),
+    lambda report:report['inventory'].pop(next(iter(report['inventory']))),
+    lambda report:report['results'][0]['reviewed_identity'].__setitem__(1,'M999'),
+    lambda report:report['results'].append(dict(report['results'][0])),
+    lambda report:report['results'][0].update(path='supplier'),
+    lambda report:report['results'][0].update(request='unknown',human_result='unchecked'),
+    lambda report:report['results'][0].update(error='Unresolved write error'),
+])
+def test_malformed_or_unresolved_resume_is_rejected_before_network(tmp_path,mutation):
+    from tools.swagger_line_test import resume_plan
+    plan,report,path,_,_=resume_fixture(tmp_path);mutation(report);path.write_text(json.dumps(report))
+    with pytest.raises(ValueError):resume_plan(plan,path,['direct'],RESUME_CONTEXT)
+
+
+def test_legacy_resume_warns_context_is_unknown_instead_of_inventing_origin(tmp_path):
+    from tools.swagger_line_test import resume_plan
+    plan,report,path,_,_=resume_fixture(tmp_path)
+    report.pop('context');report.pop('inventory');path.write_text(json.dumps(report))
+    selected=resume_plan(plan,path,['direct'],RESUME_CONTEXT)
+    assert selected['resume']['legacy_context_unverified'] and len(selected['cases'])==59
+    assert 'context' not in json.loads(path.read_text())
+
+
+def test_resume_recovery_reads_only_target_not_delayed_unrelated_tank_states(tmp_path):
+    from tools.swagger_line_test import resume_plan,verify_resume_recovery
+    async def run():
+        plan,report,path,_,_=resume_fixture(tmp_path)
+        selected=resume_plan(plan,path,['direct'],RESUME_CONTEXT)
+        client,service,runner,_=fixture(tmp_path)
+        client.values['Tank14_FillWaterAuto']=1
+        client.values['Tank14_FillWaterOn']=1
+        client.values['Tank14_FillWaterStatus']=1
+        proof=await verify_resume_recovery(service,selected['resume'],runner.logs)
+        assert len(proof)==1 and proof[0]['values']=={'Tank14_TempAdj':0}
+        assert proof[0]['fresh'] and proof[0]['write_sent'] is False and client.writes==[]
+        assert selected['resume']['settled_paths'][57]['tag_name']=='Tank14_TempAdj'
+        assert not any(row['recovery_required'] for row in selected['resume']['settled_paths'])
+        assert json.loads(path.read_text())==report
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('condition',['not_restored','stale','local','metadata','alias'])
+def test_resume_recovery_blocks_unsafe_current_state_without_corrective_write(tmp_path,condition):
+    from tools.swagger_line_test import resume_plan,verify_resume_recovery
+    async def run():
+        plan,_,path,_,_=resume_fixture(tmp_path)
+        selected=resume_plan(plan,path,['direct'],RESUME_CONTEXT)
+        client,service,runner,_=fixture(tmp_path)
+        if condition=='not_restored':client.values['Tank14_TempAdj']=900
+        elif condition=='stale':service.stale_ms=-1
+        elif condition=='local':client.values['Local']=1
+        elif condition=='metadata':client.by_name['Tank14_TempAdj']['device_address']='D999'
+        else:
+            client.tags.append({**client.by_name['Tank14_TempAdj'],'tag_name':'ExtraAlias'});client.values['ExtraAlias']=0
+        with pytest.raises(ValueError,match='Resume blocked'):
+            await verify_resume_recovery(service,selected['resume'],runner.logs)
+        assert client.writes==[]
+    asyncio.run(run())
+
+
+def test_resume_runner_respects_app_only_pending_path_and_writes_no_settled_direct_tag(tmp_path):
+    async def run():
+        direct,_,runner,cases=fixture(tmp_path)
+        app=FakeLine();runner.services['app']=SignalService(app,runner.logs,3000)
+        case={**cases['Tank01_FilterRemote'],'paths':['app']}
+        rows=await runner.run([case])
+        assert len(rows)==1 and rows[0]['path']=='app' and rows[0]['restored']
+        assert direct.writes==[] and app.writes==[('Tank01_FilterRemote',1),('Tank01_FilterRemote',0)]
+    asyncio.run(run())
+
+
+def test_new_resume_report_carries_context_provenance_and_prior_settled_paths(tmp_path):
+    from tools.swagger_line_test import resume_plan,verify_resume_recovery
+    async def run():
+        plan,source,path,_,_=resume_fixture(tmp_path)
+        selected=resume_plan(plan,path,['direct'],RESUME_CONTEXT)
+        client,service,runner,_=fixture(tmp_path)
+        runner.context=RESUME_CONTEXT;runner.resume=selected['resume']
+        runner.recovery_checks=await verify_resume_recovery(service,runner.resume,runner.logs)
+        runner.save()
+        report=json.loads((tmp_path/'report.json').read_text())
+        assert report['context']==RESUME_CONTEXT and len(report['settled_paths'])==82
+        assert report['resume']['source_sha256']==selected['resume']['source_sha256']
+        assert len(report['inventory'])==141 and report['recovery_checks'][0]['write_sent'] is False
+        again=resume_plan(plan,tmp_path/'report.json',['direct'],RESUME_CONTEXT)
+        assert len(again['cases'])==59 and again['resume']['recovery_required']==[]
+        assert source==json.loads(path.read_text()) and client.writes==[]
+    asyncio.run(run())
+
+
+def test_failed_startup_resume_report_save_is_reported_before_any_new_write(tmp_path,monkeypatch):
+    client,_,runner,_=fixture(tmp_path)
+    original=Path.open
+    def failed_csv(path,*args,**kwargs):
+        if path==tmp_path/'results.csv':raise OSError('Read-only CSV storage')
+        return original(path,*args,**kwargs)
+    monkeypatch.setattr(Path,'open',failed_csv)
+    assert runner.save() is False and runner.results==[] and client.writes==[]
+
+
+@pytest.mark.parametrize('position',['before','equal'])
+def test_fresh_cached_recovery_zero_must_be_strictly_after_source_restore_bound(tmp_path,position):
+    from datetime import timedelta
+    from tools.swagger_line_test import resume_plan,verify_resume_recovery
+    async def run():
+        plan,report,path,_,_=resume_fixture(tmp_path)
+        source=next(row for row in report['results'] if row['tag_name']=='Tank14_TempAdj')
+        stamp=datetime.now(timezone.utc)
+        latest=stamp+timedelta(seconds=.5)
+        source.update(restore_bounds=[(stamp-timedelta(seconds=1)).isoformat(),latest.isoformat()],
+                      restore_received_at=(stamp+timedelta(seconds=.25)).isoformat())
+        path.write_text(json.dumps(report));selected=resume_plan(plan,path,['direct'],RESUME_CONTEXT)
+        item=selected['resume']['recovery_required'][0]
+        assert item['recovery_after']==latest.isoformat()
+        client,service,runner,_=fixture(tmp_path);original=client.read_signals
+        async def cached():
+            poll=await original();poll['timestamp']=(latest if position=='equal' else stamp).isoformat()
+            return poll
+        client.read_signals=cached
+        with pytest.raises(ValueError,match='Resume blocked'):
+            await verify_resume_recovery(service,selected['resume'],runner.logs)
+        assert client.writes==[] and item['recovery_required'] is True
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('field',['restore_bounds','restore_received_at','restore_acknowledged'])
+def test_unresolved_legacy_restore_without_source_ack_bound_requires_review(tmp_path,field):
+    from tools.swagger_line_test import resume_plan
+    plan,report,path,_,_=resume_fixture(tmp_path)
+    report.pop('context');source=next(row for row in report['results'] if row['tag_name']=='Tank14_TempAdj')
+    source.pop(field);path.write_text(json.dumps(report))
+    with pytest.raises(ValueError,match='source timing bounds'):
+        resume_plan(plan,path,['direct'],RESUME_CONTEXT)
+
+
+def test_legacy_origin_uncertainty_and_restore_bound_survive_resume_chain(tmp_path):
+    from tools.swagger_line_test import resume_plan,verify_resume_recovery
+    async def run():
+        plan,report,path,_,_=resume_fixture(tmp_path);report.pop('context');path.write_text(json.dumps(report))
+        selected=resume_plan(plan,path,['direct'],RESUME_CONTEXT)
+        assert selected['resume']['legacy_context_unverified'] is True
+        client,service,runner,_=fixture(tmp_path)
+        runner.context=dict(RESUME_CONTEXT);runner.resume=selected['resume']
+        runner.recovery_checks=await verify_resume_recovery(service,runner.resume,runner.logs)
+        bound=runner.recovery_checks[0]['after_source_restore']
+        assert runner.save()
+        again=resume_plan(plan,tmp_path/'report.json',['direct'],RESUME_CONTEXT)
+        assert again['resume']['legacy_context_unverified'] is True
+        prior=next(row for row in again['resume']['settled_paths'] if row['tag_name']=='Tank14_TempAdj')
+        assert prior['recovery_after']==bound and prior['recovery_required'] is False
+        assert client.writes==[]
+    asyncio.run(run())

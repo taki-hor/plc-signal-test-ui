@@ -35,7 +35,8 @@ const offsetTimestamp = value => typeof value === 'string' && /(?:Z|[+-]\d{2}:\d
 function validServerDecision(row) {
   return Boolean(row && row.kind === 'human' && Array.isArray(row.identity) && row.identity.length === 5 &&
     row.identity.slice(0,3).every(value => typeof value === 'string' && value) && row.identity[3] === 'W' && Number.isFinite(row.identity[4]) &&
-    ['pass','fail','unchecked'].includes(row.value) && offsetTimestamp(row.at) && (row.observed_at == null || offsetTimestamp(row.observed_at)) && typeof row.source === 'string' && row.source && row.write_sent === false);
+    ['pass','fail','unchecked'].includes(row.value) && (!Object.hasOwn(row,'api_backfill_allowed') || typeof row.api_backfill_allowed === 'boolean') &&
+    offsetTimestamp(row.at) && (row.observed_at == null || offsetTimestamp(row.observed_at)) && typeof row.source === 'string' && row.source && row.write_sent === false);
 }
 export function importedHumanDecisions(status) {
   const context = contextKey(status);
