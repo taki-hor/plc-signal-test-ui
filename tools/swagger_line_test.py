@@ -24,7 +24,7 @@ from server.log_service import LogService
 from server.models import Tag, ValidationError
 from server.plc_client import PLCClient, PLCError
 from server.signal_service import SignalService
-from tools.human_line_test import CleanupLogs, now, read_ready, read_verdict, signature
+from tools.human_line_test import CleanupLogs, now, read_verdict, signature
 
 
 async def ask(callback, prompt):
@@ -264,11 +264,23 @@ def validate_number(tag,value,limits):
     return value
 
 
+
+def approval_snapshot(case):
+    return (tuple(case['identity']),tuple(case['aliases']),tuple(case['feedback_identity'] or ()),
+            tuple(case['feedback_aliases']),case['kind'],'hold_test_until_verdict_restore_original')
+
+
+def approve_run(cases,paths):
+    return {'confirmation':'RUN','protocol':'hold_test_until_verdict_restore_original',
+            'scopes':{(case['tag_name'],path):approval_snapshot(case) for case in cases for path in case.get('paths',paths)}}
+
+
 class SwaggerLineTest:
-    def __init__(self, services, logs, output, *, verdict=read_verdict, ready=read_ready, prompt=input, wait_seconds=15, emit=print, context=None, resume=None):
+    def __init__(self, services, logs, output, *, verdict=read_verdict, prompt=input, wait_seconds=15, emit=print, context=None, resume=None, approval=None):
         self.services=services;self.logs=CleanupLogs(logs);self.output=Path(output)
         for service in services.values():service.logs=self.logs
-        self.verdict,self.ready,self.prompt=verdict,ready,prompt
+        self.verdict,self.prompt=verdict,prompt
+        self.run_approval=approval
         self.wait_seconds=wait_seconds;self.results=[]
         self.context=context;self.resume=resume;self.recovery_checks=[];self.full_inventory=inventory()
         self.emit=lambda message:emit(logs.scrub(str(message)))
@@ -369,10 +381,6 @@ class SwaggerLineTest:
         return readback,False
 
     async def inputs(self,case,service,baseline):
-        if len(case['aliases'])>1 or len(case['feedback_aliases'])>1:
-            self.emit('Shared addresses: '+', '.join(case['aliases']+case['feedback_aliases']))
-            if (await ask(self.prompt,'Confirm ALL affected equipment/aliases are understood; type ALIASES or S to skip: ')).strip()!='ALIASES':
-                return None,'Shared-address operation was not confirmed'
         if case['kind']=='numeric':
             self.emit(f'{case["tag_name"]}: original={baseline}; PDF safety bounds={case["pdf_limits"]}')
             raw=(await ask(self.prompt,'Enter an approved engineering test value, or S to skip: ')).strip()
@@ -382,10 +390,6 @@ class SwaggerLineTest:
             if self.equal(service.tags[case['tag_name']],value,baseline):return None,'Test value equals baseline; no changed-value test'
             validate_number(service.tags[case['tag_name']],baseline,case['pdf_limits'])
             return value,None
-        if case['kind']=='door' or case['tag_name']=='MainInlet' or case['tag_name'].endswith('RemoteStart'):
-            self.emit('Confirm the actual procedure: hold1 until the requested action finishes, then restore0. Unknown procedure must be skipped.')
-            if (await ask(self.prompt,'Equipment clear, observer ready, reset rule confirmed: type HOLD or S to skip: ')).strip()!='HOLD':
-                return None,'Hold/reset procedure not confirmed'
         return 1,None
 
     async def write(self,service,case,value,baseline,row,phase):
@@ -403,7 +407,8 @@ class SwaggerLineTest:
         try:
             receipt=await service.write(case['tag_name'],value,before_write=before,on_dispatch=on_dispatch)
         except asyncio.CancelledError:
-            row[phase+'_dispatch_unknown']=True
+            possible=dispatched and (not isinstance(service.client,AppClient) or service.client.last_dispatch)
+            row[phase+'_dispatch_unknown']=possible
             raise
         except Exception as exc:
             possible=dispatched and getattr(exc,'write_dispatched',None) is not False
@@ -436,6 +441,8 @@ class SwaggerLineTest:
         self.results.append(row)
         possible=False;uncertain=False;quit_requested=False
         try:
+            if not self.run_approval or self.run_approval.get('confirmation')!='RUN' or self.run_approval.get('scopes',{}).get((name,path))!=approval_snapshot(case):
+                raise ValidationError('This tag/path/procedure is outside the initial RUN approval')
             baseline=await self.prepare(service,case)
             if not self.equal(service.tags[name],baseline[name],original):raise ValidationError('Paths do not have the same original command value')
             row['baseline']=baseline
@@ -471,25 +478,20 @@ class SwaggerLineTest:
             self.emit(name+': '+row['error'])
         finally:
             if possible:
-                allowed=not uncertain
-                if uncertain:
-                    try:allowed=(await ask(self.prompt,f'{name} write outcome unknown. Never retry test. Type RESTORE for original={original} and stop: ')).strip()=='RESTORE'
-                    except (KeyboardInterrupt,EOFError,asyncio.CancelledError):allowed=False
-                if allowed:
-                    try:
-                        self.logs.add('TEST_SWAGGER_RESTORE_INTENT',tag_name=name,path=path,value=original)
-                        bounds=await self.write(service,case,original,None,row,'restore')
-                        expected={alias:original for alias in case['aliases']}
-                        if case['kind']=='door':expected[self.opposite(case)]=0
-                        if case['kind']!='door':
-                            for related in case['feedback_aliases']:
-                                if related in baseline:expected[related]=baseline[related]
-                            for related in self.watched(case,service):
-                                if related!=name and related not in expected and related in baseline:expected[related]=baseline[related]
-                        row['restore_readback_verified'],row['restored']=await self.observe(service,case,original,bounds,row,'restore',expected)
-                    except (Exception,KeyboardInterrupt,EOFError,asyncio.CancelledError) as exc:
-                        row['restoration_error']=self.logs.scrub(str(exc) or type(exc).__name__)
-                else:row['restoration_error']='Operator declined unknown-outcome restoration'
+                if uncertain:self.emit('Unknown test outcome: initial RUN authorizes only guarded original-value restoration, then stop; the test value is not retried.')
+                try:
+                    self.logs.add('TEST_SWAGGER_RESTORE_INTENT',tag_name=name,path=path,value=original)
+                    bounds=await self.write(service,case,original,None,row,'restore')
+                    expected={alias:original for alias in case['aliases']}
+                    if case['kind']=='door':expected[self.opposite(case)]=0
+                    if case['kind']!='door':
+                        for related in case['feedback_aliases']:
+                            if related in baseline:expected[related]=baseline[related]
+                        for related in self.watched(case,service):
+                            if related!=name and related not in expected and related in baseline:expected[related]=baseline[related]
+                    row['restore_readback_verified'],row['restored']=await self.observe(service,case,original,bounds,row,'restore',expected)
+                except (Exception,KeyboardInterrupt,EOFError,asyncio.CancelledError) as exc:
+                    row['restoration_error']=self.logs.scrub(str(exc) or type(exc).__name__)
             row['continue_queue']=bool(possible and row['restored'] and not quit_requested and not uncertain and not self.logs.error)
             if self.logs.error:row['audit_error']=self.logs.error
             row['finished_at']=now()
@@ -559,9 +561,6 @@ class SwaggerLineTest:
             tank=case['tank'];label=f'Tank{tank:02d}' if tank else 'Global / MainInlet'
             if tank!=previous:
                 self.emit('\n'+label)
-                if previous is not None:
-                    answer=await ask(self.ready,'Move to '+label+'; press Enter/R when ready or Q to stop: ')
-                    if answer.strip().lower() not in ('','r'):break
                 previous=tank
             paths=case.get('paths',list(self.services))
             first_service=self.services[paths[0]]
@@ -578,9 +577,6 @@ class SwaggerLineTest:
                 self.save();continue
             original=baseline[case['tag_name']];reference=None
             for path in paths:
-                if path!=paths[0]:
-                    answer=await ask(self.ready,f'{case["tag_name"]}: direct is restored. Ready to repeat through app? Enter/R or Q: ')
-                    if answer.strip().lower() not in ('','r'):return self.results
                 row=await self.run_path(case,path,value,original,reference)
                 if reference is None:reference=row.get('baseline')
                 if not row['continue_queue']:return self.results
@@ -593,15 +589,24 @@ async def execute(plan,args):
     if not settings.api_key:raise ValueError('Existing PLC_API_KEY is missing')
     if not sys.stdin.isatty():raise ValueError('--execute requires an interactive terminal')
     print('Supplier:',settings.base_url,'; comparison:',args.app_origin if args.compare_app else 'direct only')
-    print('Keep other write clients inactive. Numeric values/reset rules are requested, not guessed.')
+    print('RUN approves the entire printed tag/path plan: hold binary1 until P/I/N/Q, then restore the original value; numeric values still require data entry.')
+    print('Tanks and paths advance automatically ONLY after verified restoration. Q/Ctrl+C restore and stop. Unknown own-write outcomes attempt guarded restoration only, then halt.')
+    print('Before RUN, keep other write clients inactive and all affected equipment clear.')
+    groups={}
+    for case in plan['cases']:
+        for field,identity in [('aliases',case['identity']),('feedback_aliases',case['feedback_identity'])]:
+            if len(case[field])>1:groups[identity[1]]=case[field]
+    for address,names in sorted(groups.items()):print('Known shared address '+address+' affects: '+', '.join(names))
     if input('Review the exact list and stand at the first location; type RUN: ').strip()!='RUN':return
+    run_approval=approve_run(plan['cases'],['direct','app'] if args.compare_app else ['direct'])
     resume=plan.get('resume')
     if resume and hashlib.sha256(Path(resume['source_path']).read_bytes()).hexdigest()!=resume['source_sha256']:
         raise ValueError('Resume source changed after preview; review it again before execution')
     args.output.mkdir(parents=True,exist_ok=False)
     logs=LogService(args.output/'events.jsonl',settings.api_key)
     logs.add('TEST_SWAGGER_SESSION',api_address=settings.base_url,app_origin=args.app_origin if args.compare_app else None,plan=plan,
-             timestamp_timezone=settings.timestamp_timezone,timestamp_offset_seconds=settings.timestamp_offset_seconds,stale_ms=settings.stale_ms)
+             timestamp_timezone=settings.timestamp_timezone,timestamp_offset_seconds=settings.timestamp_offset_seconds,stale_ms=settings.stale_ms,
+             operator_confirmation='RUN',protocol='hold_test_until_verdict_restore_original_auto_advance')
     clients={'direct':PLCClient(settings.base_url,settings.api_key,settings.timeout)}
     if args.compare_app:clients['app']=AppClient(args.app_origin,settings.base_url,settings.timeout)
     services={path:SignalService(client,logs,settings.stale_ms,timestamp_timezone=settings.timestamp_timezone,
@@ -620,7 +625,7 @@ async def execute(plan,args):
         for endpoint,method in [('/api/v1/tags/list','get'),('/api/v1/tags/read','get'),('/api/v1/tags/write','post')]:
             if method not in live_schema.get('paths',{}).get(endpoint,{}):raise ValueError('Live Swagger write/read contract changed; no test started')
         test=SwaggerLineTest(services,logs,args.output,wait_seconds=args.wait_seconds,
-                             context={'mode':'REAL','api_address':settings.base_url},resume=resume)
+                             context={'mode':'REAL','api_address':settings.base_url},resume=resume,approval=run_approval)
         if resume:
             test.recovery_checks=await verify_resume_recovery(services['direct'],resume,test.logs)
             if test.logs.error:raise OSError(test.logs.error)

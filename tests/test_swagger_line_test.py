@@ -12,7 +12,7 @@ from server.config import ROOT
 from server.log_service import LogService
 from server.plc_client import MockPLCClient, PLCError
 from server.signal_service import SignalService
-from tools.swagger_line_test import AppClient, SwaggerLineTest, inventory, local_origin, main, validate_number
+from tools.swagger_line_test import AppClient, SwaggerLineTest, inventory, local_origin, main, validate_number, approve_run
 
 
 class FakeLine(MockPLCClient):
@@ -36,7 +36,7 @@ class FakeLine(MockPLCClient):
 
 def fixture(tmp_path,keys='p',answer='HOLD'):
     logs=LogService(tmp_path/'events.jsonl','test-secret');client=FakeLine();service=SignalService(client,logs,3000)
-    runner=SwaggerLineTest({'direct':service},logs,tmp_path,verdict=lambda _:keys,ready=lambda _:'r',prompt=lambda _:answer,wait_seconds=.03,emit=lambda _:None)
+    runner=SwaggerLineTest({'direct':service},logs,tmp_path,approval=approve_run(inventory()['cases'],['direct']),verdict=lambda _:keys,prompt=lambda _:answer,wait_seconds=.03,emit=lambda _:None)
     return client,service,runner,{case['tag_name']:case for case in inventory()['cases']}
 
 
@@ -112,24 +112,22 @@ def test_missing_status_does_not_mislabel_successful_http_or_readback(tmp_path):
     asyncio.run(run())
 
 
-@pytest.mark.parametrize('answer,values',[('RESTORE',[1,0]),('NO',[1])])
-def test_unknown_request_never_retries_one_and_requires_cleanup_choice(tmp_path,answer,values):
+def test_unknown_request_restores_without_confirmation_and_never_retries_test(tmp_path):
     async def run():
-        client,_,runner,cases=fixture(tmp_path,answer=answer);client.unknown=True
+        client,_,runner,cases=fixture(tmp_path);client.unknown=True
+        runner.prompt=lambda _:pytest.fail('Unexpected unknown-outcome confirmation')
         row=await runner.run_path(cases['Tank01_FilterRemote'],'direct',1,0,None)
-        assert [value for _,value in client.writes]==values
-        assert row['request']=='unknown' and not row['continue_queue']
+        assert [value for _,value in client.writes]==[1,0]
+        assert row['request']=='unknown' and row['restored'] and not row['continue_queue']
         assert 'test-secret' not in (tmp_path/'report.json').read_text()
     asyncio.run(run())
 
 
-def test_shared_addresses_require_acknowledgment_and_watch_aliases(tmp_path):
+def test_shared_addresses_need_no_extra_confirmation_after_run_and_watch_aliases(tmp_path):
     async def run():
-        client,service,runner,cases=fixture(tmp_path,answer='S')
+        client,service,runner,cases=fixture(tmp_path)
+        runner.prompt=lambda _:pytest.fail('Unexpected alias confirmation')
         case=cases['Tank03_FillWaterAuto'];poll=await runner.prepare(service,case)
-        value,reason=await runner.inputs(case,service,poll[case['tag_name']])
-        assert value is None and reason and not client.writes
-        runner.prompt=lambda _:'ALIASES'
         value,reason=await runner.inputs(case,service,poll[case['tag_name']])
         assert value==1 and reason is None
         row=await runner.run_path(case,'direct',value,0,None)
@@ -262,19 +260,18 @@ def test_cancelled_inflight_write_requires_explicit_restore(tmp_path):
     asyncio.run(run())
 
 
-def test_next_tank_and_app_path_wait_until_ready_after_restoration(tmp_path):
+def test_next_tank_and_app_path_auto_advance_after_verified_restoration(tmp_path):
     async def run():
-        client,service,runner,cases=fixture(tmp_path)
+        client,_,runner,cases=fixture(tmp_path)
         app=FakeLine();runner.services['app']=SignalService(app,runner.logs,3000)
-        pauses=[]
-        def ready(prompt):
-            pauses.append(prompt)
-            assert client.values['Tank01_FilterRemote']==0
-            return 'q'
-        runner.ready=ready
+        runner.run_approval=approve_run(list(cases.values()),list(runner.services))
+        runner.run_approval=approve_run(list(cases.values()),list(runner.services))
+        runner.prompt=lambda _:pytest.fail('Unexpected confirmation after RUN')
         rows=await runner.run([cases['Tank01_FilterRemote'],cases['Tank02_FillWaterOn']])
-        assert len(rows)==1 and rows[0]['restored'] and pauses and app.writes==[]
-        assert not any(name=='Tank02_FillWaterOn' for name,_ in client.writes)
+        assert len(rows)==4 and all(row['restored'] for row in rows)
+        expected=[('Tank01_FilterRemote',1),('Tank01_FilterRemote',0),('Tank02_FillWaterOn',1),('Tank02_FillWaterOn',0)]
+        assert client.writes==app.writes==expected
+        assert not hasattr(runner,'ready')
     asyncio.run(run())
 
 
@@ -330,6 +327,7 @@ def test_comparison_report_keeps_path_results_separate_and_does_not_prove_cause(
         direct=await runner.run_path(cases['Tank01_FilterRemote'],'direct',1,0,None)
         app=FakeLine();app.feedback_missing=True
         runner.services['app']=SignalService(app,runner.logs,3000)
+        runner.run_approval=approve_run(list(cases.values()),list(runner.services))
         await runner.run_path(cases['Tank01_FilterRemote'],'app',1,0,direct['baseline'])
         report=json.loads((tmp_path/'report.json').read_text())
         comparison=report['comparisons'][0]
@@ -425,7 +423,7 @@ def test_real_app_adapter_roundtrip_uses_final_app_timestamp_bounds(tmp_path,fut
             return httpx.Response(200,json={})
         client=AppClient('http://127.0.0.1:8080','http://test-line:8000',1,httpx.MockTransport(handler))
         service=SignalService(client,logs,3000)
-        runner=SwaggerLineTest({'app':service},logs,tmp_path,verdict=lambda _:'n',ready=lambda _:'r',prompt=lambda _:'RESTORE',wait_seconds=.03,emit=lambda _:None)
+        runner=SwaggerLineTest({'app':service},logs,tmp_path,approval=approve_run(inventory()['cases'],['app']),verdict=lambda _:'n',prompt=lambda _:'RESTORE',wait_seconds=.03,emit=lambda _:None)
         case=next(c for c in inventory()['cases'] if c['tag_name']=='Tank01_FilterRemote')
         try:
             row=await runner.run_path(case,'app',1,0,None)
@@ -654,6 +652,7 @@ def test_resume_runner_respects_app_only_pending_path_and_writes_no_settled_dire
     async def run():
         direct,_,runner,cases=fixture(tmp_path)
         app=FakeLine();runner.services['app']=SignalService(app,runner.logs,3000)
+        runner.run_approval=approve_run(list(cases.values()),list(runner.services))
         case={**cases['Tank01_FilterRemote'],'paths':['app']}
         rows=await runner.run([case])
         assert len(rows)==1 and rows[0]['path']=='app' and rows[0]['restored']
@@ -741,4 +740,62 @@ def test_legacy_origin_uncertainty_and_restore_bound_survive_resume_chain(tmp_pa
         prior=next(row for row in again['resume']['settled_paths'] if row['tag_name']=='Tank14_TempAdj')
         assert prior['recovery_after']==bound and prior['recovery_required'] is False
         assert client.writes==[]
+    asyncio.run(run())
+
+
+def test_cancel_before_dispatch_preserves_external_command_without_cleanup(tmp_path):
+    async def run():
+        client,_,runner,cases=fixture(tmp_path,answer='RESTORE')
+        original=client.list_tags;entered=asyncio.Event();calls=0
+        async def validation_pending():
+            nonlocal calls
+            calls+=1
+            if calls==2:
+                entered.set()
+                await asyncio.Future()
+            return await original()
+        client.list_tags=validation_pending
+        def no_cleanup_prompt(_):
+            raise AssertionError('A cancelled preflight has no owned write to restore')
+        runner.prompt=no_cleanup_prompt
+        task=asyncio.create_task(runner.run_path(cases['Tank01_FilterRemote'],'direct',1,0,None))
+        await asyncio.wait_for(entered.wait(),1)
+        client.values['Tank01_FilterRemote']=1  # Another actor owns this change.
+        task.cancel()
+        row=await asyncio.wait_for(task,1)
+        assert client.writes==[] and client.values['Tank01_FilterRemote']==1
+        assert row['test_dispatch_unknown'] is False and row['request']=='blocked'
+        assert not row['continue_queue']
+    asyncio.run(run())
+
+
+
+def test_no_run_scope_denies_dispatch_even_with_fresh_safe_data(tmp_path):
+    async def run():
+        client,_,runner,cases=fixture(tmp_path)
+        runner.run_approval=None
+        row=await runner.run_path(cases['Tank01_FilterRemote'],'direct',1,0,None)
+        assert client.writes==[] and row['request']=='blocked'
+    asyncio.run(run())
+
+
+def test_selected_run_scope_cannot_be_used_for_another_tag_or_path(tmp_path):
+    async def run():
+        client,_,runner,cases=fixture(tmp_path)
+        runner.run_approval=approve_run([cases['Tank01_FilterRemote']],['direct'])
+        other=await runner.run_path(cases['Tank01_HeaterRemote'],'direct',1,0,None)
+        assert other['request']=='blocked' and not client.writes
+        app=FakeLine();runner.services['app']=SignalService(app,runner.logs,3000)
+        other=await runner.run_path(cases['Tank01_FilterRemote'],'app',1,0,None)
+        assert other['request']=='blocked' and not app.writes
+    asyncio.run(run())
+
+
+def test_q_verdict_remains_data_and_restores_then_stops(tmp_path):
+    async def run():
+        client,_,runner,cases=fixture(tmp_path,keys='q')
+        runner.prompt=lambda _:pytest.fail('Unexpected confirmation')
+        rows=await runner.run([cases['Tank01_FilterRemote'],cases['Tank01_HeaterRemote']])
+        assert len(rows)==1 and rows[0]['restored'] and not rows[0]['continue_queue']
+        assert client.writes==[('Tank01_FilterRemote',1),('Tank01_FilterRemote',0)]
     asyncio.run(run())

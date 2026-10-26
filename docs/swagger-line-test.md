@@ -1,134 +1,117 @@
 # Tank-ordered Swagger/API tag test
 
-`tools/swagger_line_test.py` lists **all141 writable catalog tags** (102 binary,
-39 numeric). Swagger defines generic HTTP routes; actual tag names come from the
-saved `/api/v1/tags/list` response. Preview is offline and sends no request:
+`tools/swagger_line_test.py` previews all 141 writable tags: 102 binary and 39
+numeric. Swagger defines the routes; `/api/v1/tags/list` defines the tag names.
+Preview is offline and sends no request:
 
 ```bash
 .venv/bin/python tools/swagger_line_test.py
 ```
 
-## Resume only skipped and unvisited work
-
-Preview a prior report without any HTTP request:
-
-```bash
-.venv/bin/python tools/swagger_line_test.py --resume-report logs/swagger-line-test-3ba5af2815/report.json
-```
-
-Add `--execute` when ready. The inspected run selects **59 pending tags**:
-41 skipped and 18 unvisited. It preserves 75 known Pass paths (explicit human P or
-verified non-timeout Auto mode-bit checks) and 7 settled output/status timeout
-failures. Those known failures are retained for separate investigation and are
-not silently retested. Selection is per path: adding `--compare-app` still tests
-all 141 untested app paths, plus the 59 pending direct tests. Prior direct results
-remain in the source summaries; an app-only resumed test does not claim a new
-direct test or comparable historical starting conditions. The preview lists
-which paths remain for every tag. Tank ordering and readiness pauses are kept.
-
-A stopped run's explicit P may coexist with unverified restoration. Before ANY
-new write, execution performs a separate read-only recovery check for such a
-case: current original write value, write metadata, aliases, fresh data and
-Remote1/Local0 must match. It sends no corrective write and does not require
-unrelated tank states to match the old snapshot. If the value is still wrong or
-the check cannot be proved, resume stops. The original `restored=false` record
-is never rewritten; startup recovery evidence belongs to the new report.
-
-Malformed files, unknown/duplicate paths, changed schemas/metadata or a different
-recorded API target/mode are rejected. Other unresolved/error results require
-review rather than becoming skipped successes. The older report above has no
-recorded origin/mode, so the preview explicitly warns that it is a legacy source.
-Verify that source belongs to the printed supplier origin before typing RUN;
-the script never infers its historical origin from matching tag metadata.
-
-New reports record current REAL/API context, the complete 141-tag identity
-manifest, Swagger-contract hash and resume source path/SHA256. Prior settled
-paths and separate recovery checks carry forward, so a later resume does not
-re-add completed work. The source hash is checked again after RUN. Numeric test
-values and reset procedures are still requested for the pending cases.
-
-To run directly against the supplier API, from the repository:
+Execute the selected direct supplier tests:
 
 ```bash
 .venv/bin/python tools/swagger_line_test.py --execute
 ```
 
-Add `--compare-app` to repeat each tag through the local web app's `/api/write`
-backend, after the direct path restores its value. This is the write endpoint
-used by the UI; **it does not automate browser clicks or test frontend controls**.
-The current app also uses live supplier metadata, so this is a path comparison,
-not an independent PDF-to-PLC implementation. The supplier batch-write route is
-not exercised. Use `--only Tank01_FilterRemote` to select tags; repeat for several.
-`--wait-seconds 15` is the default observation window (1–300 seconds).
+Add `--compare-app` to repeat each tag through the local app server's `/api/write`
+path after direct restoration. This does not click browser controls or exercise
+the supplier batch route. The app uses live supplier metadata; this comparison
+is not an independent PDF implementation. Repeat `--only TAG` to select tags.
 
-Type `RUN` only after reviewing the exact list and standing at its first
-location. Tests follow physical tank order. Global MainInlet is listed first;
-only the Tank12-named door commands are placed at physical Tank13. Other Tank12
-signals stay at Tank12. Each next tank requires Enter/R readiness; Q stops.
-When comparing paths, Enter/R is also required before the app repetition.
+## One confirmation
 
-For each test, P records a confirmed equipment/HMI result, I an incorrect action,
-N an unconfirmed/no-response observation, and Q restores then stops. The key
-requests restoration; the next command requires fresh verified restoration.
-These observations do not prove physical stopping after restoration.
+`RUN` is the only confirmation. It approves the printed tag/path list, displayed
+known shared addresses and the hold-until-result/restore-original procedure.
+Every tested path must match that frozen approval scope before any actuation.
+Review the selected procedures and all affected equipment before RUN; do not
+include a command whose hold/reset rule is unknown.
 
-No setting or reset procedure is guessed:
+There are no HOLD, ALIASES, RESTORE, tank-ready or app-path-ready prompts.
+Numeric test values and P/I/N/Q are data entry and remain:
 
-- Numeric tags require an operator-approved engineering value, different from
-  the original value. The script restores the original value, not zero. Type,
-  multiplier/register representation and the published PDF safety envelope are
-  checked. These PDF bounds are a local test restriction, not a claim that the
-  supplier API publishes or enforces them.
-- Binary commands require an initial0. An active command is preserved and blocks
-  the run. Door, RemoteStart and MainInlet tests require an explicit known
-  hold1/until-finished/restore0 rule. Enter S if that rule is not established.
-- Known shared addresses require ALIASES confirmation for all affected equipment.
-  Unexpected aliases block testing. Shared feedback cannot prove an independent
-  command-to-output mapping.
-- Auto's own mode-bit readback is tested. Immediate movement is not established
-  by the manual. No movement alone is neither an API failure nor physical Pass.
-- Door position feedback may remain latched when command0 is verified. If the
-  requested position was already set, the result is Already set, with no new
-  transition proof. The script does not operate the opposite door command to
-  manufacture a starting position. The operator must restore a comparable
-  physical starting state if a movement comparison is needed.
+- P records a confirmed equipment/HMI result.
+- I records an incorrect result.
+- N records an unconfirmed/no-response observation.
+- Q restores the current command and stops.
 
-Results keep request acknowledgment, command readback, mapped output/status,
-human verdict and restoration separate. A successful write/readback with status0
-is **output unconfirmed**, not a dead HTTP endpoint. Each path saves its baseline;
-changed process/mode/door conditions are flagged and do not prove a path defect.
+Tanks and paths advance automatically only after verified restoration. There is
+no pause before the next tank. Stay ready to observe; Q or Ctrl+C stops the run.
+A result key does not verify physical stopping afterward.
 
-The app option accepts literal HTTP loopback origins only (default
-`http://127.0.0.1:8080`), requires REAL mode and the same supplier origin, and owns
-its write token. It never disables another client's token. Keep other write
-clients inactive. Numeric/user-entered values and reset rules can be skipped;
-skipped cases remain visible in the report.
+Physical order places only the Tank12-named door at physical Tank13. Other
+Tank12 signals remain at Tank12. Global MainInlet is listed first.
 
-Fresh complete Remote1/Local0 data, unchanged write-target metadata and later-than-receipt /
-final-baseline samples are required. During read-only observation after an
-acknowledged write, stale/incomplete samples are rejected and polling continues
-within the same observation deadline. They never qualify as proof and do not
-cause another write. The freshness threshold remains unchanged. A persistent
-lack of fresh restoration proof stops the queue; Remote/Local handoff or metadata
-changes still stop verification. Write preflight never waits through a stale
-sample or permits a stale-data write.
+## Values and validation
 
-Unknown write outcomes never retry the test
-value; explicit RESTORE is required, followed by a stopped queue. Cancellation
-or audit/storage errors stop subsequent testing. Authorized guarded restoration
-is still attempted after logging failure. Read-only status metadata drift does
-not block clearing an unchanged reviewed write target, but invalidates output
-proof and stops the queue. A changed write-target address/type still blocks that
-unsafe restoration. Failed restoration needs equipment
-inspection before any other test.
+Numeric tags require a finite, representable, operator-approved engineering value
+that differs from baseline. S skips a numeric input. The script restores the
+original value, not zero. Published PDF bounds are a local test envelope; this
+does not claim that the API publishes or enforces them.
 
-Evidence goes to a new `logs/swagger-line-test-<id>/`: append-only `events.jsonl`,
-`report.json`, a `results.csv` row per tag/path, and side-by-side
-`comparison.csv` results. HTTP error status and the local app reason are retained;
-write-token echoes are redacted. Credentials are read from existing
-settings and are not logged. Old reports, browser marks and the33 confirmed P
-imports are not replaced. This runner does not automatically import new marks.
+Binary tags must start at 0. Existing active commands are preserved and block the
+test. Doors wait for the operator's result before clearing; latched position
+feedback may stay at 1. Already-set feedback is not a new transition. The script
+never moves the opposite door to manufacture a starting state.
 
-The observation change is tested with fake PLCs/HTTP transports. It has not
-been re-executed on the production line; original hardware-run reports stay
-unchanged.
+Known aliases are displayed before RUN and included in its approval. Unexpected
+aliases or changed identities block writes. Affected shared-tank outputs must
+restore before continuing; shared feedback does not prove independent mapping.
+
+Auto tests verify the mode bit. The manual does not establish an immediate
+movement requirement. No movement alone is neither an API failure nor a physical
+Pass. Request acceptance, command readback, mapped output, human verdict and
+restoration are recorded separately. Status remaining 0 after a successful write
+is output unconfirmed, rather than an unresponsive HTTP endpoint.
+
+Fresh complete Remote=1/Local=0 data, unchanged metadata and samples strictly
+later than the receipt and final pre-write baseline are required. Stale read-only
+observations are rejected and polling continues within the same observation
+window. The 3000 ms freshness limit and write guards are unchanged.
+
+Unknown outcomes never retry the test value. RUN authorizes one guarded attempt
+to restore the original value only for a potentially dispatched own write, then
+the queue stops. Cancellation before dispatch sends no restoration write and
+preserves external state. Changed write targets, stale data, Local mode or an
+externally changed numeric value can block restoration; inspect the named case
+before another test. A logging failure cannot block an otherwise authorized,
+guarded restoration, but it stops subsequent tests.
+
+The app option accepts literal HTTP loopback origins only, requires REAL mode
+and the same supplier origin, and owns its token. Other write clients must stay
+inactive. Baselines and changed process conditions are retained; an observed
+path difference does not prove that the HTTP path caused it.
+
+## Resume skipped and unvisited items
+
+```bash
+.venv/bin/python tools/swagger_line_test.py --resume-report logs/swagger-resume-reviewed.json --execute
+```
+
+Resume keeps settled P/non-timeout Auto and output-timeout Fail results, and
+queues only skipped/unvisited paths. Direct results never hide an untested app
+path. The reviewed local snapshot selects 58 direct items after the later
+Tank11 Start/Spray success; the earlier raw report selects 59.
+
+Resume checks the source hash, full inventory/schema, mode and supplier origin.
+A legacy source without embedded origin remains explicitly flagged across
+chains; verify the printed supplier and source before RUN. Prior settled results
+and provenance are carried forward so later resumes do not re-add completed work.
+
+An unresolved prior restoration requires a separate fresh read of the original
+value strictly after its source restore acknowledgment/final baseline, before any
+new write. This recovery check never sends a corrective write or clears other
+current tank states. Source hashes are checked again after RUN.
+
+## Evidence
+
+A new `logs/swagger-line-test-<id>/` contains append-only `events.jsonl`, full
+`report.json`, per-path `results.csv` and `comparison.csv`. Reports retain context,
+source provenance, baselines, receipts and verification samples. Credentials are
+read from existing settings and redacted. Raw source reports and existing web
+marks are not rewritten by this runner; importing reviewed marks is separate.
+
+The RUN-only flow had 17 isolated fake scenarios with real networking blocked;
+all seven existing validation methods matched the tested baseline exactly.
+No live PLC test was performed for this UI-flow change. Skipped/blocked items
+remain untested.
