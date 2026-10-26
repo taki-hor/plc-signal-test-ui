@@ -1,4 +1,4 @@
-"""Operator-confirmed imports are metadata-bound human evidence, never writes."""
+"""Imported human and API labels are metadata-bound judgments, never writes."""
 from dataclasses import replace
 import json
 
@@ -94,5 +94,23 @@ def test_operator_declaration_keeps_explicit_api_backfill_limit(tmp_path):
     rows,error=load_operator_results(path,CONTEXT,{TAG.tag_name:TAG})
     assert error is None and rows[0]['value']=='pass' and rows[0]['api_backfill_allowed'] is False
     data['records'][0]['api_backfill_allowed']='false';path.write_text(json.dumps(data))
+    rows,error=load_operator_results(path,CONTEXT,{TAG.tag_name:TAG})
+    assert rows==[] and error
+
+
+@pytest.mark.parametrize('value',['auto','checked','failed','unchecked'])
+def test_imported_api_label_is_separate_from_human_fail(tmp_path,value):
+    data=document();human=data['records'][0];human['value']='fail'
+    data['records'].append({**human,'kind':'api','value':value,'source':'Operator API-only judgment'})
+    path=tmp_path/'operator.json';path.write_text(json.dumps(data))
+    rows,error=load_operator_results(path,CONTEXT,{TAG.tag_name:TAG})
+    assert error is None and [(row['kind'],row['value']) for row in rows]==[('human','fail'),('api',value)]
+    assert all(row['write_sent'] is False for row in rows)
+
+
+@pytest.mark.parametrize('kind,value',[('human','checked'),('api','pass'),('unknown','unchecked')])
+def test_result_kind_restricts_its_own_values(tmp_path,kind,value):
+    data=document();data['records'][0].update(kind=kind,value=value)
+    path=tmp_path/'operator.json';path.write_text(json.dumps(data))
     rows,error=load_operator_results(path,CONTEXT,{TAG.tag_name:TAG})
     assert rows==[] and error

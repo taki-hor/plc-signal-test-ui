@@ -85,13 +85,17 @@ path difference does not prove that the HTTP path caused it.
 ## Resume skipped and unvisited items
 
 ```bash
-.venv/bin/python tools/swagger_line_test.py --resume-report logs/swagger-resume-reviewed.json --execute
+.venv/bin/python tools/swagger_line_test.py --resume-report logs/swagger-line-test-a22b56f0a6/report.json --execute
 ```
 
 Resume keeps settled P/non-timeout Auto and output-timeout Fail results, and
 queues only skipped/unvisited paths. Direct results never hide an untested app
-path. The reviewed local snapshot selects 58 direct items after the later
-Tank11 Start/Spray success; the earlier raw report selects 59.
+path. Use the report.json produced by the latest relevant run. The completed
+26-Oct direct run shown above carries all141 settled paths, so it has no pending
+direct work. Use --compare-app only when intentionally adding untested app paths.
+Reusing an older resume snapshot requeues work completed by its later follow-up
+runs; it does not discover newer reports automatically. The earlier
+swagger-resume-reviewed.json still selects its historical58-item queue.
 
 Resume checks the source hash, full inventory/schema, mode and supplier origin.
 A legacy source without embedded origin remains explicitly flagged across
@@ -110,8 +114,13 @@ A new `logs/swagger-line-test-<id>/` contains append-only `events.jsonl`, full
 source provenance, baselines, receipts and verification samples. Credentials are
 read from existing settings and redacted. Raw source reports and existing web
 marks are not rewritten by this runner; importing reviewed marks is separate.
+Explicit operator API verdicts stay separate from human Pass/Fail and the raw
+automated evidence. For example, an operator API Pass on shared feedback does
+not establish an independent feedback mapping or a physical Pass.
 
-The RUN-only flow had 17 isolated fake scenarios with real networking blocked;
-all seven existing validation methods matched the tested baseline exactly.
-No live PLC test was performed for this UI-flow change. Skipped/blocked items
-remain untested.
+The RUN-only flow initially passed17 isolated fake scenarios with real networking
+blocked; all seven existing validation methods matched the tested baseline.
+Subsequent26-Oct direct runs completed all141 writable tags; their reviewed
+operator outcomes and API caveats are in swagger-second-run-2026-10-26.txt.
+This does not establish full browser/app-path comparison or batch-route coverage.
+A skipped/blocked attempt alone remains untested until a later completed run.

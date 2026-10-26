@@ -1,4 +1,4 @@
-"""Load explicit operator judgments without changing PLC or API evidence."""
+"""Load explicit human/API labels without changing PLC or automated evidence."""
 from datetime import datetime
 import json
 
@@ -16,7 +16,8 @@ def load_operator_results(path, context, tags):
             return None, None
         results = []
         for record in saved['records']:
-            if (record['kind'] != 'human' or record['value'] not in ('pass', 'fail', 'unchecked')
+            if (record['value'] not in {'human': ('pass', 'fail', 'unchecked'),
+                                        'api': ('auto', 'checked', 'failed', 'unchecked')}.get(record['kind'], ())
                     or not datetime.fromisoformat(record['at']).tzinfo
                     or not isinstance(record['identity'], list) or len(record['identity']) != 5
                     or not isinstance(record['source'], str) or record.get('write_sent') is not False

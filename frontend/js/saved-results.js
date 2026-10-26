@@ -33,16 +33,23 @@ export function manualDecisions(status) {
 }
 const offsetTimestamp = value => typeof value === 'string' && /(?:Z|[+-]\d{2}:\d{2})$/i.test(value) && Boolean(timestamp(value));
 function validServerDecision(row) {
-  return Boolean(row && row.kind === 'human' && Array.isArray(row.identity) && row.identity.length === 5 &&
+  return Boolean(row && Array.isArray(row.identity) && row.identity.length === 5 &&
     row.identity.slice(0,3).every(value => typeof value === 'string' && value) && row.identity[3] === 'W' && Number.isFinite(row.identity[4]) &&
-    ['pass','fail','unchecked'].includes(row.value) && (!Object.hasOwn(row,'api_backfill_allowed') || typeof row.api_backfill_allowed === 'boolean') &&
+    (row.kind === 'human' ? ['pass','fail','unchecked'] : row.kind === 'api' ? ['auto','checked','failed','unchecked'] : []).includes(row.value) &&
+    (!Object.hasOwn(row,'api_backfill_allowed') || typeof row.api_backfill_allowed === 'boolean') &&
     offsetTimestamp(row.at) && (row.observed_at == null || offsetTimestamp(row.observed_at)) && typeof row.source === 'string' && row.source && row.write_sent === false);
 }
-export function importedHumanDecisions(status) {
+function importedDecisions(status) {
   const context = contextKey(status);
   if (!context) return [];
   if (!serverDecisions.has(context)) serverDecisions.set(context,read(importedKey(status)).filter(validServerDecision));
   return serverDecisions.get(context);
+}
+export function importedHumanDecisions(status) {
+  return importedDecisions(status).filter(row => row.kind === 'human');
+}
+export function importedApiDecisions(status) {
+  return importedDecisions(status).filter(row => row.kind === 'api');
 }
 export function setServerHumanDecisions(data, status) {
   const context = contextKey(status);
@@ -53,8 +60,9 @@ export function setServerHumanDecisions(data, status) {
   return true;
 }
 export function savedManualApiDecision(tag, status) {
-  return tag ? manualDecisions(status).findLast(row => row.kind === 'api' && matches(row.identity,tag) &&
-    ['auto','checked','failed','unchecked'].includes(row.value) && timestamp(row.at)) ?? null : null;
+  return tag ? [...importedDecisions(status),...manualDecisions(status)].filter(row => row.kind === 'api' && matches(row.identity,tag) &&
+    ['auto','checked','failed','unchecked'].includes(row.value) && timestamp(row.at))
+    .reduce((latest, row) => !latest || Date.parse(row.at) >= Date.parse(latest.at) ? row : latest,null) : null;
 }
 export function savedHumanDecision(tag, status, test = null) {
   const context = contextKey(status);

@@ -128,3 +128,43 @@ def test_server_human_cache_rejects_contextless_naive_or_automatic_rows_and_keep
     assert js('return window.savedResultsModule.importedHumanDecisions(window.resultContext)[0].physical_stop_verified') is False
     assert js("return window.savedResultsModule.savedHumanDecision(window.resultTag,{...window.resultContext,mode:'REAL'})") is None
     assert not state['writes']
+
+
+def test_imported_api_pass_preserves_human_fail_automated_evidence_and_newer_local_choices(browser):
+    state,wd,prefix,js,wait_for=browser;module(browser)
+    name='Tank01_FilterRemote'
+    identity=[name,'M320','Bool','W',1]
+    human={'kind':'human','identity':identity,'value':'fail','at':'2026-10-25T01:00:00Z',
+           'source':'Operator observed no movement','write_sent':False}
+    api={**human,'kind':'api','value':'checked','at':'2026-10-25T02:00:00Z','source':'Operator API-only Pass'}
+    state['api_checks']=[{'tag_name':name,'api_status':'failed','identity':identity,
+                         'checked_at':'2026-10-25T03:00:00Z','basis':'Command and related status','detail':'Mapped feedback timed out'}]
+    state['operator_results']=[human,api]
+    row="document.querySelector('[data-command-tag="+name+"]')"
+    wait_for('return '+row+"?.dataset.operatorResult==='fail' && "+row+".querySelector('.api-check-badge').dataset.apiState==='checked'")
+    js("window.resultTag={...window.resultTag,tag_name:'Tank01_FilterRemote',device_address:'M320'};document.querySelector('[data-command-tag=Tank01_FilterRemote]').click()")
+    assert js("return document.getElementById('bool-saved-results-human').value")=='fail'
+    assert js("return document.getElementById('bool-saved-results-api').value")=='checked'
+    assert 'Latest automated result: API fail' in js("return document.getElementById('bool-api-state-detail').textContent")
+    assert 'Mapped feedback timed out' in js("return document.getElementById('bool-api-state-detail').textContent")
+    assert js('return window.savedResultsModule.importedHumanDecisions(window.resultContext).length')==1
+    js("localStorage.setItem('plc-signal-results:v1:MOCK:BROWSER TEST',JSON.stringify([{kind:'api',identity:"+json.dumps(identity)+",value:'failed',at:'2026-10-25T01:30:00Z'}]))")
+    assert js('return window.savedResultsModule.savedManualApiDecision(window.resultTag,window.resultContext).value')=='checked'
+    js("window.savedResultsModule.saveManualDecision(window.resultTag,window.resultContext,'api','auto');window.dispatchEvent(new Event('signal-results-changed'))")
+    assert js("return document.getElementById('bool-api-state').textContent")=='API fail'
+    assert js("return document.getElementById('bool-saved-results-human').value")=='fail'
+    wd(prefix+'/refresh',{})
+    wait_for('return '+row+"?.dataset.operatorResult==='fail' && "+row+".querySelector('.api-check-badge').dataset.apiState==='failed'")
+    module(browser)
+    js("window.resultTag={...window.resultTag,tag_name:'Tank01_FilterRemote',device_address:'M320'}")
+    assert js('return window.savedResultsModule.savedManualApiDecision(window.resultTag,window.resultContext).value')=='auto'
+    assert js("return window.savedResultsModule.savedManualApiDecision({...window.resultTag,device_address:'M999'},window.resultContext)") is None
+    assert js("return window.savedResultsModule.savedManualApiDecision(window.resultTag,{...window.resultContext,mode:'REAL'})") is None
+    for button in ('bool-export-json','write-feedback-export-json'):
+        js("window.importedResultExport=null;URL.createObjectURL=blob=>{blob.text().then(text=>window.importedResultExport=text);return 'blob:imported-results'};HTMLAnchorElement.prototype.click=function(){};document.getElementById("+json.dumps(button)+").click()")
+        wait_for('return window.importedResultExport!==null')
+        exported=json.loads(js('return window.importedResultExport'))
+        assert exported['imported_human_decisions']==[human]
+        assert exported['imported_api_decisions']==[api]
+        assert exported['manual_decisions'][-1]['value']=='auto'
+    assert not state['writes']

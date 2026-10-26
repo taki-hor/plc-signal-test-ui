@@ -20,39 +20,110 @@ Tank11 Spray setup; it does not establish the same prerequisite for every tank.
 RemoteStart is M370; SprayRemote is M371; SprayStatus is D1112.1.
 Source: logs/tank11-start-spray-20261026T083218-187669/report.json
 
-LATEST REVIEWED OUTCOMES (INCLUDING THE CONTROLLED TANK11 TEST)
+FINAL DIRECT RUN AND CURRENT OPERATOR RESULTS
 Outcome                    | Count | Meaning
 ---------------------------+-------+-------------------------------------------
-Settled Pass               | 77    | Explicit P / operator-reviewed mode checks
-Known output/status Fail   | 6     | Request/readback worked; output unconfirmed
-Skipped                    | 40    | No write was sent; still needs review/input
-Unvisited                  | 18    | Not reached before stopping
-Second-run queue           | 58    | Only skipped + unvisited
+Direct catalog coverage    | 141   | All writable tags reached a settled result
+Current operator Pass      | 133   | Explicit P / operator-reviewed mode checks
+Current operator Fail      | 8     | Six status timeouts + two corrected results
+Remaining unvisited tags   | 0     | Final two numeric cases completed
 
-The six remaining output-status failures are Tank01 Filter/Heater/US,
-Tank11 FillWaterOn, and Tank14 Filter/Heater. A low-level permissive is suspected
-for Tank14, not proven. Tank14 Alarm69/71 were1 during both failures.
+The resumed run saved56 new P results with restoration in:
+logs/swagger-line-test-8abf0a5024/report.json
+Its final Tank16_TempSV attempt was blocked by a catalog-read disconnect before
+a write was sent. The recovery snapshot retained those56 results and the83
+prior settled paths; the two remaining values were then completed in:
+logs/swagger-line-test-a22b56f0a6/report.json
+Tank16_TempSV: test60, original40 restored; operator P.
+Tank16_TimeSV: test999, original9999 restored; operator P.
 
-WEB RECORDS
-Current marks were overwritten with the latest reviewed tested outcomes; raw
-history remains. There are83 Pass,6 Fail and4 Not checked source records,
-including earlier Pass results outside this run. Auto mode Pass means the mode
-bit was verified; it does not certify an undocumented automatic action.
-Unverified TempSV, TimeSV and TempAdj cases remain in the second run for actual
-confirmation. They were not converted to API Pass from memory.
+The combined script review initially held135 Pass and6 timeout Fail. The
+operator later corrected Tank01_FillWaterOn and Tank14_FillWaterOn to physical
+Fail. Current web marks are therefore133 Pass and8 Fail, with history preserved.
+Correction source: logs/fill-water-result-correction-2026-10-26.json
 
-SECOND RUN (FROM THE EXISTING REPOSITORY)
-.venv/bin/python tools/swagger_line_test.py --resume-report logs/swagger-resume-reviewed.json --execute
+CURRENT EIGHT FAIL RESULTS
+Tag                       | Recorded issue
+--------------------------+---------------------------------------------------
+Tank01_FillWaterOn        | Operator reports no operation; shared status caveat
+Tank01_FilterRemote       | Command1 readback worked; mapped status stayed0
+Tank01_HeaterRemote       | Command1 readback worked; mapped status stayed0
+Tank01_USRemote           | Command1 readback worked; mapped status stayed0
+Tank11_FillWaterOn        | Command1 readback worked; mapped status stayed0
+Tank14_FillWaterOn        | Operator reports no operation; newer restore timeout
+Tank14_FilterRemote       | Command1 readback worked; mapped status stayed0
+Tank14_HeaterRemote       | Command1 readback worked; mapped status stayed0
 
-The reviewed resume snapshot binds the original stopped run and later Tank11
-successes without changing either source. It keeps the original legacy-origin
-warning and requires a separate fresh, strictly later calibration0 recovery
-read before any new write. No recovery write is issued. Unrelated filling states
-are left unchanged. Use Remote/API mode and review the printed source/list at RUN.
+These are test/output failures, not proof that the HTTP endpoints are dead or
+that the PLC equipment is faulty. Requests and command readback worked in the
+saved runs. Tank14 Alarm69/71 were1 during the original Filter/Heater failures;
+a low-level permissive is suspected, not established by the supplier contract.
 
-The script rejects stale verification samples and waits within the existing
-observation deadline. The3000ms limit, all write preflight guards, metadata,
-alias and Remote/Local requirements remain unchanged.
+API EVIDENCE AND HUMAN MARKS STAY SEPARATE
+Both Tank01_FillWaterOn and Tank14_FillWaterOn are now marked API Pass by the
+operator's explicit decision, while their human result remains Fail.
+Tank14 has new full command/status/restoration proof. Tank01 has accepted writes
+and changed-value readback, but Tank01_FillWaterStatus shares D1002.8 with
+Tank02_AirAgitationStatus. Tank01's API Pass is an explicit operator verdict;
+it does not turn shared status into independent feedback evidence. Its native
+automated shared-mapping result remains unconfirmed in the raw report.
+Tank14_FillWaterOn had earlier script command/status1 and0 proof, but a newer
+web API record said restoration was not verified within15s. That failure must
+remain in history. The latest guarded retest below now supplies newer full API
+proof; it does not change the operator's physical Fail.
+Tank10_DoorOpenRemote has operator-confirmed physical P while its script API
+output remained unconfirmed. Physical Pass does not manufacture API completion.
+Auto Pass verifies the mode bit only; it does not certify an undocumented
+automatic action. Supplier documents do not define all Start/Auto/interlock
+prerequisites. Tank11 Spray working with Start1 is a conditional result only.
 
-Skipped numeric inputs and unknown hold/reset/alias procedures remain visible.
-This update prepares58 tests; it has not executed the second run.
+Raw reports remain unchanged. Interrupted duplicate attempts keep their own
+missing-proof/cancellation records. A duplicate MainInlet restore0 was accepted
+before observation was cancelled; later final-run baselines show MainInlet and
+MainInletStatus both0. This does not rewrite the interrupted report as verified.
+
+LATEST GUARDED API-ONLY RETEST - COMPLETED
+Source: logs/api-eight-retest-20261026T101813-1a9b9c/report.json
+Summary: logs/api-eight-retest-20261026T101813-1a9b9c/summary.json
+Time: 26-Oct-2026 10:18:13-10:20:15 UTC (18:18:13-18:20:15 Hong Kong).
+Runner code:11b5aa4; REAL supplier http://192.168.1.12:8000.
+All eight listed non-door commands were tested one at a time:
+original0 -> command1 -> up to15s observation -> guarded restore0 verification.
+All eight requests were acknowledged, command1 readback was verified, and
+restoration to0 was verified. No request or restoration errors occurred.
+
+Latest API result          | Tags / limit
+---------------------------+--------------------------------------------------
+Full command/status cycle  | Tank14_FillWaterOn; fresh1/status1 and restored0
+Operator API Pass          | Tank01_FillWaterOn; native shared feedback unconfirmed
+Output/status unconfirmed  | Tank01_FilterRemote, Tank01_HeaterRemote,
+                           | Tank01_USRemote, Tank11_FillWaterOn,
+                           | Tank14_FilterRemote, Tank14_HeaterRemote
+
+The six unconfirmed outputs stayed0 during their observation windows despite
+command1 readback. Tank14 fill now has fresh API success after the older web
+restoration timeout; physical operation still needs the operator's judgment.
+Tank01 fill's shared status is not independent proof of its output mapping.
+The later explicit API Pass verdict is separate from this automated evidence.
+No human verdict was collected during the retest; human marks remain133 Pass
+and8 Fail. Later API-only verdicts do not change those human marks.
+Auto bits, RemoteStart, numeric values and other commands were not written.
+No universal PLC prerequisite rule was established by this retest.
+
+RESUME AND EVIDENCE
+The completed second run used logs/swagger-resume-latest.json after retaining
+verified earlier paths. Reusing the older swagger-resume-reviewed.json re-adds
+its original58-item queue. Use the latest completed report as a resume source,
+not the old snapshot. Reviewed operator corrections remain separate from raw
+script verdicts and must stay visible in the web result history.
+
+The3000ms freshness limit, strictly later sample checks, target/alias metadata,
+Remote1/Local0 requirements and guarded restoration remain enabled. A read-only
+Tank14_TempAdj recovery check confirmed its original0 before the second run;
+no recovery write or unrelated-state reset was issued. Legacy source-origin
+uncertainty remains recorded rather than inventing provenance.
+
+Only the direct single-write API path has this full141-tag coverage. This does
+not establish a full app-path comparison or supplier batch-route test. Runtime
+reports, operator history and credentials remain local/ignored by Git; this
+note records their paths and findings without publishing those files.
