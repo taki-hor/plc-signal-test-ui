@@ -64,7 +64,7 @@ def harness(tmp_path_factory):
                                 **({} if state['status_hold'] else {'write_mode_enabled':state['mode']}),
                                 'catalog_warnings':[], 'poll_interval_ms':250, 'stale_after_ms':500},
                 '/api/test/cases': {'tests':cases},
-                '/api/checks': {'records':state.get('api_checks',[]),'error':state.get('api_check_error'),'context':state.get('api_check_context',{'mode':'MOCK','api_address':'BROWSER TEST'})},
+                '/api/checks': {'records':state.get('api_checks',[]),'error':state.get('api_check_error'),'operator_results':state.get('operator_results',[]),'operator_results_error':state.get('operator_results_error'),'context':state.get('api_check_context',{'mode':'MOCK','api_address':'BROWSER TEST'})},
             }
             self.reply(data.get(self.path, {'logs':[]}))
 
@@ -149,6 +149,8 @@ def browser(harness):
     state['mode'] = False; state['status_hold'] = False; state['write_fault'] = None
     state['writes'].clear(); state['validation_advance']=False; state['omit_baseline']=False
     state['values'].clear(); state['last_poll'] = None; state['freeze_stamp'] = None
+    state['api_checks']=[]; state['api_check_error']=None; state['api_check_context']={'mode':'MOCK','api_address':'BROWSER TEST'}
+    state['operator_results']=[]; state['operator_results_error']=None
     state['release'].clear()
     wd(prefix + '/url', {'url':url})
     js('localStorage.clear()')

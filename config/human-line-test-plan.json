@@ -3,6 +3,19 @@
   "scope": "Operator-reviewed non-door commands only; one command0\u21921\u21920 at a time. Mapping observations do not prove physical operation.",
   "cases": [
     {
+      "tag_name": "Tank01_FillWaterAuto",
+      "identity": [
+        "Tank01_FillWaterAuto",
+        "L200",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank01_FilterRemote",
       "identity": [
         "Tank01_FilterRemote",
@@ -60,372 +73,10 @@
       "wait_seconds": 15
     },
     {
-      "tag_name": "Tank11_FillWaterOn",
-      "identity": [
-        "Tank11_FillWaterOn",
-        "L150",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank11_FillWaterStatus",
-      "feedback_identity": [
-        "Tank11_FillWaterStatus",
-        "D1112.4",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank11_SprayRemote",
-      "identity": [
-        "Tank11_SprayRemote",
-        "M371",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank11_SprayStatus",
-      "feedback_identity": [
-        "Tank11_SprayStatus",
-        "D1112.1",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank14_FilterRemote",
-      "identity": [
-        "Tank14_FilterRemote",
-        "M391",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank14_FilterStatus",
-      "feedback_identity": [
-        "Tank14_FilterStatus",
-        "D1128.1",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank14_HeaterRemote",
-      "identity": [
-        "Tank14_HeaterRemote",
-        "M392",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank14_HeaterStatus",
-      "feedback_identity": [
-        "Tank14_HeaterStatus",
-        "D1128.2",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank01_FillWaterAuto",
-      "identity": [
-        "Tank01_FillWaterAuto",
-        "L200",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
       "tag_name": "Tank02_AirAgitationAuto",
       "identity": [
         "Tank02_AirAgitationAuto",
         "L202",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank02_FillWaterAuto",
-      "identity": [
-        "Tank02_FillWaterAuto",
-        "L201",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank04_AirAgitationAuto",
-      "identity": [
-        "Tank04_AirAgitationAuto",
-        "L212",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank04_FillWaterAuto",
-      "identity": [
-        "Tank04_FillWaterAuto",
-        "L211",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank06_AirAgitationAuto",
-      "identity": [
-        "Tank06_AirAgitationAuto",
-        "L222",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank06_FillWaterAuto",
-      "identity": [
-        "Tank06_FillWaterAuto",
-        "L221",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank07_AirAgitationAuto",
-      "identity": [
-        "Tank07_AirAgitationAuto",
-        "L235",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank07_CoolerAuto",
-      "identity": [
-        "Tank07_CoolerAuto",
-        "L231",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank07_FillWaterAuto",
-      "identity": [
-        "Tank07_FillWaterAuto",
-        "L230",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank08_AirAgitationAuto",
-      "identity": [
-        "Tank08_AirAgitationAuto",
-        "L232",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank09_AirAgitationAuto",
-      "identity": [
-        "Tank09_AirAgitationAuto",
-        "L233",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank09_FillWaterAuto",
-      "identity": [
-        "Tank09_FillWaterAuto",
-        "L234",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank10_FillWaterAuto",
-      "identity": [
-        "Tank10_FillWaterAuto",
-        "L240",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank11_FillWaterAuto",
-      "identity": [
-        "Tank11_FillWaterAuto",
-        "L250",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank12_AirAgitationAuto",
-      "identity": [
-        "Tank12_AirAgitationAuto",
-        "L261",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank12_FillWaterAuto",
-      "identity": [
-        "Tank12_FillWaterAuto",
-        "L262",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank13_FillWaterAuto",
-      "identity": [
-        "Tank13_FillWaterAuto",
-        "L260",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank14_FillWaterAuto",
-      "identity": [
-        "Tank14_FillWaterAuto",
-        "L270",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank15_AirAgitationAuto",
-      "identity": [
-        "Tank15_AirAgitationAuto",
-        "L280",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank15_FillWaterAuto",
-      "identity": [
-        "Tank15_FillWaterAuto",
-        "L281",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank16_AirAgitationAuto",
-      "identity": [
-        "Tank16_AirAgitationAuto",
-        "L282",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": null,
-      "feedback_identity": null,
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank16_FillWaterAuto",
-      "identity": [
-        "Tank16_FillWaterAuto",
-        "L283",
         "Bool",
         "W",
         1.0
@@ -451,6 +102,19 @@
         "R",
         1.0
       ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank02_FillWaterAuto",
+      "identity": [
+        "Tank02_FillWaterAuto",
+        "L201",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
       "wait_seconds": 15
     },
     {
@@ -511,6 +175,19 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank04_AirAgitationAuto",
+      "identity": [
+        "Tank04_AirAgitationAuto",
+        "L212",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank04_FillWaterOn",
       "identity": [
         "Tank04_FillWaterOn",
@@ -527,6 +204,19 @@
         "R",
         1.0
       ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank04_FillWaterAuto",
+      "identity": [
+        "Tank04_FillWaterAuto",
+        "L211",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
       "wait_seconds": 15
     },
     {
@@ -587,6 +277,19 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank06_AirAgitationAuto",
+      "identity": [
+        "Tank06_AirAgitationAuto",
+        "L222",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank06_FillWaterOn",
       "identity": [
         "Tank06_FillWaterOn",
@@ -606,6 +309,83 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank06_FillWaterAuto",
+      "identity": [
+        "Tank06_FillWaterAuto",
+        "L221",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank07_AirAgitationOn",
+      "identity": [
+        "Tank07_AirAgitationOn",
+        "L135",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank07_AirAgitationStatus",
+      "feedback_identity": [
+        "Tank07_AirAgitationStatus",
+        "D1030.F",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank07_AirAgitationAuto",
+      "identity": [
+        "Tank07_AirAgitationAuto",
+        "L235",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank07_CoolerOn",
+      "identity": [
+        "Tank07_CoolerOn",
+        "L131",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank07_CoolerStatus",
+      "feedback_identity": [
+        "Tank07_CoolerStatus",
+        "D1030.B",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank07_CoolerAuto",
+      "identity": [
+        "Tank07_CoolerAuto",
+        "L231",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank07_FillWaterOn",
       "identity": [
         "Tank07_FillWaterOn",
@@ -622,6 +402,19 @@
         "R",
         1.0
       ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank07_FillWaterAuto",
+      "identity": [
+        "Tank07_FillWaterAuto",
+        "L230",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
       "wait_seconds": 15
     },
     {
@@ -663,6 +456,70 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank08_AirAgitationOn",
+      "identity": [
+        "Tank08_AirAgitationOn",
+        "L132",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank08_AirAgitationStatus",
+      "feedback_identity": [
+        "Tank08_AirAgitationStatus",
+        "D1030.C",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank08_AirAgitationAuto",
+      "identity": [
+        "Tank08_AirAgitationAuto",
+        "L232",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank09_AirAgitationOn",
+      "identity": [
+        "Tank09_AirAgitationOn",
+        "L133",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank09_AirAgitationStatus",
+      "feedback_identity": [
+        "Tank09_AirAgitationStatus",
+        "D1030.D",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank09_AirAgitationAuto",
+      "identity": [
+        "Tank09_AirAgitationAuto",
+        "L233",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank09_FillWaterOn",
       "identity": [
         "Tank09_FillWaterOn",
@@ -682,6 +539,19 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank09_FillWaterAuto",
+      "identity": [
+        "Tank09_FillWaterAuto",
+        "L234",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank10_FillWaterOn",
       "identity": [
         "Tank10_FillWaterOn",
@@ -698,6 +568,19 @@
         "R",
         1.0
       ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank10_FillWaterAuto",
+      "identity": [
+        "Tank10_FillWaterAuto",
+        "L240",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
       "wait_seconds": 15
     },
     {
@@ -758,6 +641,89 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank11_FillWaterOn",
+      "identity": [
+        "Tank11_FillWaterOn",
+        "L150",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank11_FillWaterStatus",
+      "feedback_identity": [
+        "Tank11_FillWaterStatus",
+        "D1112.4",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank11_FillWaterAuto",
+      "identity": [
+        "Tank11_FillWaterAuto",
+        "L250",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank11_SprayRemote",
+      "identity": [
+        "Tank11_SprayRemote",
+        "M371",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank11_SprayStatus",
+      "feedback_identity": [
+        "Tank11_SprayStatus",
+        "D1112.1",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank12_AirAgitationOn",
+      "identity": [
+        "Tank12_AirAgitationOn",
+        "L161",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank12_AirAgitationStatus",
+      "feedback_identity": [
+        "Tank12_AirAgitationStatus",
+        "D1118.4",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank12_AirAgitationAuto",
+      "identity": [
+        "Tank12_AirAgitationAuto",
+        "L261",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank12_FillWaterOn",
       "identity": [
         "Tank12_FillWaterOn",
@@ -777,6 +743,19 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank12_FillWaterAuto",
+      "identity": [
+        "Tank12_FillWaterAuto",
+        "L262",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank13_FillWaterOn",
       "identity": [
         "Tank13_FillWaterOn",
@@ -793,6 +772,19 @@
         "R",
         1.0
       ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank13_FillWaterAuto",
+      "identity": [
+        "Tank13_FillWaterAuto",
+        "L260",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
       "wait_seconds": 15
     },
     {
@@ -834,6 +826,57 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank14_FillWaterAuto",
+      "identity": [
+        "Tank14_FillWaterAuto",
+        "L270",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank14_FilterRemote",
+      "identity": [
+        "Tank14_FilterRemote",
+        "M391",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank14_FilterStatus",
+      "feedback_identity": [
+        "Tank14_FilterStatus",
+        "D1128.1",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank14_HeaterRemote",
+      "identity": [
+        "Tank14_HeaterRemote",
+        "M392",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank14_HeaterStatus",
+      "feedback_identity": [
+        "Tank14_HeaterStatus",
+        "D1128.2",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank14_SwingRemote",
       "identity": [
         "Tank14_SwingRemote",
@@ -850,6 +893,38 @@
         "R",
         1.0
       ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank15_AirAgitationOn",
+      "identity": [
+        "Tank15_AirAgitationOn",
+        "L180",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank15_AirAgitationStatus",
+      "feedback_identity": [
+        "Tank15_AirAgitationStatus",
+        "D1136.4",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank15_AirAgitationAuto",
+      "identity": [
+        "Tank15_AirAgitationAuto",
+        "L280",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
       "wait_seconds": 15
     },
     {
@@ -872,6 +947,51 @@
       "wait_seconds": 15
     },
     {
+      "tag_name": "Tank15_FillWaterAuto",
+      "identity": [
+        "Tank15_FillWaterAuto",
+        "L281",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank16_AirAgitationOn",
+      "identity": [
+        "Tank16_AirAgitationOn",
+        "L182",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": "Tank16_AirAgitationStatus",
+      "feedback_identity": [
+        "Tank16_AirAgitationStatus",
+        "D1136.6",
+        "Bool",
+        "R",
+        1.0
+      ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank16_AirAgitationAuto",
+      "identity": [
+        "Tank16_AirAgitationAuto",
+        "L282",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
+      "wait_seconds": 15
+    },
+    {
       "tag_name": "Tank16_FillWaterOn",
       "identity": [
         "Tank16_FillWaterOn",
@@ -888,6 +1008,19 @@
         "R",
         1.0
       ],
+      "wait_seconds": 15
+    },
+    {
+      "tag_name": "Tank16_FillWaterAuto",
+      "identity": [
+        "Tank16_FillWaterAuto",
+        "L283",
+        "Bool",
+        "W",
+        1.0
+      ],
+      "feedback_tag": null,
+      "feedback_identity": null,
       "wait_seconds": 15
     },
     {
@@ -922,139 +1055,6 @@
       "feedback_identity": [
         "Tank16_HeaterStatus",
         "D1136.3",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank07_AirAgitationOn",
-      "identity": [
-        "Tank07_AirAgitationOn",
-        "L135",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank07_AirAgitationStatus",
-      "feedback_identity": [
-        "Tank07_AirAgitationStatus",
-        "D1030.F",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank07_CoolerOn",
-      "identity": [
-        "Tank07_CoolerOn",
-        "L131",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank07_CoolerStatus",
-      "feedback_identity": [
-        "Tank07_CoolerStatus",
-        "D1030.B",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank08_AirAgitationOn",
-      "identity": [
-        "Tank08_AirAgitationOn",
-        "L132",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank08_AirAgitationStatus",
-      "feedback_identity": [
-        "Tank08_AirAgitationStatus",
-        "D1030.C",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank09_AirAgitationOn",
-      "identity": [
-        "Tank09_AirAgitationOn",
-        "L133",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank09_AirAgitationStatus",
-      "feedback_identity": [
-        "Tank09_AirAgitationStatus",
-        "D1030.D",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank12_AirAgitationOn",
-      "identity": [
-        "Tank12_AirAgitationOn",
-        "L161",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank12_AirAgitationStatus",
-      "feedback_identity": [
-        "Tank12_AirAgitationStatus",
-        "D1118.4",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank15_AirAgitationOn",
-      "identity": [
-        "Tank15_AirAgitationOn",
-        "L180",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank15_AirAgitationStatus",
-      "feedback_identity": [
-        "Tank15_AirAgitationStatus",
-        "D1136.4",
-        "Bool",
-        "R",
-        1.0
-      ],
-      "wait_seconds": 15
-    },
-    {
-      "tag_name": "Tank16_AirAgitationOn",
-      "identity": [
-        "Tank16_AirAgitationOn",
-        "L182",
-        "Bool",
-        "W",
-        1.0
-      ],
-      "feedback_tag": "Tank16_AirAgitationStatus",
-      "feedback_identity": [
-        "Tank16_AirAgitationStatus",
-        "D1136.6",
         "Bool",
         "R",
         1.0

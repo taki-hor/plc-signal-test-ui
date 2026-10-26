@@ -1,4 +1,4 @@
-import {savedHumanDecision, manualDecisions, signature} from './saved-results.js';
+import {savedHumanDecision, manualDecisions, importedHumanDecisions, signature} from './saved-results.js';
 import {apiCheckFor, apiFilterMatches, renderApiBadge, renderSavedResults} from './api-checks.js';
 import {commandGuidance} from './command-guidance.js';
 import {$, node, groupFor, fillGroups, valueText, setText} from './dom.js';
@@ -512,7 +512,7 @@ function download(format) {
       end_mode:r?.endMode ?? null,current_value:poll?.[t.tag_name] ?? null};
   });
   let content, type;
-  if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(), mode:status?.mode, api_address:status?.api_address, checklist:summary, attempts:records, manual_decisions:manualDecisions(status)}, null, 2); type = 'application/json'; }
+  if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(), mode:status?.mode, api_address:status?.api_address, checklist:summary, attempts:records, manual_decisions:manualDecisions(status),imported_human_decisions:importedHumanDecisions(status)}, null, 2); type = 'application/json'; }
   else {
     const columns = ['tag_name','address','attempt_id','result','operator_result','operator_result_at','operator_completed_at','api_result','api_cycle_complete','api_check_status','at','elapsed_ms','since_send_1_ms','end_mode','end_mode_confirmed_at','zero_requested_at','automatic_local_record','source','mapping_under_test','timeout_ms','backend_run_id','backend_result','backend_elapsed_ms','feedback_result','feedback_elapsed_ms','action','value','api_elapsed_ms','http_status','written','console_accepted_at','console_command_baseline_utc','supplier_timestamp_utc','zero_baseline_supplier_timestamp_utc','Remote','Local','command_value','feedback_tag','feedback_value','supplier_timestamp','note'];
     const entries = records.flatMap(r => r.events.map(e => ({tag_name:r.tag_name,address:r.address,attempt_id:r.id,result:operatorStatus(r),operator_result:operatorResult(r),operator_result_at:r.operatorResultAt ?? r.operatorCompletedAt ?? r.issueAt ?? null,operator_completed_at:r.operatorCompletedAt ?? null,api_result:result(r),api_cycle_complete:apiCycleComplete(r),api_check_status:apiCheckFor(tags.find(t=>t.tag_name===r.tag_name),status).api_status,end_mode:r.endMode ?? null,end_mode_confirmed_at:r.endModeConfirmedAt ?? null,zero_requested_at:r.zeroRequestedAt ?? null,source:r.source ?? null,mapping_under_test:r.mappingUnderTest ?? null,timeout_ms:r.timeout_ms ?? null,backend_run_id:r.backendRunId ?? null,note:r.note,...e})));

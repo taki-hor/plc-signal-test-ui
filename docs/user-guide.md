@@ -360,3 +360,10 @@ the signal. Export JSON to retain the manual decision audit as well as attempts.
 For the 26 October hardware run and outstanding tests, see
 [API first-pass notes](api-firstpass-2026-10-26.md). For documented and unknown
 conditions, see [prerequisites](api-prerequisites-2026-10-26.md).
+
+
+Explicit operator-confirmed CLI results can also appear in the saved Human result.
+They retain their source, original observation time and metadata. Later browser
+corrections take precedence. Refresh the page after an import; no PLC write is
+needed. Imported judgments are included in JSON exports. See the
+[26 October human-run review](human-run-review-2026-10-26.md).

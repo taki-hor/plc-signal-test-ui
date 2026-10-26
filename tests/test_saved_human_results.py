@@ -113,3 +113,18 @@ def test_historical_value_mark_cannot_promote_a_different_or_unidentified_signal
     assert js("return JSON.parse(localStorage.getItem('plc-value-feedback:v1:MOCK:BROWSER TEST'))[0].operatorResult")=='pass'
     assert js("return JSON.parse(localStorage.getItem('plc-signal-results:v1:MOCK:BROWSER TEST')??'[]').length")==0
     assert not state['writes']
+
+
+def test_server_human_cache_rejects_contextless_naive_or_automatic_rows_and_keeps_last_import(browser):
+    state,_,_,js,_=browser;module(browser)
+    entry={'kind':'human','identity':[TAG,'M300','Bool','W',1],'value':'pass','at':'2026-10-25T01:00:00Z',
+           'source':'Operator-confirmed CLI run','write_sent':False,'physical_stop_verified':False}
+    state['operator_results']=[entry]
+    js('window.serverHumanEntry='+json.dumps(entry))
+    assert js("return window.savedResultsModule.setServerHumanDecisions({context:window.resultContext,operator_results:[window.serverHumanEntry]},window.resultContext)") is True
+    js("window.rejectedImports=[{operator_results:[]},{context:{...window.resultContext,mode:'REAL'},operator_results:[]},{context:window.resultContext,operator_results:[{...window.serverHumanEntry,at:'2026-10-25T01:00:00'}]},{context:window.resultContext,operator_results:[{...window.serverHumanEntry,kind:'api'}]},{context:window.resultContext,operator_results:[],operator_results_error:'Temporary human-store failure'},{context:window.resultContext,error:'Transport unavailable'}]")
+    assert js('return window.rejectedImports.every(data=>!window.savedResultsModule.setServerHumanDecisions(data,window.resultContext))') is True
+    assert js('return window.savedResultsModule.savedHumanDecision(window.resultTag,window.resultContext).value')=='pass'
+    assert js('return window.savedResultsModule.importedHumanDecisions(window.resultContext)[0].physical_stop_verified') is False
+    assert js("return window.savedResultsModule.savedHumanDecision(window.resultTag,{...window.resultContext,mode:'REAL'})") is None
+    assert not state['writes']

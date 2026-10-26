@@ -29,28 +29,39 @@ selected equipment, and run:
 .venv/bin/python tools/human_line_test.py --only Tank01_FilterRemote --execute
 ```
 
-For the full reviewed queue, omit `--only`. Type `RUN` once after checking the
-printed list, line readiness and equipment clearance. The queue advances itself
-after each case's restoration is verified. Keep other testers and write clients
-inactive during the queue: direct supplier requests do not share the web server's
-command lock.
+For the full reviewed queue, omit `--only`. The script sorts cases by tank number
+and related function. Within each function, the On/Remote command precedes its
+Auto bit. These remain separate tests; the script does not combine commands or
+set prerequisites.
+
+Type `RUN` once after checking the printed list, standing at the first tank, and
+checking line readiness and equipment clearance. Cases at that tank advance after
+each restoration is verified. Before moving to the next tank, the queue stops
+with the preceding command restored to `0`. The heading shows the next tank and
+case progress. Walk to that tank, then press **Enter/R** when ready, or **Q** to
+stop before any command for that tank is sent. Live write guards are checked again
+after you continue. Keep other testers and write clients inactive: direct
+supplier requests do not share the web server's command lock.
 
 After sending `1`, the script waits up to the case's `wait_seconds` (default 15)
 for a fresh later command readback and, where configured, its mapped status. It
 then holds the command at `1` while you inspect the equipment. Press one key:
 
-- **P**: The requested operation is visible.
-- **I**: Incorrect action: the equipment performs an unexpected or wrong action.
-- **N**: There is no physical response.
-- **Q**: Stop the queue after requesting `0` and checking restoration.
+- **P**: Pass. The requested operation is visible; saves human result **Pass**.
+- **I**: Incorrect action. The equipment performs an unexpected or wrong action; saves **Fail**.
+- **N**: No response. Saves **Not checked** with `retest_required=true` for another observation.
+- **Q**: Stop after requesting `0` and checking restoration; saves **Not checked**.
 
 Each key requests `0`; the next case starts only after a later fresh read verifies
 command/status restoration. Your key describes **operation while the command is
 1**. It does not certify physical stopping, which happens afterward. The export
-therefore keeps `human_observation` separately and leaves the overall
-`human_result` as `unchecked`. A later full physical check can establish the
-complete human result. `I` and `N` remain distinct physical observations. Neither proves that the API
-or PLC is faulty. Any later mapping to a UI Fail result requires human review.
+keeps `human_observation` and `human_result` separately from API evidence. A P
+verdict is an explicit human Pass for the observed operation.
+`physical_stop_verified=false` records that the verdict did not confirm physical
+stopping. API restoration to `0` does not change that field. I and N remain
+distinct: I explicitly records a failed human check; N stays unchecked and needs
+a rerun, because a missing or uncertain response does not establish a failed
+physical check. Neither observation alone proves that the API or PLC is faulty.
 
 The script requires fresh complete data, `Remote=1`, `Local=0`, unchanged metadata,
 independent addresses and a zero baseline. It preserves an already active state.

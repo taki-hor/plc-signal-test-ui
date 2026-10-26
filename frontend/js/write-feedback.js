@@ -1,4 +1,4 @@
-import {savedHumanDecision, manualDecisions, signature, saveManualDecision} from './saved-results.js';
+import {savedHumanDecision, manualDecisions, importedHumanDecisions, signature, saveManualDecision} from './saved-results.js';
 import {$, node, groupFor, valueText, formatTime, setText} from './dom.js';
 
 let tags = [], poll = null, status = null, cases = [], records = [], storageKey = null;
@@ -197,7 +197,7 @@ function render() {
 }
 function exportRecords(format) {
   let content, type;
-  if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(),api_address:status?.api_address,mode:status?.mode,records,manual_decisions:manualDecisions(status)},null,2); type = 'application/json'; }
+  if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(),api_address:status?.api_address,mode:status?.mode,records,manual_decisions:manualDecisions(status),imported_human_decisions:importedHumanDecisions(status)},null,2); type = 'application/json'; }
   else {
     const columns = ['write_id','requested_at','commands','result','read_tag','before','before_timestamp_utc','after','after_timestamp_utc','api_accepted_at','feedback_evidence','operator_result','operator_result_at','operator_completed_at','operator_events'];
     const operatorFields = r => [operatorResult(r),r.operatorResultAt ?? r.operatorCompletedAt ?? '',r.operatorCompletedAt ?? '',JSON.stringify(r.operatorEvents ?? [])];

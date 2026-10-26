@@ -13,6 +13,7 @@ from .plc_client import MockPLCClient, PLCClient, PLCError
 from .signal_service import SignalService
 from .test_runner import TestRunner
 from .api_checks import APIChecks
+from .operator_results import load_operator_results
 
 settings = Settings()
 logs = LogService(ROOT / 'logs' / 'events.jsonl', settings.api_key)
@@ -198,7 +199,10 @@ async def test_run(request: Request, body: dict):
 async def api_check_results():
     if service.api_checks and not service.tags:
         await service.load_tags()
-    return logs.scrub(service.api_checks.public(service)) if service.api_checks else {'records':[],'error':None}
+    data = service.api_checks.public(service) if service.api_checks else {'records':[],'error':None}
+    context = data.get('context')
+    data['operator_results'], data['operator_results_error'] = load_operator_results(ROOT/'logs'/'operator-results.json', context, service.tags) if context else ([], None)
+    return logs.scrub(data)
 
 @app.get('/api/logs')
 async def get_logs(kind: str = 'all'):

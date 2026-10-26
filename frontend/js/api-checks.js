@@ -1,5 +1,5 @@
 import {formatTime, node} from './dom.js';
-import {signature, savedHumanDecision, savedManualApiDecision, saveManualDecision} from './saved-results.js';
+import {signature, savedHumanDecision, savedManualApiDecision, saveManualDecision, setServerHumanDecisions} from './saved-results.js';
 let records = new Map(), scope = null, contextValid = true;
 const key = status => JSON.stringify([status?.mode,status?.api_address]);
 const labels = {checked:'API pass',failed:'API fail',unchecked:'Unchecked'};
@@ -7,11 +7,14 @@ export function setApiChecks(data, status, tags = []) {
   const nextScope=key(status), mismatch=Boolean(data?.context && key(data.context)!==nextScope);
   if (scope!==nextScope || mismatch) records=new Map();
   scope=nextScope; contextValid=!mismatch;
-  const error = data?.error || (mismatch ? 'API target changed. Waiting for matching check results.' : null);
+  const apiError = data?.error || (mismatch ? 'API target changed. Waiting for matching check results.' : null);
+  const imported = !mismatch && setServerHumanDecisions(data,status);
+  const operatorError = data?.operator_results_error || (!mismatch && Array.isArray(data?.operator_results) && !imported ? 'Saved human results have an invalid format.' : null);
+  const error = [apiError,operatorError].filter(Boolean).join(' ');
   const note = document.getElementById('api-check-error');
   if (note) { note.textContent = error ? error+' Saved judgments are retained.' : ''; note.classList.toggle('hidden',!error); }
   // A failed refresh cannot erase the last matching result.
-  if (!error && Array.isArray(data?.records)) records=new Map(data.records.map(record=>[record.tag_name,record]));
+  if (!apiError && Array.isArray(data?.records)) records=new Map(data.records.map(record=>[record.tag_name,record]));
   renderApiSummary(status,tags);
 }
 export function renderApiSummary(status,tags) {
@@ -27,9 +30,10 @@ export function apiCheckFor(tag, status) {
   let result=remote && !mismatch && Object.hasOwn(labels,remote.api_status) ? remote :
     {api_status:'unchecked',detail:mismatch ? 'Metadata changed; previous API evidence no longer applies.' : 'No verified API cycle is recorded for this signal.'};
   const human=tag && savedHumanDecision(tag,status), decision=tag && savedManualApiDecision(tag,status);
+  const humanEvidenceAt=Number.isFinite(Date.parse(human?.observed_at)) ? human.observed_at : human?.at;
   if (human?.value==='pass' && !mismatch && remote?.identity_valid!==false && contextValid && result.api_status!=='checked' &&
-      !(result.api_status==='failed' && Date.parse(result.checked_at ?? result.started_at)>=Date.parse(human.at))) {
-    result={api_status:'checked',checked_at:human.at,source:'human',detail:'Human-confirmed test. This status was backfilled from your saved Pass; it is not a new automated API cycle.'};
+      !(result.api_status==='failed' && Date.parse(result.checked_at ?? result.started_at)>=Date.parse(humanEvidenceAt))) {
+    result={api_status:'checked',checked_at:human.at,source:'human',detail:'Human-confirmed test. This status was backfilled from your saved Pass; it is not a new automated API cycle.'+(human.physical_stop_verified === false ? ' Physical stop was not confirmed.' : '')};
   }
   if (decision && decision.value!=='auto') {
     const automatic=remote && !mismatch ? ` Latest automated result: ${labels[remote.api_status] ?? 'Unchecked'}. ${remote.detail ?? ''}` : '';
@@ -67,6 +71,7 @@ export function renderSavedResults(element,tag,status) {
     const kind=choice.dataset.resultKind, decision=kind==='api' ? savedManualApiDecision(tag,status) : savedHumanDecision(tag,status);
     const value=decision?.value ?? (kind==='api' ? 'auto' : 'unchecked');
     if (document.activeElement!==choice) choice.value=value;
+    choice.title=kind === 'human' && decision ? `${decision.source ?? 'Operator'} · ${formatTime(decision.at)}${decision.physical_stop_verified === false ? ' · Physical stop not confirmed' : ''}` : '';
     choice.disabled=!tag || !status?.mode || !status?.api_address;
     choice.onchange=()=>{
       const error=element.querySelector('[data-result-error]');

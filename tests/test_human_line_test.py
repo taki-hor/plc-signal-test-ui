@@ -32,7 +32,7 @@ class FakeLine(MockPLCClient):
 def fixture(tmp_path,verdict='p',cleanup='ZERO'):
     client=FakeLine();logs=LogService(tmp_path/'events.jsonl','private-canary')
     service=SignalService(client,logs,3000)
-    runner=HumanLineTest(service,logs,tmp_path,verdict=lambda _:verdict,cleanup=lambda _:cleanup,emit=lambda _:None)
+    runner=HumanLineTest(service,logs,tmp_path,verdict=lambda _:verdict,cleanup=lambda _:cleanup,emit=lambda _:None,ready=lambda _:'')
     plan=load_plan(ROOT/'config/human-line-test-plan.json')
     return client,service,runner,plan
 
@@ -52,13 +52,14 @@ def test_dry_run_is_offline_and_plan_contains_only_approved_distinct_commands(mo
     assert all('Door' not in case['tag_name'] and not case['tag_name'].endswith('RemoteStart') for case in plan['cases'])
 
 
-def test_full_cycle_records_api_pass_and_start_only_human_judgment(tmp_path):
+def test_full_cycle_records_api_pass_and_explicit_human_pass_with_stop_scope_separate(tmp_path):
     async def run():
         client,_,runner,plan=fixture(tmp_path)
         row=await runner.run_case(case_for(plan,'Tank01_FilterRemote'))
         assert client.writes==[('Tank01_FilterRemote',1),('Tank01_FilterRemote',0)]
         assert row['api_status']=='checked' and row['restored_zero'] and row['continue_queue']
-        assert row['human_observation']=='pass' and row['human_result']=='unchecked'
+        assert row['human_observation']=='pass' and row['human_result']=='pass'
+        assert row['physical_stop_verified'] is False and not row['retest_required']
         assert 'physical stop' in row['human_observation_scope']
         assert 'private-canary' not in (tmp_path/'events.jsonl').read_text()
         assert (tmp_path/'report.json').exists() and 'api_result' in (tmp_path/'results.csv').read_text()
@@ -70,6 +71,7 @@ def test_human_no_response_is_independent_of_api_pass(tmp_path):
         _,_,runner,plan=fixture(tmp_path,verdict='n')
         row=await runner.run_case(case_for(plan,'Tank01_FilterRemote'))
         assert row['api_status']=='checked' and row['human_observation']=='no_response'
+        assert row['human_result']=='unchecked' and row['retest_required']
     asyncio.run(run())
 
 
@@ -280,4 +282,73 @@ def test_csv_only_export_failure_updates_primary_json_after_verified_cleanup(tmp
         for result in (row,report):
             assert result['restored_zero'] and result['api_status']=='unchecked' and not result['continue_queue']
             assert 'CSV storage unavailable' in result['audit_error']
+    asyncio.run(run())
+
+
+def test_load_plan_orders_numeric_tanks_then_related_functions_on_before_auto():
+    names=['Tank16_FillWaterOn','Tank02_FillWaterAuto','Tank07_CoolerAuto',
+           'Tank10_FillWaterOn','Tank07_CoolerOn','Tank02_FillWaterOn']
+    plan=load_plan(ROOT/'config/human-line-test-plan.json',names)
+    assert [case['tag_name'] for case in plan['cases']]==[
+        'Tank02_FillWaterOn','Tank02_FillWaterAuto','Tank07_CoolerOn','Tank07_CoolerAuto',
+        'Tank10_FillWaterOn','Tank16_FillWaterOn']
+
+
+def test_same_tank_advances_but_next_tank_waits_before_any_new_write(tmp_path):
+    async def run():
+        client,_,runner,plan=fixture(tmp_path)
+        names=['Tank01_FilterRemote','Tank01_HeaterRemote','Tank02_FillWaterOn']
+        pauses=[]
+        def ready(prompt):
+            pauses.append(prompt)
+            assert client.writes==[(names[0],1),(names[0],0),(names[1],1),(names[1],0)]
+            assert client.values[names[0]]==client.values[names[1]]==0
+            assert client.values[names[2]]==0
+            return 'r'
+        runner.ready=ready
+        rows=await runner.run([case_for(plan,name) for name in names])
+        assert len(rows)==3 and len(pauses)==1 and 'Tank02' in pauses[0]
+        assert client.writes[-2:]==[(names[2],1),(names[2],0)]
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('cancel',[False,True])
+def test_quit_or_cancel_at_tank_pause_sends_no_next_command(tmp_path,cancel):
+    async def run():
+        client,_,runner,plan=fixture(tmp_path)
+        def ready(_):
+            if cancel: raise KeyboardInterrupt
+            return 'q'
+        runner.ready=ready
+        rows=await runner.run([case_for(plan,'Tank01_FilterRemote'),case_for(plan,'Tank02_FillWaterOn')])
+        assert len(rows)==1 and rows[0]['restored_zero'] and rows[0]['human_result']=='pass'
+        assert client.writes==[('Tank01_FilterRemote',1),('Tank01_FilterRemote',0)]
+        assert client.values['Tank02_FillWaterOn']==0
+    asyncio.run(run())
+
+
+def test_incorrect_action_is_explicit_fail_without_claiming_physical_stop(tmp_path):
+    async def run():
+        _,_,runner,plan=fixture(tmp_path,verdict='i')
+        row=await runner.run_case(case_for(plan,'Tank01_FilterRemote'))
+        assert row['human_result']=='fail' and row['human_observation']=='incorrect'
+        assert row['physical_stop_verified'] is False and not row['retest_required']
+    asyncio.run(run())
+
+
+def test_cancelled_async_tank_readiness_preserves_previous_zero_and_pass(tmp_path):
+    async def run():
+        client,_,runner,plan=fixture(tmp_path)
+        entered=asyncio.Event()
+        async def ready(_):
+            entered.set()
+            await asyncio.Future()
+        runner.ready=ready
+        task=asyncio.create_task(runner.run([case_for(plan,'Tank01_FilterRemote'),case_for(plan,'Tank02_FillWaterOn')]))
+        await asyncio.wait_for(entered.wait(),1)
+        assert client.writes==[('Tank01_FilterRemote',1),('Tank01_FilterRemote',0)]
+        task.cancel()
+        rows=await asyncio.wait_for(task,1)
+        assert len(rows)==1 and rows[0]['human_result']=='pass' and rows[0]['restored_zero']
+        assert client.values['Tank02_FillWaterOn']==0
     asyncio.run(run())

@@ -94,6 +94,16 @@ def signature(tag):
     return [tag.tag_name, tag.device_address, tag.data_type, tag.read_write, tag.multiplier]
 
 
+def tank_for(case):
+    return re.match(r'Tank\d+',case['tag_name']).group()
+
+
+def case_order(case):
+    name=case['tag_name']
+    tank,function=name.split('_',1)
+    return (int(tank[4:]),re.sub(r'(?:Auto|Remote|On)$','',function).lower(),name.endswith('Auto'),name)
+
+
 def load_plan(path, only=()):
     plan = json.loads(Path(path).read_text())
     if not isinstance(plan, dict) or not isinstance(plan.get('cases'), list) or not plan['cases']:
@@ -121,10 +131,11 @@ def load_plan(path, only=()):
     unknown = set(only)-set(names)
     if unknown: raise ValueError('Requested command is not in this plan: '+', '.join(sorted(unknown)))
     if only: plan['cases']=[case for case in plan['cases'] if case['tag_name'] in only]
+    plan['cases'].sort(key=case_order)
     return plan
 
 
-async def read_verdict(prompt):
+async def read_verdict(prompt,keys=('p','i','n','q')):
     """Await one terminal key without blocking Ctrl+C or leaving terminal mode set."""
     import termios
     import tty
@@ -138,8 +149,8 @@ async def read_verdict(prompt):
         try:
             key = os.read(fd,1).decode('ascii',errors='ignore').lower()
             if not key: answer.set_exception(EOFError())
-            elif key in ('p','i','n','q'):
-                print(key.upper(),flush=True)
+            elif key in keys:
+                print('READY' if key in ('\r','\n') else key.upper(),flush=True)
                 answer.set_result(key)
         except OSError as exc: answer.set_exception(exc)
     try:
@@ -149,6 +160,10 @@ async def read_verdict(prompt):
     finally:
         loop.remove_reader(fd)
         termios.tcsetattr(fd,termios.TCSADRAIN,previous)
+
+
+async def read_ready(prompt):
+    return await read_verdict(prompt,keys=('r','q','\r','\n'))
 
 
 class CleanupLogs:
@@ -170,11 +185,11 @@ class CleanupLogs:
 
 
 class HumanLineTest:
-    def __init__(self, service, logs, output, verdict=read_verdict, cleanup=input, emit=print):
+    def __init__(self, service, logs, output, verdict=read_verdict, cleanup=input, emit=print, ready=read_ready):
         self.service,self.output = service,Path(output)
         self.logs=CleanupLogs(logs)
         self.service.logs=self.logs
-        self.verdict,self.cleanup = verdict,cleanup
+        self.verdict,self.cleanup,self.ready = verdict,cleanup,ready
         self.emit = lambda message: emit(logs.scrub(message))
         self.results = []
 
@@ -243,6 +258,7 @@ class HumanLineTest:
         name=case['tag_name']
         row={'tag_name':name,'started_at':now(),'api_status':'unchecked','human_result':'unchecked',
              'human_observation':'not_checked','human_observation_scope':'Operation while command=1; physical stop is not checked by the verdict key.',
+             'physical_stop_verified':False,'retest_required':False,
              'restored_zero':False,'one_verified':False,'zero_verified':False,'continue_queue':False}
         possible=False; uncertain=False; quit_requested=False; frozen={}
         try:
@@ -278,6 +294,8 @@ class HumanLineTest:
             if inspect.isawaitable(key): key=await key
             if key not in ('p','i','n','q'): raise ValueError('Invalid human verdict.')
             row['human_observation']={'p':'pass','i':'incorrect','n':'no_response','q':'not_checked'}[key]
+            row['human_result']={'p':'pass','i':'fail','n':'unchecked','q':'unchecked'}[key]
+            row['retest_required']=key=='n'
             row['human_observation_at']=now();quit_requested=key=='q'
             self.record('TEST_HUMAN_OBSERVATION',**row,write_sent=False)
         except (Exception,KeyboardInterrupt,EOFError,asyncio.CancelledError) as exc:
@@ -339,7 +357,7 @@ class HumanLineTest:
 
     def export(self):
         report=self.write_report()
-        fields=['tag_name','api_result','human_observation','human_observation_scope','human_result','one_verified','zero_verified','restored_zero','started_at','finished_at','api_detail','error','restoration_error','audit_error']
+        fields=['tag_name','api_result','human_observation','human_observation_scope','human_result','physical_stop_verified','retest_required','one_verified','zero_verified','restored_zero','started_at','finished_at','api_detail','error','restoration_error','audit_error']
         with (self.output/'results.csv').open('w',newline='') as stream:
             writer=csv.DictWriter(stream,fieldnames=fields,extrasaction='ignore');writer.writeheader()
             for row in report['results']:
@@ -347,7 +365,25 @@ class HumanLineTest:
                 writer.writerow({key:("'"+value if isinstance(value,str) and re.match(r'^[=+@\-\t\r]',value) else value) for key,value in values.items()})
 
     async def run(self, cases):
-        for case in cases:
+        previous_tank=None
+        for index,case in enumerate(cases):
+            tank=tank_for(case)
+            if tank!=previous_tank:
+                count=sum(tank_for(item)==tank for item in cases[index:])
+                self.emit(f'\n{tank}: cases {index+1}–{index+count} of {len(cases)}. {count} command(s) at this tank.')
+                if previous_tank is not None:
+                    self.emit(f'{previous_tank} is restored to0. Move to {tank} before continuing. No next command has been sent.')
+                    try:
+                        answer=self.ready(f'Ready at {tank}? Press Enter/R to continue, or Q to stop: ')
+                        if inspect.isawaitable(answer): answer=await answer
+                        proceed=answer.strip().lower() in ('','r')
+                    except (KeyboardInterrupt,EOFError,asyncio.CancelledError):
+                        proceed=False
+                    self.record('TEST_TANK_READY',tank=tank,result='READY' if proceed else 'STOPPED',write_sent=False)
+                    if not proceed or self.logs.error:
+                        self.emit(f'Stopped before {tank}; no command for this tank was sent.')
+                        break
+                previous_tank=tank
             row=await self.run_case(case)
             if not row['continue_queue']: break
         return self.results
@@ -360,8 +396,9 @@ async def execute(plan, output):
     if not settings.api_key: raise ValueError('PLC_API_KEY is missing from the existing environment/.env.')
     if not sys.stdin.isatty(): raise ValueError('--execute requires an interactive terminal for the human verdict keys.')
     print('The queue writes directly to',settings.base_url)
+    print('The queue is ordered by tank and function. It pauses before moving to the next tank.')
     print('Watch the equipment. Each P/I/N key records operation at 1, requests 0, then advances only after fresh restoration. Q restores 0 and stops.')
-    if input('Confirm the exact printed plan and clear equipment; type RUN to begin: ').strip()!='RUN':
+    if input('Confirm the printed plan, stand at the first tank, and clear equipment; type RUN to begin: ').strip()!='RUN':
         print('Cancelled; no PLC request was sent.');return
     output.mkdir(parents=True,exist_ok=False)
     logs=LogService(output/'events.jsonl',settings.api_key)
