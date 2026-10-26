@@ -1,102 +1,127 @@
-# Human-in-the-loop line queue
+# Line queue with an operator
 
-`tools/human_line_test.py` tests the reviewed non-door commands **one at a time**.
-Each case uses `0 → 1 → 0`. It talks directly to the supplier API from the existing
-`.env`, through the project's `PLCClient` and `SignalService`. It does not require
-the local web server to run, and it does not use its write-mode token.
+`tools/human_line_test.py` tests reviewed non-door commands **one at a time**.
+Each case uses `0 → 1 → 0`.
+The script uses the supplier API and existing `.env` through `PLCClient` and `SignalService`.
+It does not require the local web server or its write-mode token.
+This guide describes the 63-case human queue, not the separate 141-tag Swagger runner.
 
-Review the exact plan without any network request:
+Review the exact plan without network requests:
 
 ```bash
 .venv/bin/python tools/human_line_test.py
 ```
 
-The editable plan is `config/human-line-test-plan.json`: 40 non-door command/status
-cases and 23 distinct Auto bits. Use `--only Tank01_FilterRemote` to select one;
-repeat `--only` to select several. Its frozen identities are checked against live
-metadata before execution. The scope cannot be expanded by adding arbitrary tag
-names. Doors, numeric values, RemoteStart, MainInlet and shared-address cases are
-excluded. Each Auto case verifies its own readback; it does not claim that its
-associated equipment ran. This is not an exhaustive set of simultaneous command
-combinations, and no prerequisite commands are synthesized. Supplier documentation gives no
-prerequisite truth table. An optional case `operator_note` can record an
-operator-reported prerequisite; the script displays it and sends no enable command.
+The editable plan is `config/human-line-test-plan.json`.
+It contains 40 non-door command/status cases and 23 distinct Auto bits.
+Use `--only Tank01_FilterRemote` to select one case.
+Repeat `--only` to select several cases.
+The script checks fixed identities against live metadata before execution.
+Arbitrary tag names cannot expand this scope.
 
-To operate the line, review the printed commands, stand where you can inspect the
-selected equipment, and run:
+The queue excludes doors, numeric values, RemoteStart, MainInlet and shared addresses.
+Each Auto case checks its own readback. It does not claim equipment operation.
+The queue does not cover all simultaneous command combinations.
+It does not create prerequisite commands. Supplier documents give no prerequisite truth table.
+An optional `operator_note` can record an operator-reported prerequisite.
+The script shows that note. It sends no prerequisite enable command.
+
+Before execution, review the printed commands.
+Move to a location where you can inspect the selected equipment.
+Run the selected case:
 
 ```bash
 .venv/bin/python tools/human_line_test.py --only Tank01_FilterRemote --execute
 ```
 
-For the full reviewed queue, omit `--only`. The script sorts cases by tank number
-and related function. Within each function, the On/Remote command precedes its
-Auto bit. These remain separate tests; the script does not combine commands or
-set prerequisites.
+Omit `--only` for the full reviewed queue.
+The script sorts cases by tank number and function.
+Within each function, the On/Remote command precedes its Auto bit.
+These remain separate tests. The script does not combine commands or set prerequisites.
 
-Type `RUN` once after checking the printed list, standing at the first tank, and
-checking line readiness and equipment clearance. Cases at that tank advance after
-each restoration is verified. Before moving to the next tank, the queue stops
-with the preceding command restored to `0`. The heading shows the next tank and
-case progress. Walk to that tank, then press **Enter/R** when ready, or **Q** to
-stop before any command for that tank is sent. Live write guards are checked again
-after you continue. Keep other testers and write clients inactive: direct
-supplier requests do not share the web server's command lock.
+Before `RUN`, check the printed list.
+Stand at the first tank.
+Check line readiness and equipment clearance.
+Type `RUN` once.
+Cases at that tank continue after each verified restoration.
+Before the next tank, the queue stops with the preceding command restored to `0`.
+The heading shows the next tank and case progress.
 
-After sending `1`, the script waits up to the case's `wait_seconds` (default 15)
-for a fresh later command readback and, where configured, its mapped status. It
-then holds the command at `1` while you inspect the equipment. Press one key:
+Move to that tank.
+Press **Enter/R** when ready.
+Press **Q** to stop before the queue sends a command for that tank.
+The script checks live write guards again after you continue.
+Keep other testers and write clients inactive.
+Direct supplier requests do not share the web server's command lock.
 
-- **P**: Pass. The requested operation is visible; saves human result **Pass**.
-- **I**: Incorrect action. The equipment performs an unexpected or wrong action; saves **Fail**.
-- **N**: No response. Saves **Not checked** with `retest_required=true` for another observation.
-- **Q**: Stop after requesting `0` and checking restoration; saves **Not checked**.
+After `1`, the script waits for later fresh command readback and any configured mapped status.
+The case's `wait_seconds` sets this limit. The default is 15 seconds.
+The script then holds `1` while you inspect the equipment.
+Press one key:
 
-Each key requests `0`; the next case starts only after a later fresh read verifies
-command/status restoration. Your key describes **operation while the command is
-1**. It does not certify physical stopping, which happens afterward. The export
-keeps `human_observation` and `human_result` separately from API evidence. A P
-verdict is an explicit human Pass for the observed operation.
-`physical_stop_verified=false` records that the verdict did not confirm physical
-stopping. API restoration to `0` does not change that field. I and N remain
-distinct: I explicitly records a failed human check; N stays unchecked and needs
-a rerun, because a missing or uncertain response does not establish a failed
-physical check. Neither observation alone proves that the API or PLC is faulty.
+- **P**: Pass. The operation is visible. The script saves human result **Pass**.
+- **I**: Incorrect action. The equipment performs a wrong or unexpected action. The script saves **Fail**.
+- **N**: No response. The script saves **Not checked** with `retest_required=true` for another observation.
+- **Q**: Stop. The script requests `0`, checks restoration and saves **Not checked**.
 
-The script requires fresh complete data, `Remote=1`, `Local=0`, unchanged metadata,
-independent addresses and a zero baseline. It preserves an already active state.
-It uses the existing timezone, timestamp correction and stale limit unchanged.
-For Auto, related On/status signals must start at zero and return to zero; the
-script does not write those related commands to manufacture a restoration.
+Each key requests `0`.
+The next case starts only after a later fresh read checks command/status restoration.
+Your key describes **operation while the command is 1**.
+It does not certify physical stopping after the key press.
 
-Ctrl+C stays responsive while a verdict key is awaited and restores the terminal
-mode. After an acknowledged command, cancellation requests the already-approved
-`0` cleanup and stops. Cancellation while the `1` request is in flight leaves its
-outcome uncertain.
+The export separates `human_observation` and `human_result` from API evidence.
+P records an explicit human Pass for observed operation.
+`physical_stop_verified=false` means the verdict did not confirm physical stopping.
+API restoration to `0` does not change that field.
+I records a failed human check. N records an unchecked result that needs another run.
+A missing or uncertain response does not establish a physical failure.
+Neither observation alone proves an API or PLC fault.
 
-A missing or mismatched write acknowledgment is an uncertain outcome. The script
-never retries `1`. It asks you to type `ZERO` before requesting cleanup, then stops
-the queue. A failed clear or unverified restoration also stops the queue and names
-the signal needing inspection. A command may remain active if communication is
-lost, cleanup is declined, or the process is killed. Use the local machine
-controls as required; this tool is not a safety system.
+The script requires these conditions:
 
-An audit storage failure blocks any new `1` and stops the queue. It does not
-block an already-authorized cleanup `0`: the same freshness, mode and metadata
-guards still apply. The script retains fallback evidence in memory and includes
-it in the report if export succeeds. If storage remains unavailable, it prints
-the audit error and cleanup state; those in-memory records cannot survive process
-exit.
+- Fresh, complete data.
+- `Remote=1` and `Local=0`.
+- Unchanged metadata and independent addresses.
+- A zero baseline.
 
-Evidence is written to a new `logs/human-line-test-<UTC>-<id>/` folder, or the new
-folder given by `--output`:
+The script preserves an active state instead of testing it.
+It retains the existing timezone, timestamp correction and stale-data limit.
+For Auto, related On/status signals must start and return at zero.
+The script does not write those related commands to force restoration.
 
-- `events.jsonl`: append-only intent, receipt, full read snapshots and decisions.
-- `report.json`: complete per-case API evidence and human observations.
+Ctrl+C remains responsive while the script waits for a verdict key.
+It restores terminal mode.
+After an acknowledged command, cancellation requests the approved cleanup `0` and stops.
+Cancellation during a `1` request leaves the outcome uncertain.
+
+A missing or mismatched acknowledgment also leaves the outcome uncertain.
+The script never retries `1`.
+It asks for `ZERO` before requesting cleanup. It then stops the queue.
+A failed clear or unverified restoration stops the queue and names the signal for inspection.
+
+A command may remain active after lost communication, declined cleanup or forced process termination.
+Use local machine controls as required.
+This tool is not a safety system.
+
+Audit storage failure blocks new `1` requests and stops the queue.
+It does not block an approved cleanup `0`.
+The same freshness, mode and metadata guards still apply.
+The script retains fallback evidence in memory. It includes that evidence if report export succeeds.
+
+If storage remains unavailable, the script prints the audit error and cleanup state.
+Memory-only records cannot survive process exit.
+
+The script writes evidence to a new `logs/human-line-test-<UTC>-<id>/` folder.
+`--output` can specify another new folder.
+The folder contains:
+
+- `events.jsonl`: append-only intents, receipts, full read snapshots and decisions.
+- `report.json`: complete API evidence and human observations for each case.
 - `results.csv`: concise results for review.
 
-API pass requires the complete fresh `1` and restored `0` observations and valid
-receipts. API pass and a human observation remain separate. The script reads the
-API key only from existing settings; logs redact it. It does not update saved web
-UI judgments automatically. Return the report/CSV for review and explicit result
-reconciliation rather than treating old physical results as newly checked.
+API pass requires valid receipts and complete fresh observations of `1` and restored `0`.
+API pass and human observation remain separate.
+The script reads the API key from existing settings. Logs redact it.
+The script does not update saved web judgments automatically.
+Return the report or CSV for review and explicit result reconciliation.
+Do not treat old physical results as new checks.

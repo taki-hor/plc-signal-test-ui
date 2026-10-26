@@ -888,11 +888,17 @@ def test_issue_revokes_human_completion_and_new_attempt_starts_unconfirmed(brows
     assert not saved.get('operatorCompletedAt') and saved['issueAt']
     assert any(event['action']=='Operator recorded an issue' and event.get('previous_operator_completed_at') for event in saved['events'])
     assert js("return !document.getElementById('bool-mark-complete').disabled&&!document.getElementById('bool-mark-incomplete').disabled")
+    history=js("return JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST'))")
     js("document.getElementById('bool-new').click()")
-    assert js("return document.getElementById('bool-operator-state').textContent==='NOT TESTED'")
+    assert js("return document.getElementById('bool-operator-state').textContent==='FAIL — YOUR CHECK'")
+    assert js("return document.querySelector('[data-command-tag=Tank01_USRemote]').dataset.operatorResult==='fail'")
     assert js("return document.getElementById('bool-mark-complete').disabled")
-    saved=js("return JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST')).at(-1)")
-    assert not saved.get('operatorCompletedAt') and not saved.get('oneRequestedAt')
+    assert js("return document.getElementById('bool-completion').textContent==='NOT STARTED'")
+    assert js("return document.getElementById('bool-timer').textContent==='00:00.0'")
+    records=js("return JSON.parse(localStorage.getItem('plc-command-checklist:v1:MOCK:BROWSER TEST'))")
+    assert len(records)==len(history)+1 and records[:-1]==history
+    saved=records[-1]
+    assert not any(saved.get(field) for field in ('operatorResult','operatorCompletedAt','issueAt','oneRequestedAt'))
     assert state['writes']==[{'tag_name':'Tank01_USRemote','value':1},{'tag_name':'Tank01_USRemote','value':0}]
 
 

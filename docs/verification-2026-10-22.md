@@ -1,8 +1,8 @@
 # Verification — 2026-10-22
 
-The initial real-test phase was read only. The operator later authorized the
-individual physical tests recorded below. Simulated software regressions used
-mock clients or the isolated browser-test API.
+The initial phase used read-only real tests. The operator later authorized the
+individual physical tests recorded below. Software regression tests used mock
+clients or the isolated browser-test API.
 
 ## Real signal reads
 
@@ -12,10 +12,10 @@ only in the ignored `.env`.
 
 All **362 catalog signals passed five successive read samples**. Each sample
 had zero missing tags, nulls, invalid values or supplier-reported read failures.
-Four different supplier poll snapshots were observed. The catalog contains
-277 Bool, 69 Word, eight SignedWord and eight Float tags; 221 are marked R and
-141 W. Reading a W tag does not issue a write. Bool values were checked against
-0/1; the other types were checked for finite numeric values. This verifies
+The scan observed four different supplier poll snapshots. The catalog contains
+277 Bool, 69 Word, eight SignedWord and eight Float tags. It marks 221 tags R
+and 141 tags W. Reading a W tag does not issue a write. The scan checked Bool
+values against 0/1. It checked the other types for finite numeric values. This verifies
 transport, parsing and reported values, not physical sensor calibration or
 command effects.
 
@@ -26,8 +26,8 @@ Local per-tag evidence is saved outside the repository in
 - `plc-signal-test-ui-all-signals-read-2026-10-22.csv`
 
 The report includes metadata, latest value, sample count and PASS/FAIL for every
-catalog tag. The app was restarted after the fixes and the read scan repeated;
-the local artifacts retain the latest run timestamp.
+catalog tag. After the fixes, the app restarted and the read scan ran again.
+The local artifacts retain the latest run timestamp.
 
 ## Confirmed software bugs fixed
 
@@ -39,32 +39,33 @@ the local artifacts retain the latest run timestamp.
 3. Single, batch and configured reset writes recheck authorization immediately
    before dispatch. Tests also recheck authorization during feedback waiting.
    Disable/expiry during validation prevents the unsent command.
-4. Each feedback read is bounded by the remaining monotonic test deadline;
-   late or hung responses cannot produce PASS. The real and mock client wait
+4. The remaining monotonic test deadline limits each feedback read.
+   Late or unresponsive reads cannot produce PASS. The real and mock client wait
    helpers follow the same deadline rule.
 5. A failed, malformed or overdue frontend refresh invalidates cached healthy
    state and disables write/test controls. Read requests time out after ten
-   seconds; the stale-data watchdog acts sooner. POST requests allow sixty
+   seconds. The stale-data watchdog acts sooner. POST requests allow sixty
    seconds for validation and configured feedback waiting.
 
 Additional guards reject overlapping local writes/tests and malformed command
 identities. Leaving Remote mode during verification blocks PASS. Disabling a
 mode does not recall a command already submitted to the supplier. External PLC
-clients are outside the local command lock; recorded feedback remains timing
+clients are outside the local command lock. Recorded feedback remains timing
 and state evidence, not proof that no external action influenced it.
 
 ## Automated checks
 
 `env -u PYTHONPATH PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest -q -p no:cacheprovider`
 
-**161 passed in 54.67 seconds** after the edge-case follow-up, including 30
-real-Firefox browser tests against a fake loopback API. The browser tests require Firefox and geckodriver and are
-explicitly skipped on hosts without them. No new Python dependency was added.
+**161 passed in 54.67 seconds** after the edge-case review. This count includes
+30 real-Firefox browser tests against a fake loopback API. The browser tests
+require Firefox and geckodriver. The suite explicitly skips them on hosts
+without those programs. No new Python dependency was added.
 `git diff --check` passed. Changes are local and uncommitted.
 
 ## Temporary clock configuration and remaining field blockers
 
-The supplier timestamps omit an offset; the operator confirmed Hong Kong time.
+The supplier timestamps omit an offset. The operator confirmed Hong Kong time.
 The supplier host clock was about 44 seconds behind this workstation, while its
 polls advanced normally. This test uses:
 
@@ -80,19 +81,21 @@ synchronizing the API host clock, reset the offset to 0 and restart `./start`.**
 Remeasure if either clock changes. The correction also affects the test runner's
 supplier-timestamp comparison with write-acceptance time.
 
-The 36 mappings marked `requires_confirmation=true` remain blocked. No command
-pulse, latch or reset behavior was inferred. The agent-operated physical tests cover only the operator-confirmed Tank 01
-door sequence below. No other tank, batch, writable Float or unconfirmed mapping
-was field-tested by the agent; later operator UI exercises are separate evidence. The supplier's duplicate-address and live
-metadata differences remain visible for supplier review.
+The 36 mappings marked `requires_confirmation=true` remain blocked. No command pulse, latch
+or reset behavior was inferred. The agent operated only the operator-confirmed
+Tank 01 door sequence below. The agent did not field-test other tanks, batches,
+writable Float tags or unconfirmed mappings. Later operator UI exercises are
+separate evidence. The supplier's duplicate addresses and live metadata
+differences remain visible for supplier review.
 
 
 ## Individual physical tests — Tank 01
 
-The operator confirmed area readiness for each movement and specified holding
-commands at 1 until movement finished, then clearing to 0 after physical
-confirmation. Both remote command bits were verified 0 before the next direction
-was issued. Write mode was disabled after each command and clear operation.
+The operator confirmed area readiness for each movement. The operator specified
+that commands must stay at 1 until movement finished. Physical confirmation was
+required before each clear to 0. Both remote command bits were verified 0 before
+the next direction was issued. Write mode was disabled after each command and
+clear operation.
 
 | Test | Observation limit | Software result | Operator observation | Command clear |
 | --- | --- | --- | --- | --- |
@@ -104,11 +107,11 @@ was issued. Write mode was disabled after each command and clear operation.
 The original open TIMEOUT is preserved. A later poll agreed with the operator's
 first open observation, but that does not qualify the original five-second
 window as PASS. The operator then approved a thirty-second observation window
-for Tank 01 open/close. The repeat open passed in 6.625 seconds; close passed in
+for Tank 01 open/close. The repeat open passed in 6.625 seconds. Close passed in
 8.704 seconds and the final restore-close passed in 8.453 seconds. These are
 software feedback latencies, not independent measurements of mechanical travel.
 
-Only the two Tank 01 case timeouts were changed to 30000 ms; the configuration
+The change set only the two Tank 01 case timeouts to 30000 ms. The configuration
 validation test passed afterward. The agent did not operate or retime other tanks.
 No automatic command retry or inferred pulse/reset was used. Commands were
 cleared only after the operator confirmed completion, and subsequent polls
@@ -134,35 +137,40 @@ writable tags in the existing Manual write form. API receipts, later 0 readback,
 notes, issue recording, attempt timing, browser-local history and CSV/JSON
 exports form the checklist. No new dependency was added.
 
-The browser regressions cover command counts, read-only and failed/hung-refresh
-guards, one confirmation with Escape cancellation for both values, no automatic
-write/clear, timer updates, retained log details, export contents and spreadsheet
-formula escaping, history after reload with write mode off, rejection of
-pre-clear poll timestamps (including a slightly fast corrected supplier clock),
-pending-command isolation, and issue cleanup without
-losing history. The clear check also requires a timestamp later than the pre-clear snapshot,
-so a slightly fast corrected clock cannot let cached 0 count as a new readback.
+The browser regression tests cover these behaviors:
+
+- Command counts and read-only, failed-refresh and unresponsive-refresh guards.
+- One confirmation with Escape cancellation for both values.
+- No automatic write or clear, timer updates and retained log details.
+- Export contents and escaping of spreadsheet formulas.
+- History after reload with write mode off.
+- Rejection of pre-clear poll timestamps, including a slightly fast corrected supplier clock.
+- Isolation of pending commands and issue cleanup without loss of history.
+ The clear check also requires a timestamp later than the pre-clear snapshot.
+This rejects cached 0 even when the corrected clock is slightly fast.
 The backend test checks that a naive Hong Kong supplier timestamp
 with the temporary correction compares correctly against a UTC write receipt.
 
 Desktop (1380 px) and narrow (430 px) Firefox previews used the isolated fake API.
-Neither layout had horizontal overflow. At this initial UI revision, the
-timer included operator and network delay; the follow-up below replaces it with
-completion feedback timing. **API CYCLE COMPLETE** means accepted 1, accepted 0 and later 0 readback;
-it does not certify physical operation. Operator observations belong in notes.
+Neither layout had horizontal overflow. In this initial UI revision, the timer
+included operator and network delay. The later update below measures completion
+feedback time instead. **API CYCLE COMPLETE** means accepted 1, accepted 0 and
+later 0 readback. It does not certify physical operation. Operator observations belong in notes.
 No real PLC write was performed for this UI update.
 
-The final read-only smoke check after restarting the app confirmed REAL mode,
-REMOTE, fresh data, all 362 tags readable across five new samples and four
-advancing supplier snapshots. A separate Firefox profile loaded the real page,
-confirmed 102 checklist commands and 141 Manual write choices, verified automatic
-updates and the configured Tank 01 feedback reference, and kept write mode off.
+The final read-only smoke check followed the app restart. It confirmed REAL
+mode, REMOTE and fresh data. All 362 tags were readable across five new samples
+and four advancing supplier snapshots.
+
+A separate Firefox profile loaded the real page. It confirmed 102 checklist
+commands, 141 Manual write choices, automatic updates and the configured
+Tank 01 feedback reference. Write mode stayed off.
 Tank 01 remained closed with both remote command bits 0. Local smoke reports and
 a page screenshot are saved in the artifacts directory.
 
-The complete uncommitted diff, including all three new files, was reviewed for
-callers, configuration, tests and documentation. Credential and whitespace checks
-passed for all 25 changed files. The private `.env` stays ignored; the credential
+The review checked callers, configuration, tests and documentation across the
+complete uncommitted diff, including all three new files. Credential and whitespace checks
+passed for all 25 changed files. The private `.env` stays ignored. The credential
 files remain permission 0600. No commit or push was performed.
 
 ## Operator UX follow-up — completion timing and maintained states
@@ -172,7 +180,7 @@ mode disabled/expired) was incorrectly left as a pending 1. It also showed the
 open record started 3.476 seconds before Send 1 and finished only after manual
 clear/readback. The logged 22.651-second open attempt and 19.585-second close
 attempt were cycle/interaction durations, not API completion feedback times.
-The historical records are retained; their missing completion times cannot be
+The historical records are retained. Their missing completion times cannot be
 reconstructed from the clear events. A private pre-fix browser-log snapshot is
 saved in the workspace artifacts, outside Git.
 
@@ -183,10 +191,10 @@ opened/closed feedback, independently of Send 0. API response latency is shown
 separately. New attempt stays at zero and cannot generate more unused attempts.
 Already-set, unknown, interrupted or early-cleared feedback is not timed as a
 confirmed transition. The separate configured verification runner retains its
-existing deadlines and PASS rules; manual monitoring does not award that PASS.
+existing deadlines and PASS rules. Manual monitoring does not award that PASS.
 
 Status now validates the requesting browser's token. Disabling write mode
-clears local authorization immediately; an old status response cannot revoke a
+clears local authorization immediately. An old status response cannot revoke a
 newer token. Explicit local pre-dispatch rejections do not require clearing a
 command that was never sent. Historical local authorization-rejection records
 are recovered without deleting their evidence. Unknown write outcomes remain
@@ -200,27 +208,31 @@ active state visible, and permits another guided test. Clearing a prior held
 command remains possible while another command is pending. Doors cannot use
 Keep at 1. The 36 unconfirmed feedback mappings remain blocked.
 
-The browser regressions cover all reported UX failures, completion arriving
-after acceptance but before clear, frozen feedback, preexisting completion,
-unknown outcomes, old 403 recovery, token/status races, maintained-state
-readback, and clearing held commands during another pending command. All
+The browser regressions cover all reported UX failures and completion arriving
+after acceptance but before clear. They also cover frozen feedback, preexisting
+completion, unknown outcomes, old 403 recovery and token/status races. Coverage
+includes maintained-state readback and clearing held commands during another
+pending command. All
 simulated writes use an isolated fake API. No PLC write was issued by the agent
 for this update.
 
 ## Additional edge-case review
 
-Regression tests first reproduced loss of notes entered before the first send,
-false completion feedback during a delayed early-clear request, and unfinished
-transport states remaining stuck after reload. Backend regressions reproduced
+Regression tests first reproduced three failures:
+
+- Notes entered before the first send were lost.
+- A delayed early-clear request allowed false completion feedback.
+- Unfinished transport states remained stuck after reload.
+ Backend regressions reproduced
 supplier catalog/read failures returning no indication that dispatch had never
-started. Ten new cases failed against the previous implementation; three
+started. Ten new cases failed against the previous implementation. Three
 control cases passed. All 13 focused regressions pass after the fixes.
 
 Preparation notes now survive selection and reload without starting the timer.
-Early clear is tracked before its response arrives; blocked, accepted and
-unknown outcomes are distinguished. In-flight states restored after a reload
+The UI tracks an early clear before its response arrives. It distinguishes
+blocked, accepted and unknown outcomes. In-flight states restored after a reload
 become unknown without re-sending a command. Catalog/read failures before both
-single and batch writes explicitly return `write_dispatched=false`; simulated
+single and batch writes explicitly return `write_dispatched=false`. Simulated
 failures after write transport starts remain uncertain, including a test where
 the mock value has already changed before acknowledgement is lost.
 
@@ -241,9 +253,10 @@ not documented as a guaranteed stop under other active PLC logic. No mapping,
 reset behavior or application code was changed for this documentation update.
 
 The operator requested staged changes only. Remote main was fetched and matched
-the local base before staging. The UI fixes, new files and documentation are
-prepared together; credentials, browser logs and local artifacts stay outside
-the staged change. No commit or push is performed in this preparation step.
+the local base before staging. The staged change contains the UI fixes, new
+files and documentation together. Credentials, browser logs and local artifacts
+stay outside that change. No commit or push is performed in this preparation
+step.
 
 ## Local installation and reload timing fix
 
@@ -254,14 +267,14 @@ were retained. A private rollback archive of the previous project, excluding
 the virtual environment and Python caches, is saved in Downloads as
 `plc-signal-test-ui-before-update-2026-10-22-173915.tar.gz`.
 
-Two browser regressions reproduced the reload bug: an accepted command whose
-completion was still WAITING could resume after a page reload and report
-CONFIRMED, including when the transition happened while the page was closed.
-Leaving the page now interrupts an unfinished measurement. Restored WAITING
-records are also marked MONITORING INTERRUPTED, covering closures where the
-page could not save its final state. No completion time is awarded across that
-gap. Accepted commands and history remain available for explicit manual
-clearing; previously confirmed timing is preserved.
+Two browser regression tests reproduced the reload bug. An accepted command with
+completion still WAITING could resume after a page reload and report CONFIRMED.
+This included transitions that occurred while the page was closed. Leaving the
+page now interrupts an unfinished measurement. Restored WAITING records are also
+marked MONITORING INTERRUPTED, covering closures where the page could not save
+its final state. The UI awards no completion time across that gap. Accepted
+commands and history remain available for explicit manual clearing. Previously
+confirmed timing remains unchanged.
 
 The installed project passed **165 tests**, including **34 Firefox browser
 cases**, with:
@@ -279,9 +292,9 @@ was sent during this launcher check. The temporary server was stopped afterward.
 `bash -n start` and whitespace checks passed.
 
 For the next session, run `./start` from the installed project and open
-`http://127.0.0.1:8080`. The preserved local `.env` currently selects mock mode;
-the launcher will keep that configuration. Use the README's configuration
+`http://127.0.0.1:8080`. The preserved local `.env` currently selects mock
+mode. The launcher will keep that configuration. Use the README's configuration
 instructions when preparing a real API session. No supplier timezone or clock
-correction was guessed or copied into the local `.env`. This installation
-check used mock data; the earlier field results above are retained evidence
-from the staged documentation.
+correction was guessed or copied into the local `.env`. This
+installation check used mock data. The earlier field results above are retained
+evidence from the staged documentation.

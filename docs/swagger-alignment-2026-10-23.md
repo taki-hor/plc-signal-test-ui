@@ -2,26 +2,28 @@
 
 ## Scope and source quality
 
-The initial comparison used the historical API capture at about 18:37 Hong Kong
-time on 23 October 2026, as the user authorized while the line adapter was absent.
-After the operator reconnected it, a fresh GET-only check at **20:05:19 Hong Kong
-time on 23 October 2026** confirmed that the live Swagger schema and all 362 tag
-definitions are semantically identical to the retained captures. The docs,
-schema, catalog and read endpoints all returned HTTP 200. The read snapshot
-contained all 362 catalog signals, with 362 OK and 0 failed.
+The user authorized the first comparison while the line adapter was absent.
+It used a historical API capture from about 18:37 Hong Kong time on 23 October 2026.
+The operator then reconnected the adapter.
 
-The comparison therefore has fresh live confirmation, with the original saved
-evidence preserved. No production write or actuator test was sent.
+A fresh GET-only check ran at **20:05:19 Hong Kong time on 23 October 2026**.
+It confirmed that the live Swagger schema and all 362 tag definitions match the
+saved captures in meaning. The docs, schema, catalog and read endpoints returned
+HTTP 200. The read snapshot contained all 362 catalog signals, with 362 OK and
+0 failed.
+
+The audit retains the original captures and the fresh check as evidence.
+It sent no production write or actuator test.
 
 The PDF is `docs/source/HKPU_PLC_API_User_Manual_PD-03726_2026-09-29.pdf`,
 SHA256 `a157cfc7165fa86ee23ea10fc7293b343b4a2e356c8f7a70b863876b4ad0f40e`.
 Its copy at `docs/HKPU PLC_API_User_Manual (PD-03726).pdf` is byte-identical.
-All 362 rows were extracted independently from the PDF table. Their names,
+The audit independently extracted all 362 rows from the PDF table. Their names,
 addresses, types, permissions, multipliers, descriptions and published limits
 match the existing PDF-derived mock fixture. This avoids treating that fixture
 as independent proof of the PDF's content.
 
-Saved primary evidence is committed alongside the PDF:
+The repository contains this primary evidence beside the PDF:
 
 - [Swagger OpenAPI schema](source/supplier-openapi-2026-10-23.json).
 - [Actual `/api/v1/tags/list` response](source/supplier-tags-2026-10-23.json).
@@ -37,14 +39,14 @@ signal definitions. The retained capture has no API key or authentication token.
 
 Both sources list 362 signals: 141 writable and 221 read-only. There are no missing
 or extra catalog names. All 362 addresses, data types, W/R permissions and
-multipliers agree. No operational tag is renamed to achieve alignment.
+multipliers agree. The app keeps all operational tag names.
 
-There are 47 affected signal definitions: 39 numeric signals with PDF limits not
-published by the API, plus 8 description differences caused only by spacing.
-The API response omits both limit keys for every tag; these are not explicit
-null values. The saved Swagger TagInfo model also omits these properties.
+The differences affect 47 signal definitions. The API omits the PDF limits for
+39 numeric signals. Another 8 descriptions differ only in spacing.
+The API response omits both limit keys for every tag. It does not return
+explicit null values. The saved Swagger TagInfo model also omits these properties.
 Missing metadata does not prove that a numeric write is unlimited or that the
-supplier no longer enforces the PDF limits. No out-of-range writes were probed.
+supplier no longer enforces the PDF limits. The audit sent no out-of-range writes.
 
 ## Every numeric signal with unavailable API limits
 
@@ -95,8 +97,8 @@ absent. These 39 signals account for 78 missing published bound values.
 
 ## Every spacing-only description difference
 
-These eight API descriptions contain two spaces before `(Degree Celsius)`; the
-PDF contains one. The wording, address and signal meaning otherwise agree. The
+These eight API descriptions contain two spaces before `(Degree Celsius)`.
+The PDF contains one. The wording, address and signal meaning otherwise agree. The
 CSV retains both exact strings. This is formatting, not a different device.
 
 | Signal | Address | PDF page | Difference |
@@ -114,8 +116,8 @@ CSV retains both exact strings. This is formatting, not a different device.
 
 1. PDF page 4's abbreviated tag-list example assigns Tank01_TempSV to D4000. The
    PDF's own table and captured API assign it to D4020. D4000 belongs to
-   Tank01_TempPV. The app already obtains the correct address from the API; it
-   does not submit the example address or use it to route writes.
+   Tank01_TempPV. The app gets the correct address from the API.
+   It does not submit the example address or use that address to route writes.
 2. PDF page 5 uses Tank01_HeaterOn in batch examples. That tag exists in neither
    catalog. The actual writable symbol is Tank01_HeaterRemote (M321). Do not send
    the example name or invent an automatic alias. The current app does not use it.
@@ -123,9 +125,10 @@ CSV retains both exact strings. This is formatting, not a different device.
    from the captured catalog. It is an example string, not an exposed signal.
 4. Swagger declares batch requests as `writes` and responses as `results` plus
    `count`. The PDF describes the request but does not specify the response
-   shape. The production backend already validates the documented response.
-   The mock client still returned a legacy `writes` response and is aligned by
-   this update. Legacy response acceptance remains for backward compatibility.
+   shape. The production backend checks the documented response.
+   Before this update, the mock client returned a legacy `writes` response.
+   The update changes that response to the Swagger shape.
+   The backend still accepts the legacy response for compatibility.
 5. Swagger declares HTTP 422 for request validation. The PDF's error table omits
    it. The client now gives that status a specific request-validation message.
 6. Swagger permits nullable data_type in TagInfo/TagWriteResponse, while the PDF
@@ -137,8 +140,11 @@ CSV retains both exact strings. This is formatting, not a different device.
 These are not differences between the sources. Copying the API alone cannot
 correct them.
 
-The operator explicitly confirmed that physical Tank 13 has this door, physical
-Tank 12 has no door, and both commands and both feedback bits refer to Tank 13:
+The operator explicitly confirmed these physical findings:
+
+- Physical Tank 13 has the door.
+- Physical Tank 12 has no door.
+- Both commands and both feedback bits refer to Tank 13.
 
 | Physical Tank 13 function | API/PDF name | Address |
 | --- | --- | --- |
@@ -150,46 +156,51 @@ Tank 12 has no door, and both commands and both feedback bits refer to Tank 13:
 The PDF page 17 and saved API both contain these Tank12 names. Neither contains
 a Tank13_Door tag. The source/API names remain intact. This operator-observed
 physical correction covers only these four door tags, not every Tank12 signal.
-A supplier naming correction or separately specified display alias is needed
-to change physical tank labels. See the [field evidence](signal-test-plan.md#physical-tank-13-door-uses-tank12-api-names).
+Changing the physical tank labels requires a supplier naming correction or a
+separately specified display alias. See the [field evidence](signal-test-plan.md#physical-tank-13-door-uses-tank12-api-names).
 
 Both sources also contain these five shared-address groups:
 
 | Address | Signal names sharing it |
 | --- | --- |
-| D1002.8 | Tank01_FillWaterStatus; Tank02_AirAgitationStatus |
-| D1012.8 | Tank03_FillWaterStatus; Tank04_AirAgitationStatus |
-| D1022.8 | Tank05_FillWaterStatus; Tank06_AirAgitationStatus |
-| D1036 | Tank08_WaterFlow; Tank09_WaterFlow |
-| L220 | Tank03_FillWaterAuto; Tank05_FillWaterAuto |
+| D1002.8 | Tank01_FillWaterStatus, Tank02_AirAgitationStatus |
+| D1012.8 | Tank03_FillWaterStatus, Tank04_AirAgitationStatus |
+| D1022.8 | Tank05_FillWaterStatus, Tank06_AirAgitationStatus |
+| D1036 | Tank08_WaterFlow, Tank09_WaterFlow |
+| L220 | Tank03_FillWaterAuto, Tank05_FillWaterAuto |
 
-No address replacement or pair polarity was inferred. The source documents do
-not supply operating prerequisites, pulse/reset rules or a complete command-to-
-feedback transition table. HTTP 200/written=true is write acknowledgement, not
-physical completion. The earlier observed failed devices therefore remain
-separate from catalog agreement.
+The audit did not infer address replacements or feedback polarity.
+The source documents do not supply operating prerequisites, pulse/reset rules
+or a complete table of command and feedback transitions.
+HTTP 200/written=true acknowledges the write. It does not prove physical completion.
+Catalog agreement does not resolve the earlier device failures.
 
 ## Software alignment
 
 Production signal names, addresses, types, permissions and multipliers already
-come from live `/tags/list`; the offline capture is not a runtime fallback.
+come from live `/tags/list`. The app does not use the offline capture as a runtime fallback.
 The PDF-derived mock fixture remains a validation fixture, including optional
 limits. It is not a substitute for the supplier's current metadata.
 
-This update makes the mock batch response use Swagger's results/count shape,
-adds HTTP 422 handling, and labels unpublished numeric limits as unavailable.
+This update makes these changes:
+
+- The mock batch response uses Swagger's results/count shape.
+- The client handles HTTP 422.
+- The UI labels unpublished numeric limits as unavailable.
+
 It preserves finite-number/type checks, supplied-limit checks, live metadata
 refresh and write authorization/confirmation guards. It does not restore
 missing bounds from the PDF or interpret an omitted bound as permission to
-write any value. No signal name/address/permission change is supported by this
-particular API capture.
+write any value. This API capture does not support a change to any signal name,
+address or permission.
 
 The raw read timestamp was 2026-10-23T20:04:32.831352. Against the client at
 capture, this is about 46.2 seconds old before the existing temporary clock
 correction. The value includes polling/transport delay and is not a direct
-measurement of PLC clock error. The supplier timestamp has no timezone; the
-previously confirmed Hong Kong interpretation and existing 44-second temporary
-correction were not changed. A clock concern is separate from catalog identity.
+measurement of PLC clock error. The supplier timestamp has no timezone.
+This audit kept the previously confirmed Hong Kong interpretation and the
+existing 44-second temporary correction. Clock concerns remain separate from
+catalog identity.
 
 ## Software verification
 
@@ -199,9 +210,9 @@ verifies that saved API metadata wins over PDF limits without a guessed fallback
 That contract group plus parallel-backend checks passed **39 tests in 2.71 seconds**.
 The groups overlap. Final source-provenance, catalog-contract, client and UI
 checks passed **20 tests in 10.08 seconds** after live confirmation was recorded.
-The complete earlier suite was not repeated
-for these small response-format, error-message and display changes.
+The audit did not repeat the complete earlier suite for these small changes
+to response formats, error messages and displays.
 
-No write mode was enabled and no POST was sent to the production line for this
-audit. Live verification used only the four GET endpoints listed in the capture
-manifest. No further line connection is needed for publishing these notes.
+The audit did not enable write mode or send a production POST request.
+The live check used only the four GET endpoints in the capture manifest.
+Publishing these audit notes requires no additional line connection.

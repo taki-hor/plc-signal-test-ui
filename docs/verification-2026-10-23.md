@@ -4,8 +4,8 @@ Source: `/home/ano/Downloads/plc-signal-test-ui-full-2026-10-22/plc-signal-test-
 Destination: `/home/ano/development/plc-signal-test-ui`.
 
 The original project already contains the source copy's other backend, configuration,
-transport, validation and test-runner improvements. Its worktree had existing
-uncommitted changes; those were retained. This is a selective local code port,
+transport, validation and test-runner improvements. The port retained the
+worktree's existing uncommitted changes. This is a selective local code port,
 with no Git merge, commit or push.
 
 ## Imported
@@ -30,9 +30,9 @@ Only the checklist's verification logic, audit data and missing-evidence hint ch
 The source's tab UI, workflow classifier/guides, badges, filters, button relabeling and
 activity banner were excluded.
 
-The original pagehide and restored-WAITING protections remain: interrupted completion
-monitoring cannot resume and produce a measured result after a reload. The source
-copy removes those protections; that change was excluded.
+The original pagehide and restored-WAITING protections remain. Interrupted
+completion monitoring cannot resume and produce a measured result after a reload. The source
+copy removes those protections. That change was excluded.
 
 ## Verification
 
@@ -41,7 +41,7 @@ copy removes those protections; that change was excluded.
   against the original logic: **4 failed** before the fix.
 - After the port: **172 passed in 35.96 seconds**, including **38 Firefox cases**,
   using `env -u PYTHONPATH PLC_MOCK_MODE=true .venv/bin/python -m pytest -q`.
-- `git diff --check` passed; file hashes confirmed the UI assets and unrelated
+- `git diff --check` passed. File hashes confirmed the UI assets and unrelated
   original files were preserved.
 - Restarted the original backend gracefully at `http://127.0.0.1:8080` in mock mode.
   Chrome showed the original sidebar UI, 362/0 tags, fresh data and READ-ONLY MODE.
@@ -50,10 +50,11 @@ copy removes those protections; that change was excluded.
 
 ## Value write read-signal feedback
 
-Added a panel within the existing Value write page, retaining the original sidebar
-and page layout. It shows all live read-only tags (221 in the mock catalog), puts
-mapped and same-group signals first, shows both door position signals, and supports
-search and a selected-group filter. It remains available in read-only mode.
+The update added a panel to the existing Value write page. It retained the
+original sidebar and page layout. The panel shows all live read-only tags (221
+in the mock catalog). It puts mapped and same-group signals first and shows both
+door position signals. It supports search and a selected-group filter. It
+remains available in read-only mode.
 
 Single and batch receipts include all read-only values from the final validated
 pre-dispatch poll, UTC timestamps and configured mapping evidence, including
@@ -64,8 +65,8 @@ Already-set signals and candidate mappings cannot become confirmed transitions.
 Partial or mismatched batch receipts do not qualify as full acceptance.
 
 The last 50 manual requests are retained per API/mode in browser storage, with
-JSON/CSV export. Record current read values captures a later numeric reading
-without sending a command, resuming interrupted monitoring or certifying a mapping.
+JSON/CSV export. Record current read values captures a later numeric reading. It sends no
+command, does not resume interrupted monitoring and does not certify a mapping.
 Reload, stale/disconnected data, leaving Remote, and subsequent manual writes
 interrupt unfinished observation. Accepted, rejected and uncertain outcomes stay
 separate. No automatic reset or retry was added.
@@ -93,9 +94,9 @@ result appeared below all 50 case cards, and the module did not receive live
 poll data. These logs establish API observations, not independent physical
 verification by this agent.
 
-The initial supplier-catalogue request failed while the Ethernet NIC was absent.
-Later healthy polling did not reload the browser catalogue, leaving Commands
-empty. Initial failures now retry after communication returns. Loading,
+The initial request for the supplier catalog failed while the Ethernet NIC was
+absent. Later healthy polling did not reload the browser catalog. Commands
+therefore remained empty. Initial failures now retry after communication returns. Loading,
 unavailable, valid-empty and filtered-empty states have messages and actions.
 A valid empty catalogue stops retries.
 
@@ -161,10 +162,10 @@ or failures, using:
 env -u PYTHONPATH PLC_MOCK_MODE=true PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest -q -p no:cacheprovider
 ```
 
-This includes the final inventory clears, manual hints, numeric/Bool selector
-groups, horizontal tank tabs, all read views, malformed post-dispatch replies,
-clear-address evidence, interrupted/retried clear histories and both Manual 0/1
-receipt addresses. Earlier aggregate runs passed 313 tests before the final UI
+The suite includes final inventory clears, manual hints, numeric/Bool selector
+groups, horizontal tank tabs and all read views. It also covers malformed
+post-dispatch replies, clear-address evidence, interrupted/retried clear
+histories and both Manual 0/1 receipt addresses. Earlier aggregate runs passed 313 tests before the final UI
 refinements and 346 tests before the final receipt-address check.
 
 `git diff --check` passed. A scan of all 33 changed/new files found no configured
@@ -187,16 +188,16 @@ verification run.
 
 ### Push preparation — 23 October 2026
 
-GitHub `origin/main` was fetched again and still points to `76d0d0b`. The
-feature branch is `feat/line-test-workflows`. The 33 intended source, test,
-configuration and documentation files form the staging manifest. Final staging
+GitHub `origin/main` was fetched again and still points to `76d0d0b`.
+The feature branch is `feat/line-test-workflows`. The staging manifest lists the 33
+intended source, test, configuration and documentation files. Final staging
 checks and the suggested commit/PR text are recorded in the local
-`plc-signal-test-ui-push-prep-2026-10-23.txt` artifact. The final review found an address-provenance gap in Manual 0/1: a
-receipt for a remapped tag could be accepted against the browser's old address.
-Both values now require a matching receipt address before acceptance. Missing
-or contradictory identity remains unknown and pending. The eight new fake-API
-regressions passed in 12.56 seconds. The aggregate suite then passed all
-354 tests in 271.26 seconds, with no failures or skips.
+`plc-signal-test-ui-push-prep-2026-10-23.txt` artifact. The final review found a gap in Manual 0/1 address
+evidence. A receipt for a remapped tag could match the browser's old address and
+be accepted. Both values now require a matching receipt address before
+acceptance. Missing or contradictory identity remains unknown and pending. The
+eight new fake-API regressions passed in 12.56 seconds. The aggregate suite then
+passed all 354 tests in 271.26 seconds, with no failures or skips.
 
 The proposed files were checked for the configured API key, common GitHub token
 formats and private keys. No match was found. Private settings, Wi-Fi credentials,
@@ -204,7 +205,7 @@ runtime logs, ZIP files and local network notes are excluded.
 
 At the staging checkpoint, no commit or push had been made. GitHub CLI login
 was verified as `neptulyx`, with push access to the repository. Git commit author
-name/email was still unset; that identity is separate from GitHub authentication.
+name/email was still unset. That identity is separate from GitHub authentication.
 The live PLC was not written to for this review.
 
 
@@ -232,7 +233,7 @@ follows qualified manual Hold hints, with Manual 0 for doors or absent hints.
 
 Focused backend checks passed 119 tests against the 15-second default. All
 checks use mock or isolated loopback APIs. No agent live PLC write or physical
-test is part of this update. Human choices remain browser-local; exported
+test is part of this update. Human choices remain browser-local. Exported
 checklist and value-feedback records retain them.
 
 ### Final verification for human results and feedback controls
@@ -244,10 +245,11 @@ skips, using:
 env -u PYTHONPATH PLC_MOCK_MODE=true PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest -q -p no:cacheprovider
 ```
 
-This includes explicit/reversible human choices, legacy API-only records,
-exports, no-write result changes, interrupted Hold, preserved pending locks,
-15-second defaults, valid/invalid overrides, captured deadlines, horizontal tank
-tabs, selection/focus recovery, mode suggestions and manual overrides.
+The suite covers explicit/reversible human choices, legacy API-only records,
+exports, no-write result changes, interrupted Hold and preserved pending locks.
+It also checks 15-second defaults, valid/invalid overrides, captured deadlines
+and horizontal tank tabs. Coverage includes selection/focus recovery, mode
+suggestions and manual overrides.
 
 Fake-API previews at 1440 and 500 CSS pixels showed human Fail separately from
 API TIMEOUT, with a visible result dropdown and no horizontal clipping. Preview
@@ -257,7 +259,7 @@ No preview contacted the line API.
 `git diff --check` passed. A scan of all 24 changed/new files found no configured
 API key, private-key block or GitHub token pattern. The private `.env` remains
 ignored. This follow-up remains local and uncommitted on
-`feat/line-test-workflows`; the previously pushed commit is `f9d20c8`.
+`feat/line-test-workflows`. The previously pushed commit is `f9d20c8`.
 
 The local backend was gracefully restarted to load the new defaults and timeout
 handling. Read-only checks confirmed REAL mode, connected/fresh Remote data,
@@ -268,15 +270,15 @@ remain separate from API observations and supplier mapping confirmation.
 One final status sample was stale. The next three were fresh, with corrected
 ages of 2693, 2283 and 1866 ms against the existing 3000 ms limit. The temporary
 44-second timestamp correction and freshness guards were left unchanged. A stale
-observation still blocks writes; human-result editing remains a separate local action.
+observation still blocks writes. Human-result editing remains a separate local action.
 
 
 ## Parallel feedback observations
 
 The operator requested that a feedback wait no longer block independent commands.
-The backend now releases the command lock during observation. Its active-run
-registry protects the same command/address, opposing door actuator and shared
-feedback resource. Actual dispatch validation remains serialized. Explicit
+The backend now releases the command lock during observation. Its registry of
+active runs protects conflicts involving the same command/address, opposing
+door actuator or shared feedback resource. Actual dispatch validation remains serialized. Explicit
 same-command 0 interrupts only its observer at dispatch. A rejected preflight
 clear leaves observation running. Interrupted reads cannot produce late PASS
 or a configured reset. Each observer checks its own snapshot, including
@@ -292,7 +294,7 @@ checklist audit/export. No jobs API, automatic retries or command queue was adde
 ### Regression verification
 
 The current collection contains **471 tests**. All passed in two complementary
-groups with the implementation and shared fixtures frozen:
+groups. The implementation and shared fixtures stayed unchanged between groups:
 
 - **112 passed in 205.90 seconds**: checklist, command modes and feedback bridge.
 - **359 passed in 294.22 seconds**: every other collected test.
@@ -358,7 +360,7 @@ The initial audit of the recent full run found 43 attempts across 40 distinct
 cases. Latest per-case outcomes were 28 API matches/observations and 12 timeouts.
 The timed-out writes were acknowledged, but all sampled expected feedback
 values remained 0. One earlier Tank14 Heater attempt also returned supplier HTTP
-502; its later retry was acknowledged and timed out. Neither UI labels nor a
+502. Its later retry was acknowledged and timed out. Neither UI labels nor a
 correct tag table establishes the PLC's operating conditions.
 
 With explicit user authorization for non-door writes, the agent then tested:
@@ -405,7 +407,7 @@ Command bits live in one shared topbar on the three write routes. Recorded
 intent is separate from live readback. A missing or remapped address remains
 visible as Needs review. Its old request cannot clear a different current
 address. Enable/Disable write mode is compact beside Refresh now, with visible
-OFF/ON status. Healthy read-only data says MONITORING READY; authorized healthy
+OFF/ON status. Healthy read-only data says MONITORING READY. Authorized healthy
 Remote data says READY TO TEST. Neither label establishes machine interlocks.
 
 Manual and Feedback use page scrolling. Explicit keyboard selection reaches
@@ -417,7 +419,7 @@ The advanced read-comparison table retains bounded, keyboard-accessible scrollin
 All three pages use the same human-result vocabulary. Setpoints/batch now
 autosaves unchecked/pass/fail, preserving valid legacy human completion marks
 and prior choices in its audit. API outcomes, snapshots and timing stay separate.
-Bool engineering values use a labelled 0/1 selector; numeric types retain input.
+Bool engineering values use a labelled 0/1 selector. Numeric types retain input.
 Changed selection/address/type/permission/API/mode blocks a stale single-write
 confirmation before any observation or POST.
 
@@ -469,7 +471,7 @@ command_readback, Remote, Local, run_id and timeout_ms. All nine diagnostic
 request bits still read 0. No command was written during this reload/check.
 Write mode remained OFF. The existing 44-second temporary clock adjustment and
 3000 ms freshness guard were unchanged. Reloading the browser loads the updated
-UI; the restart requires renewed write authorization before any later write.
+UI. The restart requires renewed write authorization before any later write.
 
 Final diff checks passed across 37 changed/new files, with 0 staged files. A
 scan using the configured private API key plus private-key/GitHub-token patterns
@@ -480,10 +482,10 @@ as api_test/artifacts/final-runtime-check-2026-10-23.json.
 ## Broader console HCI pass
 
 The follow-up [HCI review](hci-review-2026-10-23.md) covers all nine pages and
-their read/write workflows. It fixes hidden global mode failures, unexplained
-disabled Feedback Run actions, catalog keyboard focus loss during polling,
-missing accessible names, route/skip navigation, low contrast and repeated
-unchanged live status text. Catalog warnings use an accessible disclosure that
+their read/write workflows. It fixes hidden global mode failures, unexplained disabled Feedback Run actions
+and catalog keyboard focus loss during polling. It also fixes missing
+accessible names, route/skip navigation, low contrast and repeated unchanged
+live status text. Catalog warnings use an accessible disclosure that
 retains every warning and its expanded state. Source labels match across pages.
 The requested neutral Feedback result-card borders remain unchanged.
 
@@ -500,13 +502,14 @@ remain outside the verified scope. All changes remain local and uncommitted.
 ## Failed-pair source recheck against the live supplier API
 
 A fresh read-only check returned HTTP 200 from the supplier /docs page and read
-its /openapi.json and /api/v1/tags/list. All 12 historical TIMEOUT cases in the
-full-run audit still match the current config and supplied tag table for symbol,
-address, Bool type and W/R permission. An independent reread of the extracted
-manual/catalog found no mismatch between their tank/equipment labels and the
-app labels, or an open/closed swap. This check did not establish physical tank
-identity. The later Tank12/Tank13 correction below demonstrates that limit. The read endpoint returns general tag values. The write receipt written=true
-acknowledges the write; it does not confirm physical operation.
+its /openapi.json and /api/v1/tags/list. All 12 historical TIMEOUT cases in the full-run audit still match the current
+config and supplied tag table. The matched fields are symbol, address, Bool
+type and W/R permission. An independent reread compared the
+extracted manual/catalog labels with the app labels. It found no tank/equipment
+label mismatch or open/closed swap. This check did not establish physical tank
+identity. The later Tank12/Tank13 correction below demonstrates that limit. The
+read endpoint returns general tag values. The write receipt written=true
+acknowledges the write. It does not confirm physical operation.
 
 | Command | Address | Feedback | Address | Metadata |
 | --- | --- | --- | --- | --- |
@@ -526,7 +529,7 @@ acknowledges the write; it does not confirm physical operation.
 The reviewed documents list the command and status tags separately. They do
 not explicitly establish command 1 → feedback 1, timing, prerequisite modes or
 hold/reset behavior. Pair behavior remains unconfirmed by supplier documentation.
-Tank03 FillWaterStatus D1012.8 also names Tank04 AirAgitationStatus; Tank05
+Tank03 FillWaterStatus D1012.8 also names Tank04 AirAgitationStatus. Tank05
 FillWaterStatus D1022.8 also names Tank06 AirAgitationStatus. These source-level
 aliases require supplier clarification. No replacement address was guessed.
 
@@ -539,14 +542,15 @@ failed-pair-recheck prefix.
 ## Operator-confirmed Tank12/Tank13 physical door naming correction
 
 The operator explicitly confirmed that Tank12_DoorOpenRemote/CloseRemote operate
-physical Tank 13, and Tank12_DoorOpened/Closed follow its actual position. The
-supplier manual PDF page 17 and current API both retain Tank12 names; there are
+physical Tank 13. Tank12_DoorOpened/Closed follow its actual position. The
+supplier manual PDF page 17 and current API both retain Tank12 names. There are
 no Tank13_Door tags. All 14 door pairs match the written sources at the metadata
 level. That agreement does not establish physical identity.
 
 The four-tag mapping, operator evidence, affected existing test IDs and limits
-are recorded in the [signal test plan](signal-test-plan.md#physical-tank-13-door-uses-tank12-api-names).
-The supplier handoff now includes this naming discrepancy. No API names, write
+are recorded in the [signal test
+plan](signal-test-plan.md#physical-tank-13-door-uses-tank12-api-names). The
+supplier handoff now includes this naming discrepancy. No API names, write
 routing, feedback addresses, UI grouping or operator marks changed. No commands
 were sent. A source correction/display alias is separate follow-up work.
 
@@ -554,9 +558,10 @@ were sent. A source correction/display alias is separate follow-up work.
 
 The operator approved one test: Tank07_AirAgitationOn (L135) =1 for up to
 15 seconds, observing Tank07_AirAgitationStatus (D1030.F), then command 0.
-Both baseline values were0 in fresh REAL/Remote data. The supplier acknowledged1.
-Later fresh data newer than the receipt showed command1/status1. Command 0 was
-then acknowledged; a later fresh snapshot showed command 0/status0. The operator
+Both baseline values were 0 in fresh REAL/Remote data. The supplier acknowledged
+1. Later fresh data newer than the receipt showed command 1/status 1. The
+supplier then acknowledged command 0. A later fresh snapshot showed command
+0/status 0. The operator
 explicitly confirmed physical start and stop and selected Pass.
 
 This is operator-observed evidence for this device/address, not supplier source
@@ -564,18 +569,19 @@ sign-off. No Feedback test definition was added and no other actuator was writte
 The script's own write token was disabled afterward. Evidence, timestamps and
 raw sampled values are saved outside Git as
 api_test/artifacts/supervised-tank07-air-20261023T110029.json. The 91-item run list
-now records this result. Step2 remains pending equipment-readiness confirmation.
+now records this result. Step 2 remains pending equipment-readiness confirmation.
 
 ## Supervised outside-Feedback test: Tank07 cooling circulation
 
-The operator approved Tank07_CoolerOn (L131) =1 for up to15 seconds while
-observing Tank07_CoolerStatus (D1030.B), followed by0. Fresh baseline command/status
-were0. Both writes were acknowledged. Later fresh readbacks newer than each
-receipt showed command/status1 and then command/status0. The operator selected
-Pass and confirmed physical start/stop. This evidence applies to this device
-and address. No other actuator was written. The script's own token was disabled.
-Evidence is api_test/artifacts/supervised-tank07-cooler-20261023T110210.json.
-The outside-Feedback run list now has two physically confirmed Pass results.
+The operator approved Tank07_CoolerOn (L131) =1 for up to 15 seconds while
+observing Tank07_CoolerStatus (D1030.B). Command 0 followed. Fresh baseline
+command/status values were 0. The supplier acknowledged both writes. Later fresh
+readbacks were newer than each receipt. They showed command/status 1 and then
+command/status 0. The operator selected Pass and confirmed physical start/stop.
+This evidence applies to this device and address. No other actuator was written.
+The script's own token was disabled. Evidence is
+api_test/artifacts/supervised-tank07-cooler-20261023T110210.json. The
+outside-Feedback run list now has two physically confirmed Pass results.
 
 ## Additional supervised outside-Feedback test results
 
@@ -585,30 +591,31 @@ verify the API transitions independently.
 
 | Command | Read status | API result | Human result | Local evidence |
 | --- | --- | --- | --- | --- |
-| Tank08_AirAgitationOn | Tank08_AirAgitationStatus | command/status0→1→0; restored0 | Pass: start/stop confirmed | supervised-tank08-air-20261023T110329.json |
+| Tank08_AirAgitationOn | Tank08_AirAgitationStatus | command/status 0→1→0. Restored 0 | Pass: start/stop confirmed | supervised-tank08-air-20261023T110329.json |
 
 
 ## Authorized automatic remainder of the seven status checks
 
 After explicitly confirming three physical Pass results, the operator authorized
 automatic continuation when API feedback is correct. Only the remaining four
-air-agitation items in the first seven-device block were run: Tanks09,12,15,16.
-Each test captured command/status0, wrote1, observed a later fresh post-receipt
-command/status1, wrote0, and verified later fresh command/status0. The queue ran
-one device at a time and would stop on a mismatch or failed clear. Each script's
-own write token was disabled after cleanup. No unrelated tag or door was written.
+air-agitation items in the first seven-device block ran: Tanks 09, 12, 15 and
+16. Each test captured command/status 0. It wrote 1 and observed later fresh
+command/status 1 after the receipt. It then wrote 0 and verified later fresh
+command/status 0. The queue ran one device at a time and would stop on a
+mismatch or failed clear. Each script's own write token was disabled after
+cleanup. No unrelated tag or door was written.
 
-All seven status-check devices therefore have API0→1→0 evidence. Tank07 air,
+All seven status-check devices therefore have API 0→1→0 evidence. Tank07 air,
 Tank07 cooler and Tank08 air also have explicit operator physical Pass. The four
 automatic cases remain human Not checked. No physical Pass was inferred from
 an API match or copied into browser-local results. The Tank12 air test uses its
-source API identity; the separate door naming correction is not generalized.
+source API identity. The separate door naming correction is not generalized.
 
 A final fresh snapshot newer than all seven clear acknowledgements showed all
-seven command and status bits0. The final evidence is saved outside Git as
+seven command and status bits 0. The final evidence is saved outside Git as
 api_test/artifacts/supervised-first-seven-summary-2026-10-23.json. The complete
 91-row CSV/JSON run list holds per-device results and raw evidence filenames.
-Seven devices consumed14 acknowledged writes, including restoration. MainInlet,
+Seven devices consumed 14 acknowledged writes, including restoration. MainInlet,
 shared-address items, Auto bits, numeric values and RemoteStart were not changed.
 
 ## Supervised session stopped: water turned off
@@ -616,20 +623,20 @@ shared-address items, Auto bits, numeric values and RemoteStart were not changed
 The operator asked to mark the completed tests checked, then explicitly stopped
 testing because line water was turned off. All seven completed device tests are
 marked API checked in the run list. The three explicit physical Pass results
-remain separate; the four automatic cases have no recorded physical observation.
+remain separate. The four automatic cases have no recorded physical observation.
 No browser-local human marks were inferred from API readbacks.
 
-The proposed23 Auto-mode tests were never authorized and no Auto bit was written.
+The proposed 23 Auto-mode tests were never authorized. No Auto bit was written.
 The earlier pending readiness question no longer authorizes any continuation.
 No unattended job exists. Resume requires a new instruction and current equipment
 readiness. Numeric values, RemoteStart, MainInlet, shared-address items and doors
 were not written in this supervised outside-Feedback session.
 
-A final GET-only check recorded all seven tested request/status bits0. Details
+A final GET-only check recorded all seven tested request/status bits 0. Details
 and freshness are saved as api_test/artifacts/supervised-line-stop-2026-10-23.json.
 Testing remains stopped. The local read-only monitoring app is left running.
 
-## Current human marks reset; physical evidence retained
+## Current human marks reset. Physical evidence retained
 
 After stopping the session, the operator explicitly requested that the three
 physical confirmations stay in history while their current human marks return
@@ -645,7 +652,7 @@ and CSV reflect this correction. The current results are also saved outside Git
 as api_test/artifacts/supervised-first-seven-current-results-2026-10-23.json.
 Testing remains stopped and requires a new instruction to resume. No live API
 requests or writes were sent to make this bookkeeping change. Browser-local
-UI marks were not changed; the correction applies to the saved supervised run
+UI marks were not changed. The correction applies to the saved supervised run
 records, which were the records created during these tests.
 
 ## Feature-branch push preparation
@@ -669,11 +676,11 @@ Review found and fixed two concrete gaps:
   after an unchanged metadata refresh.
 
 Stale architecture/layout text and run-plan current-state text were corrected.
-Earlier dated physical results remain in history; the latest current human
+Earlier dated physical results remain in history. The latest current human
 marks are Not checked while all seven completed field items remain API checked.
 Line testing remains stopped. No live API calls or writes were made for this
 Git preparation. The raw Tank12 door names still refer to physical Tank13 as
-operator-confirmed; this supplier naming discrepancy is documented, not renamed.
+operator-confirmed. This supplier naming discrepancy is documented, not renamed.
 
 ### Final software checks
 
@@ -690,10 +697,10 @@ final targeted reruns, rather than claiming one clean monolithic run:
   **33 passed in 72.40 seconds**.
 
 The full run collected 578 cases before the last 20 new review regressions were
-added. Its corrected assertion is covered in the 30-case rerun. The final 267
-backend, 16 new frontend and 33 legacy frontend reruns cover the product changes
-made during review. All 598 unique checks therefore have passing validation.
-No implementation changed after the final affected checks.
+added. Its corrected assertion is covered in the 30-case rerun. The final reruns
+cover the product changes made during review. They include 267 backend, 16 new
+frontend and 33 legacy frontend checks. All 598 unique checks therefore have
+passing validation. No implementation changed after the final affected checks.
 
 All test commands set PLC_MOCK_MODE=true, remove inherited PYTHONPATH and disable
 bytecode/cache writes. Test APIs are mock or isolated loopback instances. The
@@ -709,27 +716,28 @@ env -u PYTHONPATH PLC_MOCK_MODE=true PYTHONDONTWRITEBYTECODE=1 .venv/bin/python 
 Final staging checks cover exact configured-secret scanning, private-key and
 GitHub-token patterns, source syntax and git diff formatting. Environment files,
 raw logs, local evidence/ZIP/PDF files and temporary test scripts stay outside
-the staged source. Runtime field artifacts remain local; committed verification
+the staged source. Runtime field artifacts remain local. Committed verification
 summaries identify their scope and limits. The backend must be restarted before
 using newly edited server guards. No additional live equipment tests were run.
 
 ## PDF and live Swagger/catalog alignment
 
-The user requested every PDF/API signal discrepancy and software alignment,
-then authorized use of local history and publication of all findings. The first
+The user requested every PDF/API signal discrepancy and software alignment, then
+authorized use of local history and publication of all findings. The first
 comparison used the retained 23 October schema/catalog captures. A later live
-GET-only recheck at 20:05:19 Hong Kong time on 23 October 2026 confirmed both are
-semantically identical to the current server. All four GET endpoints returned
-HTTP 200; /read contained all 362 signals, with 362 OK and 0 failed. No production
-POST, write-mode enable or actuator test occurred. The line adapter can be
-disconnected after that check; publication uses ordinary Internet access.
+GET-only recheck at 20:05:19 Hong Kong time on 23 October 2026 confirmed both
+are semantically identical to the current server. All four GET endpoints
+returned HTTP 200. The /read response contained all 362 signals, with 362 OK and
+0 failed. No production POST, write-mode enable or actuator test occurred. The
+line adapter can be disconnected after that check. Publication uses ordinary
+Internet access.
 
 The actual PDF table was independently extracted and all 362 rows matched the
 PDF-derived fixture. Against the saved/live API, names, addresses, types, W/R
-permissions and multipliers all agree. The complete report lists 39 numeric
-signals whose PDF limits are omitted from the API, eight description spacing
-differences, incorrect PDF/example references, the four operator-confirmed
-Tank12-door/physical-Tank13 tags and all five shared-address groups. An omitted
+permissions and multipliers all agree. The complete report lists 39 numeric signals whose PDF limits the API omits
+and eight description spacing differences. It also lists incorrect PDF/example
+references, the four operator-confirmed Tank12-door/physical-Tank13 tags and
+all five shared-address groups. An omitted
 API bound does not establish unlimited operating range. Shared source errors
 were not mislabeled as PDF-versus-Swagger differences or guessed remappings.
 
@@ -747,10 +755,11 @@ API. No tag routing/name/address, permission, finite/type/supplied-limit guard,
 authorization or calibration setting was weakened or replaced by the PDF.
 The retained source snapshots are evidence, not an offline runtime fallback.
 
-Affected offline validation: 192 passed in 37.66s; contract/runtime-catalog and
-parallel-backend follow-up: 39 passed in 2.71s; final contract/client/UI checks
-after fresh provenance: 20 passed in 10.08s. These groups overlap. Syntax, diff
-and credential checks passed. The complete earlier suite was not repeated for
-these small targeted changes. Raw /read operating values remain outside Git;
-source evidence contains only schema/catalog and capture metadata, without
-API keys or authentication tokens. Line write testing remains stopped.
+The affected offline validation passed 192 tests in 37.66s. The contract,
+runtime-catalog and parallel-backend review passed 39 tests in 2.71s. Final
+contract/client/UI checks after fresh provenance passed 20 tests in 10.08s.
+These groups overlap. Syntax, diff and credential checks passed. The complete
+earlier suite was not repeated for these small targeted changes. Raw /read
+operating values remain outside Git. Source evidence contains only
+schema/catalog and capture metadata, without API keys or authentication tokens.
+Line write testing remains stopped.
