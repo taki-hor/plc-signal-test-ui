@@ -1,0 +1,49 @@
+AUTO MODE: WHAT THE SUPPLIER DOCUMENTS CONFIRM
+PDF: PD-03726, 29-Sep-2026. Checked against the actual PDF and saved Swagger/API.
+
+Example              | Auto tag / address             | Separate On tag / address    | PDF page
+---------------------+--------------------------------+------------------------------+---------
+Tank01 fill          | Tank01_FillWaterAuto / L200    | Tank01_FillWaterOn / L100    | 9
+Tank07 air agitation | Tank07_AirAgitationAuto / L235 | Tank07_AirAgitationOn / L135 | 13
+Tank07 cooling       | Tank07_CoolerAuto / L231       | Tank07_CoolerOn / L131       | 13-14
+
+Question                                     | Documented answer
+---------------------------------------------+---------------------------------------------------------------------
+Must Auto=1 immediately start equipment?     | Not specified.
+Is no movement after Auto=1 always correct?  | Not specified.
+Which level/timer/interlock starts Auto?     | Not specified.
+Does Auto require On or RemoteStart as well? | No combination/priority truth table supplied.
+Does fresh Auto 0->1->0 prove API readback?  | Yes, as a local readback test. It does not prove physical operation.
+Does it prove automatic equipment operation? | No. The trigger and expected action need review.
+
+Use these separate results:
+- Mode bit verified: valid write receipts, fresh later 1/0 readback and restoration.
+- Automatic operation unverified: physical trigger/expected effect unspecified.
+- Human Pass: only an explicit operator confirmation of the expected result.
+Do not label Auto no-movement simply Normal, Physical Pass, or API Fail.
+
+FIRST HUMAN RUN: 26-Oct-2026
+Group                         | Count | Evidence                         | Triage label
+------------------------------+-------+----------------------------------+--------------------------------------
+Auto N                        | 21    | Fresh mode-bit 1/0 verified      | Mode bit verified, operation untested
+On N: Tank02/04 FillWaterOn   | 2     | Command + mapped status verified | Human check pending
+Other N: seven commands below | 7     | Command=1, mapped status stays 0 | Output/status unconfirmed
+Confirmed P                   | 33    | Operator explicitly confirmed    | Human Pass. Preserve records.
+
+All 126 write requests returned HTTP 200 and ACCEPTED. All 63 commands returned to 0.
+The same write endpoint acknowledged all writes. Fresh reads showed the changed
+command values. The seven output status values did not change.
+These results do not establish seven dead HTTP endpoints.
+
+Tank01_FilterRemote
+Tank01_HeaterRemote
+Tank01_USRemote
+Tank11_FillWaterOn
+Tank11_SprayRemote
+Tank14_FilterRemote
+Tank14_HeaterRemote
+
+Swagger's Try it out control calls the supplier API. It is not a separate PLC control path.
+Compare direct supplier requests with the web app's write path to investigate path differences.
+Keep the tag, value, equipment conditions and restoration comparable.
+Source: logs/human-line-test-20261026T054921-c083f3c0/report.json (local runtime data).

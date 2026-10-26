@@ -5,7 +5,7 @@ export function node(tag, className = '', content = '') {
   element.textContent = content == null ? '—' : String(content);
   return element;
 }
-export function setText(id, value) { $(id).textContent = value == null || value === '' ? '—' : String(value); }
+export function setText(id, value) { const element = $(id), text = value == null || value === '' ? '—' : String(value); if (element.textContent !== text) element.textContent = text; }
 export function formatTime(value) { if (!value) return '—'; const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString(); }
 export function valueText(value) { return value == null ? 'NO DATA' : String(value); }
 export function metadataNumber(value, empty = '—') { return value == null ? empty : Number.isInteger(value) ? value.toFixed(1) : String(value); }

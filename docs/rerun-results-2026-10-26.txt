@@ -1,0 +1,36 @@
+ORDERED RERUN RESULTS - 26-Oct-2026, 15:03-15:08 HONG KONG TIME
+Scope: The rerun repeated 30 signals marked N in the original 63-tag run.
+This rerun does not compare all 141 tags.
+
+Result group                                    | Count | Web result
+------------------------------------------------+-------+------------------------------------------------
+Confirmed physical P: Tank02/04 FillWaterOn     | 2     | Human Pass, earlier 33 Pass retained (total 35)
+Auto mode bit changed/read back/restored        | 21    | API mode-bit verified, human Not checked
+Command 1 verified, mapped status not seen at 1 | 7     | API/status Fail, physical result unconfirmed
+Verified restoration to original 0              | 30    | All restored
+HTTP write requests accepted                    | 60    | No failed/unresponsive write HTTP call seen
+
+The same seven command/status checks failed in both human runs:
+Tank | Command             | Write/readback | Mapped status | Restoration
+-----+---------------------+----------------+---------------+------------
+01   | Tank01_FilterRemote | Accepted / 1   | Timeout at 0  | Verified 0
+01   | Tank01_HeaterRemote | Accepted / 1   | Timeout at 0  | Verified 0
+01   | Tank01_USRemote     | Accepted / 1   | Timeout at 0  | Verified 0
+11   | Tank11_FillWaterOn  | Accepted / 1   | Timeout at 0  | Verified 0
+11   | Tank11_SprayRemote  | Accepted / 1   | Timeout at 0  | Verified 0
+14   | Tank14_FilterRemote | Accepted / 1   | Timeout at 0  | Verified 0
+14   | Tank14_HeaterRemote | Accepted / 1   | Timeout at 0  | Verified 0
+
+These are output/status observations, not seven dead HTTP endpoints.
+The supplier manual does not define the missing permissive/trigger rules.
+Auto no-movement is neither confirmed Normal nor proof of an API failure.
+Swagger Try it out and a direct client call the same supplier write route.
+
+Web updated from reviewed source evidence:
+- 35 explicit Human Pass judgments, including the two new fill results.
+- 28 explicit Unconfirmed/Not checked judgments for the remaining rerun items.
+- 30 refreshed API records: 23 API pass and 7 output/status failures.
+- The import kept the raw reports and history unchanged. It sent no new PLC commands.
+
+Source: logs/human-line-test-20261026T070320-26b83efd/report.json
+Proof: reconstructed final pre-write timestamps and later fresh 1/0 samples.

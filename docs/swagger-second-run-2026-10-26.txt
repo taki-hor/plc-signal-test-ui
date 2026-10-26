@@ -1,0 +1,149 @@
+SWAGGER TEST REVIEW AND SECOND RUN - 26-Oct-2026
+
+Original run: logs/swagger-line-test-3ba5af2815/report.json
+The run stopped after 123 catalog entries: 82 exercised, 41 skipped, 18 unvisited.
+All 82 exercised tags had valid receipts and changed-value readback.
+The API acknowledged Tank14_TempAdj restoration to 0.
+Verification rejected a 3244 ms-old sample against the 3000 ms freshness guard.
+Later fresh reads confirmed the original calibration value of 0.
+The raw stopped report remains unchanged. Later filling states remain unchanged.
+
+TANK11 CONTROLLED START / SPRINKLER COMPARISON
+The local Start switch was OFF. The operator watched the test.
+The test preserved FillWaterAuto=1.
+Condition             | Spray command | SprayStatus | Physical observation
+----------------------+---------------+-------------+-----------------------------
+RemoteStart=0         | Accepted / 1  | Stayed 0    | No physical Pass claimed
+RemoteStart=1         | Accepted / 1  | Reached 1   | Operator confirmed sprinkler
+
+The test restored RemoteStart and Spray to 0.
+This confirms a conditional Tank11 Spray setup, not the same prerequisite for every tank.
+RemoteStart is M370. SprayRemote is M371. SprayStatus is D1112.1.
+Source: logs/tank11-start-spray-20261026T083218-187669/report.json
+
+FINAL DIRECT RUN AND CURRENT OPERATOR RESULTS
+Outcome                    | Count | Meaning
+---------------------------+-------+-------------------------------------------
+Direct catalog coverage    | 141   | All writable tags reached a settled result
+Current operator Pass      | 133   | Explicit P / operator-reviewed mode checks
+Current operator Fail      | 8     | Six status timeouts + two corrected results
+Remaining unvisited tags   | 0     | Final two numeric cases completed
+
+The resumed run saved 56 new P results with restoration:
+logs/swagger-line-test-8abf0a5024/report.json
+Its final Tank16_TempSV attempt stopped after a catalog-read disconnect.
+The script sent no write for that attempt.
+The recovery snapshot retained those 56 results and the 83 prior settled paths.
+The final two values completed in:
+logs/swagger-line-test-a22b56f0a6/report.json
+Tank16_TempSV: test 60, original 40 restored, operator P.
+Tank16_TimeSV: test 999, original 9999 restored, operator P.
+
+The combined review initially held 135 Pass and 6 timeout Fail results.
+The operator later corrected Tank01_FillWaterOn and Tank14_FillWaterOn to physical Fail.
+Current web marks are therefore 133 Pass and 8 Fail. History remains intact.
+Correction source: logs/fill-water-result-correction-2026-10-26.json
+
+CURRENT EIGHT HUMAN FAIL RESULTS
+Tag                       | Recorded issue
+--------------------------+---------------------------------------------------
+Tank01_FillWaterOn        | Operator reports no operation. Shared status limit.
+Tank01_FilterRemote       | Command 1 readback worked. Mapped status stayed 0.
+Tank01_HeaterRemote       | Command 1 readback worked. Mapped status stayed 0.
+Tank01_USRemote           | Command 1 readback worked. Mapped status stayed 0.
+Tank11_FillWaterOn        | Command 1 readback worked. Mapped status stayed 0.
+Tank14_FillWaterOn        | Operator reports no operation. Older restore timeout.
+Tank14_FilterRemote       | Command 1 readback worked. Mapped status stayed 0.
+Tank14_HeaterRemote       | Command 1 readback worked. Mapped status stayed 0.
+
+These test/output failures do not prove dead HTTP endpoints or faulty PLC equipment.
+Requests and command readback worked in the saved runs.
+Tank14 Alarm69/71 were 1 during the original Filter/Heater failures.
+A low-level permissive is suspected. The supplier contract does not establish it.
+
+API EVIDENCE AND HUMAN MARKS STAY SEPARATE
+The operator explicitly marked Tank01_FillWaterOn and Tank14_FillWaterOn API Pass.
+Their human results remain Fail.
+Tank14 has new full command/status/restoration proof.
+Tank01 has accepted writes and changed-value readback.
+However, Tank01_FillWaterStatus shares D1002.8 with Tank02_AirAgitationStatus.
+
+Tank01 API Pass is an explicit operator verdict.
+Shared status does not become independent feedback evidence.
+The raw automated result remains unconfirmed for this shared mapping.
+
+Tank14_FillWaterOn had earlier script proof of command/status 1 and 0.
+A later web API record reported no verified restoration within 15 seconds.
+That failure remains in history.
+The latest guarded retest below supplies newer full API proof.
+It does not change the operator's physical Fail.
+
+Tank10_DoorOpenRemote has operator-confirmed physical P with unconfirmed script API output.
+Physical Pass does not create API completion evidence.
+Auto Pass checks the mode bit only. It does not certify an undocumented automatic action.
+Supplier documents do not define all Start/Auto/interlock prerequisites.
+Tank11 Spray with Start 1 remains a conditional result.
+
+Raw reports remain unchanged. Interrupted duplicate attempts retain their cancellation and missing-proof records.
+The API accepted a duplicate MainInlet restoration to 0 before observation ended with cancellation.
+Later final-run baselines show MainInlet and MainInletStatus at 0.
+The interrupted report still lacks its original restoration proof.
+
+LATEST GUARDED API-ONLY RETEST - COMPLETED
+Source: logs/api-eight-retest-20261026T101813-1a9b9c/report.json
+Summary: logs/api-eight-retest-20261026T101813-1a9b9c/summary.json
+Time: 26-Oct-2026 10:18:13-10:20:15 UTC (18:18:13-18:20:15 Hong Kong).
+Runner code: 11b5aa4. REAL supplier: http://192.168.1.12:8000.
+The run tested all eight listed non-door commands separately.
+Each test used this sequence:
+1. Start from original 0.
+2. Send command 1.
+3. Observe for up to 15 seconds.
+4. Request guarded restoration to 0.
+5. Check restoration.
+
+All eight requests received acknowledgments and verified command 1 readback.
+All eight commands returned to 0 with verification.
+No request or restoration errors occurred.
+
+Latest API result          | Tags / limit
+---------------------------+--------------------------------------------------
+Full command/status cycle  | Tank14_FillWaterOn. Fresh 1/status 1 and restored 0.
+Operator API Pass          | Tank01_FillWaterOn. Native shared feedback unconfirmed.
+Output/status unconfirmed  | Tank01_FilterRemote, Tank01_HeaterRemote,
+                           | Tank01_USRemote, Tank11_FillWaterOn,
+                           | Tank14_FilterRemote, Tank14_HeaterRemote
+
+The six unconfirmed outputs stayed 0 during observation despite command 1 readback.
+Tank14 fill now has fresh API success after the older web restoration timeout.
+Physical operation still needs the operator's judgment.
+Tank01 fill's shared status does not independently prove its output mapping.
+The later explicit API Pass verdict remains separate from automated evidence.
+
+The retest collected no human verdict. Human marks remain 133 Pass and 8 Fail.
+Later API verdicts do not change those human marks.
+The retest did not write Auto bits, RemoteStart, numeric values or other commands.
+It did not establish a universal PLC prerequisite rule.
+
+RESUME AND EVIDENCE
+The completed second run used logs/swagger-resume-latest.json with earlier verified paths retained.
+Reusing swagger-resume-reviewed.json queues its original 58 items again.
+Use the latest completed report as the resume source.
+Reviewed operator corrections remain separate from raw script verdicts.
+The web result history must retain those corrections.
+
+These guards remain enabled:
+- 3000 ms freshness limit.
+- Strictly later samples.
+- Target and alias metadata checks.
+- Remote 1/Local 0.
+- Guarded restoration.
+
+A read-only Tank14_TempAdj recovery check confirmed its original 0 before the second run.
+The recovery check sent no write and reset no unrelated state.
+The records retain uncertainty about the legacy source origin.
+
+Only the direct single-write API path has full 141-tag coverage.
+This does not establish full app comparison or a supplier batch-route test.
+Git ignores runtime reports, operator history and credentials. Those files remain local.
+This note records their paths and findings without publishing the files.

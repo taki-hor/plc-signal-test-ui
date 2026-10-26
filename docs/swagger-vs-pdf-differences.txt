@@ -1,0 +1,108 @@
+SWAGGER / API vs PDF - DIFFERENCE TABLE
+PDF: PD-03726, 29-Sep-2026. API comparison baseline: saved 23-Oct-2026.
+Actual signal definitions come from GET /api/v1/tags/list.
+Swagger defines the generic API models.
+
+Check                                         | PDF                      | Swagger / API            | Result
+----------------------------------------------+--------------------------+--------------------------+------------------------
+Signal count                                  | 362 (141 W, 221 R)       | 362 (141 W, 221 R)       | Match
+Names / addresses / types / W-R / multipliers | All 362 definitions      | Same definitions         | Match
+Published numeric limits                      | 39 tags, 78 bounds       | Limit properties omitted | 39 tags differ
+Temperature PV descriptions                   | Single space before unit | Double space before unit | 8 tags, formatting only
+
+TANK DOOR MISMATCH - PRESENT IN BOTH SOURCES (OPERATOR-CONFIRMED FIELD ISSUE)
+Physical Tank 12 has no door. These Tank12-named signals control or follow the physical Tank 13 door.
+Physical location / function | Name in BOTH PDF and API | Address
+-----------------------------+--------------------------+--------
+Tank13 door open             | Tank12_DoorOpenRemote    | M310
+Tank13 door close            | Tank12_DoorCloseRemote   | M311
+Tank13 door opened feedback  | Tank12_DoorOpened        | D1116.4
+Tank13 door closed feedback  | Tank12_DoorClosed        | D1116.5
+No Tank13_Door* tags exist. PDF p17 and API agree on the names.
+Keep these names unchanged in API requests.
+
+A. ALL 39 NUMERIC LIMIT DIFFERENCES
+Not published: the API omits low_limit and high_limit.
+This omission does not mean unlimited values or explicit null values.
+Signal          | Address | Unit  | PDF min | PDF max | Swagger / API min-max | PDF p.
+----------------+---------+-------+---------+---------+-----------------------+-------
+Tank01A_USSV    | D1044   | A     | 0.0     | 8.0     | Not published         | 9
+Tank01B_USSV    | D1048   | A     | 0.0     | 8.0     | Not published         | 9
+Tank01_TempAdj  | D4010   | deg C | -999.0  | 999.9   | Not published         | 9
+Tank01_TempSV   | D4020   | deg C | 0.0     | 999.9   | Not published         | 9
+Tank01_TimeSV   | D4051   | s     | 0.0     | 9999.0  | Not published         | 9
+Tank02_TimeSV   | D4052   | s     | 0.0     | 9999.0  | Not published         | 10
+Tank03_SwingSV  | D1008   | CPM   | 5.0     | 120.0   | Not published         | 11
+Tank03_TempAdj  | D4011   | deg C | -999.0  | 999.9   | Not published         | 11
+Tank03_TempSV   | D4021   | deg C | 0.0     | 999.9   | Not published         | 11
+Tank03_TimeSV   | D4053   | s     | 0.0     | 9999.0  | Not published         | 11
+Tank04_TimeSV   | D4054   | s     | 0.0     | 9999.0  | Not published         | 12
+Tank05_SwingSV  | D1018   | CPM   | 5.0     | 120.0   | Not published         | 12
+Tank05_TempAdj  | D4012   | deg C | -999.0  | 999.9   | Not published         | 12
+Tank05_TempSV   | D4022   | deg C | 0.0     | 999.9   | Not published         | 12
+Tank05_TimeSV   | D4055   | s     | 0.0     | 9999.0  | Not published         | 13
+Tank06_TimeSV   | D4056   | s     | 0.0     | 9999.0  | Not published         | 13
+Tank07_AmpereSV | D1362   | A     | 0.0     | 200.0   | Not published         | 13
+Tank07_TempAdj  | D4013   | deg C | -999.0  | 999.9   | Not published         | 14
+Tank07_TempSV   | D4023   | deg C | 0.0     | 999.9   | Not published         | 14
+Tank07_TimeSV   | D4057   | s     | 0.0     | 9999.0  | Not published         | 14
+Tank08_TimeSV   | D4058   | s     | 0.0     | 9999.0  | Not published         | 15
+Tank09_TimeSV   | D4059   | s     | 0.0     | 9999.0  | Not published         | 15
+Tank10_SwingSV  | D1100   | CPM   | 5.0     | 120.0   | Not published         | 16
+Tank10_TempAdj  | D4014   | deg C | -999.0  | 999.9   | Not published         | 16
+Tank10_TempSV   | D4024   | deg C | 0.0     | 999.9   | Not published         | 16
+Tank10_TimeSV   | D4060   | s     | 0.0     | 9999.0  | Not published         | 16
+Tank11_TimeSV   | D4061   | s     | 0.0     | 9999.0  | Not published         | 17
+Tank12_TimeSV   | D4062   | s     | 0.0     | 9999.0  | Not published         | 18
+Tank13_TempAdj  | D4015   | deg C | -999.0  | 999.9   | Not published         | 18
+Tank13_TempSV   | D4025   | deg C | 0.0     | 999.9   | Not published         | 18
+Tank13_TimeSV   | D4063   | s     | 0.0     | 9999.0  | Not published         | 18
+Tank14_SwingSV  | D1124   | CPM   | 5.0     | 120.0   | Not published         | 19
+Tank14_TempAdj  | D4016   | deg C | -999.0  | 999.9   | Not published         | 19
+Tank14_TempSV   | D4026   | deg C | 0.0     | 999.9   | Not published         | 19
+Tank14_TimeSV   | D4064   | s     | 0.0     | 9999.0  | Not published         | 19
+Tank15_TimeSV   | D4065   | s     | 0.0     | 9999.0  | Not published         | 20
+Tank16_TempAdj  | D4017   | deg C | -999.0  | 999.9   | Not published         | 20
+Tank16_TempSV   | D4027   | deg C | 0.0     | 999.9   | Not published         | 21
+Tank16_TimeSV   | D4066   | s     | 0.0     | 9999.0  | Not published         | 21
+
+B. ALL 8 DESCRIPTION DIFFERENCES (SPACING ONLY)
+PDF suffix: "Present Value (Degree Celsius)". API suffix: "Present Value  (Degree Celsius)".
+Signal        | Address | PDF spaces before unit | API spaces before unit | PDF p.
+--------------+---------+------------------------+------------------------+-------
+Tank01_TempPV | D4000   | 1                      | 2                      | 9
+Tank03_TempPV | D4001   | 1                      | 2                      | 11
+Tank05_TempPV | D4002   | 1                      | 2                      | 12
+Tank07_TempPV | D4003   | 1                      | 2                      | 14
+Tank10_TempPV | D4004   | 1                      | 2                      | 16
+Tank13_TempPV | D4005   | 1                      | 2                      | 18
+Tank14_TempPV | D4006   | 1                      | 2                      | 19
+Tank16_TempPV | D4007   | 1                      | 2                      | 21
+
+C. API CONTRACT / EXAMPLE DISCREPANCIES
+Item                    | PDF                               | Swagger / API                                             | Reference
+------------------------+-----------------------------------+-----------------------------------------------------------+-------------------------------
+TempSV address example  | Tank01_TempSV = D4000             | Actual Tank01_TempSV = D4020, D4000 is TempPV             | PDF p4 example, p9 table
+Heater batch example    | Tank01_HeaterOn                   | Actual writable tag: Tank01_HeaterRemote (M321)           | PDF p5, API catalog
+Generic request example | No Tank1_AddWater catalog entry   | Swagger example Tank1_AddWater is absent from API catalog | TagWriteRequest.tag_name
+Batch response fields   | Response shape not specified      | results[] and count, request field is writes[]            | PDF p5, MultiTagWriteResponse
+Validation error        | HTTP 422 omitted from error table | HTTP 422 declared for invalid requests                    | PDF p21, write route responses
+Nullable type metadata  | Lists supported data types        | data_type may be null, all captured tags are non-null     | TagInfo / TagWriteResponse
+
+D. SHARED PLC ADDRESSES - PRESENT IN BOTH SOURCES (NOT PDF/API DIFFERENCES)
+Address | Signals sharing this address
+--------+--------------------------------------------------
+D1002.8 | Tank01_FillWaterStatus, Tank02_AirAgitationStatus
+D1012.8 | Tank03_FillWaterStatus, Tank04_AirAgitationStatus
+D1022.8 | Tank05_FillWaterStatus, Tank06_AirAgitationStatus
+D1036   | Tank08_WaterFlow, Tank09_WaterFlow
+L220    | Tank03_FillWaterAuto, Tank05_FillWaterAuto
+
+Limits: Neither source defines complete prerequisites, command/feedback rules or reset timing.
+written=true acknowledges a write. It does not prove physical completion.
+This comparison included no operating tests.
+Sources:
+- swagger-alignment-2026-10-23.md
+- swagger-signal-differences-2026-10-23.csv
+- source/supplier-openapi-2026-10-23.json
+- source/supplier-tags-2026-10-23.json

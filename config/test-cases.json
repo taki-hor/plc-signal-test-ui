@@ -7,7 +7,7 @@
       "command_value": 1,
       "feedback_tag": "Tank01_DoorOpened",
       "expected_feedback": 1,
-      "timeout_ms": 30000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -19,7 +19,7 @@
       "command_value": 1,
       "feedback_tag": "Tank01_DoorClosed",
       "expected_feedback": 1,
-      "timeout_ms": 30000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -31,7 +31,7 @@
       "command_value": 1,
       "feedback_tag": "Tank01_FilterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -43,7 +43,7 @@
       "command_value": 1,
       "feedback_tag": "Tank01_HeaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -55,7 +55,7 @@
       "command_value": 1,
       "feedback_tag": "Tank01_USStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -67,7 +67,7 @@
       "command_value": 1,
       "feedback_tag": "Tank01_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -79,7 +79,7 @@
       "command_value": 1,
       "feedback_tag": "Tank02_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -91,7 +91,7 @@
       "command_value": 1,
       "feedback_tag": "Tank03_DoorOpened",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -103,7 +103,7 @@
       "command_value": 1,
       "feedback_tag": "Tank03_DoorClosed",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -115,7 +115,7 @@
       "command_value": 1,
       "feedback_tag": "Tank03_FilterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -127,7 +127,7 @@
       "command_value": 1,
       "feedback_tag": "Tank03_HeaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -139,7 +139,7 @@
       "command_value": 1,
       "feedback_tag": "Tank03_SwingStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -151,7 +151,7 @@
       "command_value": 1,
       "feedback_tag": "Tank03_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -163,7 +163,7 @@
       "command_value": 1,
       "feedback_tag": "Tank04_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -175,7 +175,7 @@
       "command_value": 1,
       "feedback_tag": "Tank05_DoorOpened",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -187,7 +187,7 @@
       "command_value": 1,
       "feedback_tag": "Tank05_DoorClosed",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -199,7 +199,7 @@
       "command_value": 1,
       "feedback_tag": "Tank05_FilterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -211,7 +211,7 @@
       "command_value": 1,
       "feedback_tag": "Tank05_HeaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -223,7 +223,7 @@
       "command_value": 1,
       "feedback_tag": "Tank05_SwingStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -235,7 +235,7 @@
       "command_value": 1,
       "feedback_tag": "Tank05_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -247,7 +247,7 @@
       "command_value": 1,
       "feedback_tag": "Tank06_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -259,7 +259,7 @@
       "command_value": 1,
       "feedback_tag": "Tank07_DoorOpened",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -271,7 +271,7 @@
       "command_value": 1,
       "feedback_tag": "Tank07_DoorClosed",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -283,7 +283,7 @@
       "command_value": 1,
       "feedback_tag": "Tank07_FilterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -295,7 +295,7 @@
       "command_value": 1,
       "feedback_tag": "Tank07_RectStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -307,7 +307,7 @@
       "command_value": 1,
       "feedback_tag": "Tank07_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -319,7 +319,7 @@
       "command_value": 1,
       "feedback_tag": "Tank09_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -331,7 +331,7 @@
       "command_value": 1,
       "feedback_tag": "Tank10_DoorOpened",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -343,7 +343,7 @@
       "command_value": 1,
       "feedback_tag": "Tank10_DoorClosed",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -355,7 +355,7 @@
       "command_value": 1,
       "feedback_tag": "Tank10_FilterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -367,7 +367,7 @@
       "command_value": 1,
       "feedback_tag": "Tank10_HeaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -379,7 +379,7 @@
       "command_value": 1,
       "feedback_tag": "Tank10_SwingStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -391,7 +391,7 @@
       "command_value": 1,
       "feedback_tag": "Tank10_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -403,7 +403,7 @@
       "command_value": 1,
       "feedback_tag": "Tank11_SprayStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -415,7 +415,7 @@
       "command_value": 1,
       "feedback_tag": "Tank11_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -427,7 +427,7 @@
       "command_value": 1,
       "feedback_tag": "Tank12_DoorOpened",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -439,7 +439,7 @@
       "command_value": 1,
       "feedback_tag": "Tank12_DoorClosed",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -451,7 +451,7 @@
       "command_value": 1,
       "feedback_tag": "Tank12_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -463,7 +463,7 @@
       "command_value": 1,
       "feedback_tag": "Tank13_HeaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -475,7 +475,7 @@
       "command_value": 1,
       "feedback_tag": "Tank13_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -487,7 +487,7 @@
       "command_value": 1,
       "feedback_tag": "Tank14_DoorOpened",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -499,7 +499,7 @@
       "command_value": 1,
       "feedback_tag": "Tank14_DoorClosed",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": false
@@ -511,7 +511,7 @@
       "command_value": 1,
       "feedback_tag": "Tank14_FilterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -523,7 +523,7 @@
       "command_value": 1,
       "feedback_tag": "Tank14_HeaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -535,7 +535,7 @@
       "command_value": 1,
       "feedback_tag": "Tank14_SwingStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -547,7 +547,7 @@
       "command_value": 1,
       "feedback_tag": "Tank14_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -559,7 +559,7 @@
       "command_value": 1,
       "feedback_tag": "Tank15_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -571,7 +571,7 @@
       "command_value": 1,
       "feedback_tag": "Tank16_FilterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -583,7 +583,7 @@
       "command_value": 1,
       "feedback_tag": "Tank16_HeaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true
@@ -595,7 +595,7 @@
       "command_value": 1,
       "feedback_tag": "Tank16_FillWaterStatus",
       "expected_feedback": 1,
-      "timeout_ms": 5000,
+      "timeout_ms": 15000,
       "poll_interval_ms": 250,
       "reset_command": null,
       "requires_confirmation": true

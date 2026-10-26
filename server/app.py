@@ -12,6 +12,8 @@ from .models import Tag, ValidationError
 from .plc_client import MockPLCClient, PLCClient, PLCError
 from .signal_service import SignalService
 from .test_runner import TestRunner
+from .api_checks import APIChecks
+from .operator_results import load_operator_results
 
 settings = Settings()
 logs = LogService(ROOT / 'logs' / 'events.jsonl', settings.api_key)
@@ -22,6 +24,8 @@ service = SignalService(client, logs, settings.stale_ms, baseline=None if settin
 cases = json.loads((ROOT / 'config' / 'test-cases.json').read_text())['tests']
 safety = json.loads((ROOT / 'config' / 'safety-config.json').read_text())
 runner = TestRunner(service, logs, cases)
+service.api_checks = APIChecks(ROOT/'logs'/'api-checks.json', logs, 'MOCK' if settings.mock_mode else 'REAL',
+                               'MOCK' if settings.mock_mode else settings.base_url, cases)
 write_tokens: dict[str, float] = {}
 app = FastAPI(title='Anodizing PLC Signal Test Console')
 app.mount('/css', StaticFiles(directory=ROOT / 'frontend' / 'css'), name='css')
@@ -38,14 +42,14 @@ async def no_cache(request: Request, call_next):
 async def plc_error(request: Request, exc: PLCError):
     from fastapi.responses import JSONResponse
     body = {'error': exc.message, 'detail': logs.scrub(exc.detail), 'http_status': exc.status}
-    if getattr(exc, 'write_dispatched', None) is False: body['write_dispatched'] = False
+    if type(getattr(exc, 'write_dispatched', None)) is bool: body['write_dispatched'] = exc.write_dispatched
     return JSONResponse(status_code=exc.status, content=body)
 
 @app.exception_handler(HTTPException)
 async def http_error(request: Request, exc: HTTPException):
     from fastapi.responses import JSONResponse
     body = {'detail': logs.scrub(exc.detail)}
-    if request.url.path in ('/api/write', '/api/write/batch') and exc.status_code == 403:
+    if request.url.path in ('/api/write', '/api/write/batch', '/api/test/run') and exc.status_code == 403 and getattr(exc, 'write_dispatched', None) is not True:
         body['write_dispatched'] = False
     return JSONResponse(status_code=exc.status_code, content=body, headers=exc.headers)
 
@@ -54,7 +58,7 @@ async def validation_error(request: Request, exc: ValidationError):
     from fastapi.responses import JSONResponse
     logs.add('VALIDATION', result='BLOCKED', error=str(exc))
     body = {'error': str(exc), 'http_status': 400}
-    if request.url.path in ('/api/write', '/api/write/batch'): body['write_dispatched'] = False
+    if request.url.path in ('/api/write', '/api/write/batch', '/api/test/run') and getattr(exc, 'write_dispatched', None) is not True: body['write_dispatched'] = False
     return JSONResponse(status_code=400, content=body)
 
 def require_local(request: Request):
@@ -129,7 +133,7 @@ async def write(request: Request, body: dict):
     require_mode(request)
     tag_name = body.get('tag_name')
     if not isinstance(tag_name, str): raise ValidationError('tag_name is required')
-    if service.command_lock.locked(): raise ValidationError('Another write or command test is running')
+    if service.command_lock.locked(): raise ValidationError('Another write or command dispatch is running')
     async with service.command_lock:
         case = next((c for c in cases if c['command_tag'] == tag_name and c['command_value'] == body.get('value') and not c.get('requires_confirmation')), None)
         feedback = {}
@@ -158,17 +162,23 @@ async def write_batch(request: Request, body: dict):
     if not isinstance(writes, list) or any(not isinstance(item, dict) for item in writes):
         raise ValidationError('writes must be a list of objects')
     if len(writes) > safety['max_batch_items']: raise ValidationError('Batch exceeds configured maximum')
-    if service.command_lock.locked(): raise ValidationError('Another write or command test is running')
+    if service.command_lock.locked(): raise ValidationError('Another write or command dispatch is running')
     async with service.command_lock:
         reads = None
         def capture_baseline(poll):
             nonlocal reads
             reads = read_baseline(poll, writes)
         response = await service.write_batch(writes, authorize=lambda: require_mode(request), before_write=capture_baseline)
-        results = response.get('writes', [])
-        accepted = isinstance(results, list) and len(results) == len(writes) and all(
+        if not isinstance(response, dict):
+            error = PLCError(502, 'Supplier batch response is not an object. Inspect the commands before retrying.')
+            error.write_dispatched = True
+            raise error
+        results = response.get('results', response.get('writes', []))
+        count = response.get('count', None if 'results' in response else len(writes))
+        accepted = type(count) is int and count == len(writes) and isinstance(results, list) and len(results) == len(writes) and all(
             any(isinstance(result, dict) and result.get('tag_name') == item['tag_name'] and
-                result.get('value') == item['value'] and result.get('written') is True for result in results) for item in writes)
+                type(result.get('value')) in (int, float) and result['value'] == item['value'] and
+                result.get('written') is True for result in results) for item in writes)
         return logs.scrub({**response, 'console_batch_accepted': accepted,
                            'console_accepted_at': datetime.now(timezone.utc).isoformat() if accepted else None,
                            'console_read_baseline': reads})
@@ -179,9 +189,20 @@ async def test_cases(): return {'tests': cases}
 @app.post('/api/test/run')
 async def test_run(request: Request, body: dict):
     require_mode(request)
-    result = await runner.run(body.get('id'), authorize=lambda: require_mode(request))
+    options = {'timeout_ms': body['timeout_ms']} if 'timeout_ms' in body else {}
+    result = await runner.run(body.get('id'), authorize=lambda: require_mode(request),
+                              mapping_under_test=body.get('mapping_under_test', False), end_mode=body.get('end_mode', 'manual0'), **options)
     result['write_response'] = logs.scrub(result.get('write_response'))
     return result
+
+@app.get('/api/checks')
+async def api_check_results():
+    if service.api_checks and not service.tags:
+        await service.load_tags()
+    data = service.api_checks.public(service) if service.api_checks else {'records':[],'error':None}
+    context = data.get('context')
+    data['operator_results'], data['operator_results_error'] = load_operator_results(ROOT/'logs'/'operator-results.json', context, service.tags) if context else ([], None)
+    return logs.scrub(data)
 
 @app.get('/api/logs')
 async def get_logs(kind: str = 'all'):
