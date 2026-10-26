@@ -1,12 +1,16 @@
+import {savedHumanDecision} from './saved-results.js';
+import {apiFilterMatches, renderApiBadge, renderSavedResults} from './api-checks.js';
 import {$, node, groupFor, fillGroups, valueText, setText} from './dom.js';
 import {post, request, modeEnabled} from './api.js';
 import {confirmWrite, validate} from './controls.js';
 import {beginWriteObservation, finishWriteObservation} from './write-feedback.js';
 import {commandGuidance} from './command-guidance.js';
-import {canStartFeedbackTest, beginFeedbackTest, finishFeedbackTest, beginFeedbackClear, finishFeedbackClear, pendingCommandNames, canStartFeedbackClear, operatorStatus, operatorResult, canSetOperatorResult, setOperatorResult, latestFeedbackRecord, activeCommandNames, commandIntent} from './command-checklist.js';
+import {canStartFeedbackTest, beginFeedbackTest, finishFeedbackTest, beginFeedbackClear, finishFeedbackClear, pendingCommandNames, canStartFeedbackClear, operatorStatus, operatorResult, canSetOperatorResult, setOperatorResult, activeCommandNames, commandIntent} from './command-checklist.js';
 let cases = [], tags = [], status = null, poll = null, clearing = false, clearAttempt = null, activeAttempt = null;
 const attempts = [], attemptOptions = new Map(), inventoryRows = new Map(), cardIndicators = new Map();
 let selectedTestTank = 'all', selectedTestId = null;
+function humanDecision(test) { return savedHumanDecision(tags.find(tag => tag.tag_name === test?.command_tag),status,test); }
+function humanResult(test) { return humanDecision(test)?.value ?? 'unchecked'; }
 function selectedTimeout() {
   const input = $('test-timeout'), seconds = Number(input.value);
   return input.validity.valid && Number.isInteger(seconds) && seconds >= 1 && seconds <= 300 ? seconds * 1000 : null;
@@ -26,8 +30,9 @@ export function updateVerifier(nextCases, nextStatus, nextPoll, nextTags) {
   }
   $('test-search').oninput = () => updateVerifier(); $('test-result-filter').onchange = () => updateVerifier();
   $('test-choose-another').onclick = () => { const search = $('test-search'); search.focus({preventScroll:true}); search.scrollIntoView({block:'center'}); };
+  $('test-api-filter').onchange = filterCases;
   $('test-tank-select').onchange = () => { selectedTestTank = $('test-tank-select').value; filterCases(); };
-  $('test-clear-filters').onclick = () => { $('test-search').value = ''; $('test-result-filter').value = 'all'; selectedTestTank = 'all'; $('test-tank-select').value = 'all'; updateVerifier(); };
+  $('test-clear-filters').onclick = () => { $('test-search').value = ''; $('test-result-filter').value = 'all'; $('test-api-filter').value='all'; selectedTestTank = 'all'; $('test-tank-select').value = 'all'; updateVerifier(); };
   for (const button of $('test-list').querySelectorAll('[data-run-test]')) {
     const test = cases.find(test => test.id === button.closest('[data-test-id]').dataset.testId), reason = runUnavailableReason(test);
     button.disabled = Boolean(reason); button.title = reason || 'Review and confirm this test.';
@@ -87,9 +92,9 @@ function filterCases() {
   let visible = 0;
   for (const test of cases) {
     const item = cardIndicators.get(test.id); if (!item) continue;
-    const tag = tags.find(tag => tag.tag_name === test.command_tag), human = operatorResult(latestFeedbackRecord(test));
+    const tag = tags.find(tag => tag.tag_name === test.command_tag), human = humanResult(test);
     const match = (selectedTestTank === 'all' || item.card.dataset.caseTank === selectedTestTank) &&
-      (result === 'all' || human === result) &&
+      (result === 'all' || human === result) && apiFilterMatches(tag,$('test-api-filter').value,human,status) &&
       [test.name,test.command_tag,test.feedback_tag,tag?.description,tag?.device_address].some(value => String(value ?? '').toLowerCase().includes(query));
     item.card.classList.toggle('hidden',!match); if (match) visible++;
   }
@@ -118,7 +123,8 @@ function renderSelectedPair() {
   setText('test-selected-live',test ? `Command ${valueText(poll?.[test.command_tag])} · Feedback ${valueText(poll?.[test.feedback_tag])}${freshPoll() ? '' : ' · STALE / NO DATA'}` : '—');
   setText('test-selected-mapping',!test ? 'No pair selected' : test.requires_confirmation ? 'Mapping under test' : 'Local pair');
   $('test-selected-mapping').dataset.state = test?.requires_confirmation ? 'MAPPING UNDER TEST' : 'CONFIGURED';
-  const human = operatorResult(latestFeedbackRecord(test));
+  const human = humanResult(test);
+  renderApiBadge($('test-selected-api'),tag,status); renderSavedResults($('test-saved-results'),tag,status);
   setText('test-selected-human',human === 'pass' ? 'Operator verified: Pass' : human === 'fail' ? 'Operator observed: Fail' : 'Your result: Not checked');
   $('test-selected-human').dataset.result = human;
   const guide = commandGuidance(tag);
@@ -141,18 +147,19 @@ function renderCardResults() {
   for (const test of cases) {
     const item = cardIndicators.get(test.id);
     if (!item) continue;
-    const record = latestFeedbackRecord(test), result = operatorResult(record);
+    const decision = humanDecision(test), result = decision?.value ?? 'unchecked';
     const label = result === 'pass' ? '✓ Pass' : result === 'fail' ? '✕ Fail' : 'Not checked';
     if (item.card.dataset.operatorResult !== result) item.card.dataset.operatorResult = result;
     if (item.badge.textContent !== label) item.badge.textContent = label;
     item.badge.dataset.cardResult = result;
     item.badge.dataset.state = result === 'pass' ? 'COMPLETE' : result === 'fail' ? 'FAIL' : 'NOT CHECKED';
+    renderApiBadge(item.api,tags.find(tag=>tag.tag_name===test.command_tag),status);
     item.card.dataset.selected = String(selectedTestId === test.id);
-    const stamp = record?.operatorResultAt ?? record?.operatorCompletedAt ?? record?.issueAt;
+    const stamp = Date.parse(decision?.at);
     item.badge.title = `${result === 'pass' ? 'Operator verified' : result === 'fail' ? 'Operator observed' : 'Your result'}: ${label}${Number.isFinite(stamp) ? ' · '+new Date(stamp).toLocaleString() : ''}`;
     const selected = selectedTestId === test.id; item.card.classList.toggle('selected',selected); item.select.setAttribute('aria-pressed',String(selected));
   }
-  const results = cases.map(test => operatorResult(latestFeedbackRecord(test)));
+  const results = cases.map(test => humanResult(test));
   setText('test-result-count',`${results.filter(result => result === 'pass').length} Pass · ${results.filter(result => result === 'fail').length} Fail · ${results.filter(result => result === 'unchecked').length} Not checked`);
 }
 function renderCases() {
@@ -169,7 +176,8 @@ function renderCases() {
     const marks = node('div','feedback-case-marks'), badge = node('span','test-status',test.requires_confirmation ? 'Mapping under test' : 'Local pair');
     badge.dataset.state = test.requires_confirmation ? 'MAPPING UNDER TEST' : 'CONFIGURED';
     const indicator = node('span','test-status test-card-result','Not checked'); indicator.dataset.cardResult = 'unchecked';
-    marks.append(badge,indicator); cardIndicators.set(test.id,{card,badge:indicator,select});
+    const api = node('span','api-check-badge','Unchecked');
+    marks.append(badge,api,indicator); cardIndicators.set(test.id,{card,badge:indicator,select,api});
     const reason = node('p','sr-only',test.requires_confirmation ? 'Mapping under test. A matching API transition gives OBSERVED. Pair behavior is not specified in the reviewed docs.' : 'Local test pair. Signals are listed separately in the tag table. Pair behavior is not specified in the reviewed docs.');
     const runReason = node('span','sr-only'); runReason.id = `test-run-reason-${test.id}`;
     reason.id = `test-rule-${test.id}`; button.setAttribute('aria-describedby',`${reason.id} ${runReason.id}`);

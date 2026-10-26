@@ -12,6 +12,7 @@ from .models import Tag, ValidationError
 from .plc_client import MockPLCClient, PLCClient, PLCError
 from .signal_service import SignalService
 from .test_runner import TestRunner
+from .api_checks import APIChecks
 
 settings = Settings()
 logs = LogService(ROOT / 'logs' / 'events.jsonl', settings.api_key)
@@ -22,6 +23,8 @@ service = SignalService(client, logs, settings.stale_ms, baseline=None if settin
 cases = json.loads((ROOT / 'config' / 'test-cases.json').read_text())['tests']
 safety = json.loads((ROOT / 'config' / 'safety-config.json').read_text())
 runner = TestRunner(service, logs, cases)
+service.api_checks = APIChecks(ROOT/'logs'/'api-checks.json', logs, 'MOCK' if settings.mock_mode else 'REAL',
+                               'MOCK' if settings.mock_mode else settings.base_url, cases)
 write_tokens: dict[str, float] = {}
 app = FastAPI(title='Anodizing PLC Signal Test Console')
 app.mount('/css', StaticFiles(directory=ROOT / 'frontend' / 'css'), name='css')
@@ -190,6 +193,12 @@ async def test_run(request: Request, body: dict):
                               mapping_under_test=body.get('mapping_under_test', False), end_mode=body.get('end_mode', 'manual0'), **options)
     result['write_response'] = logs.scrub(result.get('write_response'))
     return result
+
+@app.get('/api/checks')
+async def api_check_results():
+    if service.api_checks and not service.tags:
+        await service.load_tags()
+    return logs.scrub(service.api_checks.public(service)) if service.api_checks else {'records':[],'error':None}
 
 @app.get('/api/logs')
 async def get_logs(kind: str = 'all'):

@@ -85,7 +85,10 @@ def test_api_cycle_without_a_human_choice_remains_unchecked_and_cleanup_does_not
     assert card_result(browser)=='unchecked'
     reload_records(browser,[saved_record('pass'),saved_record(id='cleanup',zeroOnlyCleanup=True,operatorResult='unchecked')])
     assert card_result(browser)=='pass'
-    reload_records(browser,[saved_record('pass'),saved_record(id='new-attempt',oneRequestedAt=None,oneAcceptedAt=None,operatorResult='unchecked')])
+    reload_records(browser,[saved_record('pass'),saved_record(id='new-attempt',oneRequestedAt=None,oneAcceptedAt=None)])
+    assert card_result(browser)=='pass'
+    reset=saved_record(id='explicit-reset',operatorResult='unchecked',operatorResultAt=int(time.time()*1000))
+    reload_records(browser,[saved_record('pass'),reset])
     assert card_result(browser)=='unchecked'
     assert not state['writes']
 

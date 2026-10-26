@@ -1,7 +1,8 @@
+import {apiFilterMatches, renderApiBadge, renderSavedResults} from './api-checks.js';
 import {go} from './router.js';
 import {$, node, valueText, metadataNumber} from './dom.js';
 import {post, enableMode, disableMode, modeEnabled} from './api.js';
-import {beginWriteObservation, finishWriteObservation} from './write-feedback.js';
+import {beginWriteObservation, finishWriteObservation, writeHumanResult} from './write-feedback.js';
 let tags = [], poll = null, status = null, valueIdentity = null;
 function canWrite() { return modeEnabled() && status?.supplier_api_connected && status?.data_fresh && status?.plc_mode === 'REMOTE'; }
 export function writeIdentity(tag, context) {
@@ -24,7 +25,7 @@ export function updateControls(nextTags, nextPoll, nextStatus) {
   }
   if (nextPoll) poll = nextPoll;
   if (nextStatus) status = nextStatus;
-  $('write-submit').disabled = !canWrite();
+  $('write-submit').disabled = !canWrite() || !selected();
   $('batch-submit').disabled = !canWrite();
   renderSelected();
 }
@@ -38,8 +39,12 @@ function renderValueControl(tag, defaultInvalid = false) {
   $('write-bool-zero').checked = bool && value === 0; $('write-bool-one').checked = bool && value === 1;
 }
 function renderSelected() {
+  for (const option of $('write-tag').options) { const tag=tags.find(t=>t.tag_name===option.value); option.hidden=!apiFilterMatches(tag,$('write-api-filter').value,writeHumanResult(tag?.tag_name,status),status); }
   const tag = selected(), identity = tag ? JSON.stringify([tag.tag_name,tag.device_address,tag.data_type]) : null;
+  $('write-submit').disabled=!canWrite() || !tag;
   renderValueControl(tag,identity !== valueIdentity); valueIdentity = identity;
+  renderApiBadge($('write-api-state'),tag,status); renderSavedResults($('write-saved-results'),tag,status);
+  $('write-api-filter-note').textContent=tag && !apiFilterMatches(tag,$('write-api-filter').value,writeHumanResult(tag.tag_name,status),status) ? 'Selected signal is outside this filter.' : '';
   const detail = $('write-detail'); detail.replaceChildren();
   if (!tag) { detail.textContent = 'No writable signals in catalog.'; return; }
   const grid = node('div', 'detail-grid');
@@ -67,6 +72,7 @@ export function prepareWrite(tagName, value) {
     try { validate(tag, String(value)); } catch { return false; }
     $('write-value').value = String(value);
   }
+  $('write-api-filter').value='all';
   $('write-tag').value = tag.tag_name;
   $('write-tag').dispatchEvent(new Event('change'));
   go('write');
@@ -86,6 +92,11 @@ export function initControls(onChange) {
   for (const id of ['write-bool-zero','write-bool-one']) $(id).addEventListener('change', () => {
     if (selected()?.data_type !== 'Bool' || !$(id).checked) return;
     $('write-value').value = $(id).value; renderValueControl(selected());
+  });
+  $('write-api-filter').addEventListener('input',()=>{
+    const items=tags.filter(t=>t.read_write==='W' && apiFilterMatches(t,$('write-api-filter').value,writeHumanResult(t.tag_name,status),status));
+    if (!items.some(t=>t.tag_name===$('write-tag').value)) $('write-tag').value=items[0]?.tag_name ?? '';
+    $('write-submit').disabled=!canWrite() || !selected(); $('write-tag').dispatchEvent(new Event('change'));
   });
   $('mode-btn').addEventListener('click', async () => {
     $('mode-btn').disabled = true;

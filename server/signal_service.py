@@ -12,6 +12,7 @@ class SignalService:
         self.baseline = baseline
         self.command_lock = asyncio.Lock()
         self.active_tests = {}
+        self.api_checks = None
         self.timestamp_timezone = ZoneInfo(timestamp_timezone) if timestamp_timezone else None
         self.timestamp_offset_seconds = timestamp_offset_seconds
         self.catalog_warnings = []
@@ -19,6 +20,14 @@ class SignalService:
         self.last_poll = None
         self.last_success = None
         self.last_error = None
+
+    def track_api(self, action, *args):
+        if self.api_checks is None: return None
+        try: return getattr(self.api_checks,action)(*args)
+        except Exception:
+            self.api_checks.error = 'API check evidence could not be saved; results are unavailable.'
+            self.logs.add('API_CHECK_STORAGE',result='ERROR',error=self.api_checks.error)
+            return None
 
     async def load_tags(self):
         try:
@@ -46,6 +55,7 @@ class SignalService:
             missing = [name for name in self.tags if poll.get(name) is None]
             self.success('READ', supplier_timestamp=poll.get('timestamp'), poll_count=poll.get('poll_count'),
                          tags_ok=poll.get('tags_ok'), tags_failed=poll.get('tags_failed'), failed_tags=missing)
+            self.track_api('observe',self,poll)
             return poll
         except Exception as exc:
             self.failure('READ', exc)
@@ -150,7 +160,9 @@ class SignalService:
             interrupted = self.check_test_writes([(tag, value)], owner=test_run)
         except Exception as exc:
             exc.write_dispatched = False
+            self.track_api('blocked_clear',tag_name,value)
             raise
+        draft = self.track_api('prepare',self,tag,value)
         try:
             if on_dispatch: on_dispatch()
             self.interrupt_tests(interrupted)
@@ -159,10 +171,12 @@ class SignalService:
                 raise PLCError(502, 'Supplier write response is not an object. Inspect the command before retrying.')
             response = {**response, 'console_command_address': tag.device_address}
             self.logs.add('WRITE', tag_name=tag_name, value=value, address=tag.device_address, result='ACCEPTED' if response.get('written') is True else 'REJECTED', http_status=200)
+            self.track_api('accepted',draft,response)
             return response
         except Exception as exc:
             exc.write_dispatched = True
             self.failure('WRITE', exc, tag_name=tag_name, value=value)
+            self.track_api('failed_write',draft,exc)
             raise
 
     async def write_batch(self, writes, authorize=None, before_write=None):
@@ -190,12 +204,18 @@ class SignalService:
         except PLCError as exc:
             exc.write_dispatched = False
             raise
+        drafts = [self.track_api('prepare',self,tag,item['value']) for tag,item in zip(metadata,validated)]
         try:
             self.interrupt_tests(interrupted)
             response = await self.client.write_batch(validated)
             self.logs.add('WRITE_BATCH', writes=validated, result='ACCEPTED', http_status=200)
+            results = response.get('results',response.get('writes',[])) if isinstance(response,dict) else []
+            for draft,item in zip(drafts,validated):
+                receipt = next((result for result in results if isinstance(result,dict) and result.get('tag_name')==item['tag_name']),{}) if isinstance(results,list) else {}
+                self.track_api('accepted',draft,receipt)
             return response
         except Exception as exc:
             exc.write_dispatched = True
             self.failure('WRITE_BATCH', exc)
+            for draft in drafts: self.track_api('failed_write',draft,exc)
             raise

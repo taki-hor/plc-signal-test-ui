@@ -411,3 +411,17 @@ dialog h2{margin:7px 0 18px;font-size:20px}
 
 #catalog-warning summary{cursor:pointer;font-weight:700}
 #catalog-warning-detail{margin-top:10px;white-space:pre-line}
+
+.api-check-filter{width:100%;margin-bottom:10px}
+.api-check-badge{display:inline-block;width:fit-content;padding:3px 6px;border-radius:5px;font-size:11px;font-weight:700;color:#475569;background:#edf1f3}
+.api-check-badge[data-api-state="checked"]{color:#155d7a;background:#eaf4f8}
+.api-check-badge[data-api-state="failed"]{color:#a52c32;background:#fff0ee}
+#api-check-summary{margin-bottom:8px}
+.bool-tag-meta{flex-wrap:wrap;align-items:center}
+
+.api-check-detail{display:block;margin-top:4px;overflow-wrap:anywhere}
+
+.saved-results{display:flex;flex-wrap:wrap;align-items:end;gap:8px 12px;margin:8px 0 12px}
+.saved-results label{display:flex;flex-direction:column;gap:3px;font-size:12px}
+.saved-results select{max-width:100%}
+.saved-results>small{flex-basis:100%}

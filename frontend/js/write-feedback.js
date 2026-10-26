@@ -1,3 +1,4 @@
+import {savedHumanDecision, manualDecisions, signature, saveManualDecision} from './saved-results.js';
 import {$, node, groupFor, valueText, formatTime, setText} from './dom.js';
 
 let tags = [], poll = null, status = null, cases = [], records = [], storageKey = null;
@@ -40,11 +41,14 @@ function loadHistory() {
     persist();
   } catch { $('write-feedback-storage').textContent = 'Saved feedback history could not be read.'; $('write-feedback-storage').classList.remove('hidden'); }
 }
+export function writeHumanResult(name, context) {
+  return savedHumanDecision(tags.find(tag => tag.tag_name === name),context)?.value ?? 'unchecked';
+}
 export function beginWriteObservation(writes) {
   loadHistory();
   // A subsequent write can interfere with an unfinished observation.
   interrupt('Another Value write was requested before feedback was observed');
-  const r = {id:crypto.randomUUID(), requested_at:new Date().toISOString(), writes:structuredClone(writes), state:'SENDING', feedback:[], before:null, after:null};
+  const r = {id:crypto.randomUUID(), requested_at:new Date().toISOString(), writes:structuredClone(writes), identities:writes.map(write => signature(tags.find(tag => tag.tag_name === write.tag_name))), state:'SENDING', feedback:[], before:null, after:null};
   records.push(r); records = records.slice(-MAX_RECORDS); selectedRecord = r.id;
   if (!includes(r, selected()?.tag_name)) {
     $('write-tag').value = writes[0].tag_name;
@@ -106,7 +110,18 @@ function setOperatorResult(value) {
     write_id:r.id,mode:status?.mode,api_address:status?.api_address,writes:structuredClone(r.writes),
     api_result:r.state,operator_result:value,operator_result_at:at,previous_operator_result:previous,
     previous_operator_result_at:previousAt,previous_operator_completed_at:previousComplete,write_sent:false});
-  persist(); render();
+  persist();
+  try {
+    for (const write of r.writes) {
+      const tag = tags.find(tag => tag.tag_name === write.tag_name);
+      if (tag && Array.isArray(r.identities) && r.identities.some(identity => JSON.stringify(identity) === JSON.stringify(signature(tag))))
+        saveManualDecision(tag,status,'human',value);
+    }
+  } catch {
+    $('write-feedback-storage').textContent = 'The attempt result was recorded, but its saved signal result could not be updated. Export the history.';
+    $('write-feedback-storage').classList.remove('hidden');
+  }
+  render(); window.dispatchEvent(new Event('signal-results-changed'));
 }
 function canCapture(r) {
   const stamp = Date.parse(status?.supplier_timestamp_utc);
@@ -182,7 +197,7 @@ function render() {
 }
 function exportRecords(format) {
   let content, type;
-  if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(),api_address:status?.api_address,mode:status?.mode,records},null,2); type = 'application/json'; }
+  if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(),api_address:status?.api_address,mode:status?.mode,records,manual_decisions:manualDecisions(status)},null,2); type = 'application/json'; }
   else {
     const columns = ['write_id','requested_at','commands','result','read_tag','before','before_timestamp_utc','after','after_timestamp_utc','api_accepted_at','feedback_evidence','operator_result','operator_result_at','operator_completed_at','operator_events'];
     const operatorFields = r => [operatorResult(r),r.operatorResultAt ?? r.operatorCompletedAt ?? '',r.operatorCompletedAt ?? '',JSON.stringify(r.operatorEvents ?? [])];

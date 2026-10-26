@@ -1,3 +1,5 @@
+import {savedHumanDecision, manualDecisions, signature} from './saved-results.js';
+import {apiCheckFor, apiFilterMatches, renderApiBadge, renderSavedResults} from './api-checks.js';
 import {commandGuidance} from './command-guidance.js';
 import {$, node, groupFor, fillGroups, valueText, setText} from './dom.js';
 import {post, modeEnabled} from './api.js';
@@ -113,7 +115,7 @@ function finish(r) {
 }
 function create(t, note = draftNote, mode = endMode(t)) {
   const reference = cases.find(c => c.command_tag === t.tag_name && c.command_value === 1 && !c.requires_confirmation);
-  const r = {id:crypto.randomUUID(), tag_name:t.tag_name, address:t.device_address, startedAt:now(), note, endMode:mode,
+  const r = {id:crypto.randomUUID(), tag_name:t.tag_name, address:t.device_address, identity:signature(t), startedAt:now(), note, endMode:mode,
              feedback_tag:reference?.feedback_tag ?? null, events:[]};
   records.push(r); event(r, 'Checklist started'); return r;
 }
@@ -173,7 +175,8 @@ function buildList() {
   for (const t of tags) {
     const button = node('button', 'bool-tag'); button.type = 'button'; button.dataset.commandTag = t.tag_name;
     const meta = node('span', 'bool-tag-meta'), current = node('span'), progress = node('span');
-    meta.append(current, progress); button.append(node('strong', '', t.tag_name), node('small', '', t.description), meta);
+    const api = node('span','api-check-badge','Unchecked');
+    meta.append(current,api,progress); button.append(node('strong', '', t.tag_name), node('small', '', t.description), meta);
     button.addEventListener('click', event => {
       if (busy) return;
       select(t.tag_name);
@@ -184,14 +187,14 @@ function buildList() {
         $('bool-name').setAttribute('tabindex','-1'); $('bool-name').focus({preventScroll:true});
       }
     });
-    $('bool-list').append(button); rows.set(t.tag_name, {button, current, progress});
+    $('bool-list').append(button); rows.set(t.tag_name, {button, current, progress, api});
   }
   const empty = node('div', 'hint'); empty.id = 'bool-empty'; empty.setAttribute('role', 'status');
   const message = node('p'); message.id = 'bool-empty-message';
   const retry = node('button', 'secondary', 'Retry catalog'); retry.id = 'bool-catalog-retry'; retry.type = 'button';
   retry.addEventListener('click', () => $('refresh-btn').click());
   const clear = node('button', 'secondary', 'Clear filters'); clear.id = 'bool-clear-filters'; clear.type = 'button';
-  clear.addEventListener('click', () => { $('bool-search').value = ''; $('bool-group').value = 'all'; $('bool-filter').value = 'all'; render(); });
+  clear.addEventListener('click', () => { $('bool-search').value = ''; $('bool-group').value = 'all'; $('bool-filter').value = 'all'; $('bool-api-filter').value='all'; render(); });
   empty.append(message, retry, clear); $('bool-list').append(empty);
 }
 function writeHint(r, active) {
@@ -217,15 +220,16 @@ function render() {
   const t = tag(), r = latest(), guide = commandGuidance(t), query = $('bool-search').value.trim().toLowerCase(), group = $('bool-group').value, filter = $('bool-filter').value;
   let visible = 0, done = 0;
   for (const item of tags) {
-    const row = rows.get(item.tag_name), record = latest(item), isDone = operatorComplete(record);
+    const row = rows.get(item.tag_name), record = latest(item), human = savedHumanDecision(item,status)?.value ?? 'unchecked', isDone = human === 'pass';
     if (isDone) done++;
     const matches = [item.tag_name, item.description, item.device_address].some(v => v.toLowerCase().includes(query)) &&
-      (group === 'all' || groupFor(item) === group) && (filter === 'all' || (filter === 'complete' ? isDone : filter === 'fail' ? operatorResult(record) === 'fail' : operatorResult(record) === 'unchecked'));
+      (group === 'all' || groupFor(item) === group) && apiFilterMatches(item,$('bool-api-filter').value,human,status) && (filter === 'all' || (filter === 'complete' ? isDone : filter === 'fail' ? human === 'fail' : human === 'unchecked'));
     row.button.classList.toggle('hidden', !matches); if (matches) visible++;
     row.button.classList.toggle('selected', selected === item.tag_name); row.button.setAttribute('aria-pressed', String(selected === item.tag_name));
     row.button.disabled = busy; row.current.textContent = `Value ${valueText(poll?.[item.tag_name])}`;
-    const human = operatorResult(record); row.button.dataset.result = operatorStatus(record); row.button.dataset.operatorResult = human;
+    row.button.dataset.result = human === 'pass' ? 'COMPLETE' : human === 'fail' ? 'ISSUE' : 'NOT CHECKED'; row.button.dataset.operatorResult = human;
     row.progress.textContent = human === 'pass' ? '✓ Pass' : human === 'fail' ? '✕ Fail' : 'Not checked';
+    renderApiBadge(row.api,item,status);
     row.progress.className = 'manual-result-badge'; row.progress.dataset.cardResult = human;
     row.progress.title = human === 'pass' ? 'Operator verified by physical observation' : human === 'fail' ? 'Operator recorded a failed check' : 'No human result has been set';
   }
@@ -237,6 +241,7 @@ function render() {
   const open = pending().length + held().length;
   $('nav-commands-badge').textContent = open ? `${open} open` : `${done}/${tags.length}`; $('nav-commands-badge').classList.toggle('amber', open > 0);
   $('bool-name').textContent = t?.tag_name ?? 'Select a command'; $('bool-description').textContent = t?.description ?? 'Numeric setpoints are on Setpoints & batch.';
+  renderApiBadge($('bool-api-state'),t,status); renderSavedResults($('bool-saved-results'),t,status);
   $('bool-value').textContent = valueText(t ? poll?.[t.tag_name] : null); $('bool-address').textContent = t?.device_address ?? '—';
   const reference = r?.feedback_tag ?? cases.find(c => c.command_tag === t?.tag_name && c.command_value === 1 && !c.requires_confirmation)?.feedback_tag;
   $('bool-feedback').textContent = !t ? '' : reference ? `Live feedback (${r?.mappingUnderTest ? 'mapping under test' : 'local pair'}): ${reference} = ${valueText(poll?.[reference])}. Record physical observations.` : 'The feedback mapping is unconfirmed. Record physical observations.';
@@ -268,8 +273,8 @@ function render() {
   if (document.activeElement !== $('bool-notes')) $('bool-notes').value = r?.note ?? draftNote;
   $('bool-issue').disabled = !r || busy; $('bool-new').disabled = !r || busy || needsClear(r) || (!r.oneRequestedAt && !r.zeroAcceptedAt && !r.issueAt);
   $('bool-result').textContent = result(r); $('bool-result').className = `pill ${apiCycleComplete(r) ? '' : 'amber'}`;
-  const human = operatorResult(r);
-  setText('bool-operator-state',human === 'pass' ? 'PASS — YOUR CHECK' : human === 'fail' ? 'FAIL — YOUR CHECK' : operatorStatus(r));
+  const human = savedHumanDecision(t,status)?.value ?? 'unchecked';
+  setText('bool-operator-state',human === 'pass' ? 'PASS — YOUR CHECK' : human === 'fail' ? 'FAIL — YOUR CHECK' : r?.oneAcceptedAt ? 'AWAITING YOUR CHECK' : 'NOT CHECKED');
   $('bool-operator-state').className = 'pill manual-result-badge'; $('bool-operator-state').dataset.cardResult = human;
   $('bool-mark-complete').disabled = !canMarkComplete(r); $('bool-mark-incomplete').disabled = !canSetOperatorResult(r) || operatorResult(r) === 'unchecked';
   $('bool-timer').textContent = feedbackTimer(r);
@@ -498,13 +503,20 @@ export function updateChecklist(nextTags, nextPoll, nextStatus, nextCases, catal
   render();
 }
 function download(format) {
-  const summary = tags.map(t => ({tag_name:t.tag_name, address:t.device_address, result:operatorStatus(latest(t)), operator_result:operatorResult(latest(t)), operator_result_at:latest(t)?.operatorResultAt ?? latest(t)?.operatorCompletedAt ?? latest(t)?.issueAt ?? null, operator_completed_at:latest(t)?.operatorCompletedAt ?? null, api_result:result(latest(t)), api_cycle_complete:apiCycleComplete(latest(t)), end_mode:latest(t)?.endMode ?? null, current_value:poll?.[t.tag_name] ?? null}));
+  const summary = tags.map(t => {
+    const decision = savedHumanDecision(t,status), r = latest(t), human = decision?.value ?? 'unchecked';
+    return {tag_name:t.tag_name,address:t.device_address,result:human === 'pass' ? 'COMPLETE' : human === 'fail' ? 'ISSUE' : r?.oneRejectedAt ? 'BLOCKED' : 'NOT CHECKED',
+      operator_result:human,operator_result_at:decision?.record?.operatorResultAt ?? decision?.record?.operatorCompletedAt ?? decision?.record?.issueAt ?? decision?.at ?? null,
+      operator_completed_at:human === 'pass' ? decision?.record?.operatorCompletedAt ?? decision?.at : null,
+      api_result:result(r),api_cycle_complete:apiCycleComplete(r),api_check_status:apiCheckFor(t,status).api_status,
+      end_mode:r?.endMode ?? null,current_value:poll?.[t.tag_name] ?? null};
+  });
   let content, type;
-  if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(), mode:status?.mode, api_address:status?.api_address, checklist:summary, attempts:records}, null, 2); type = 'application/json'; }
+  if (format === 'json') { content = JSON.stringify({exported_at:new Date().toISOString(), mode:status?.mode, api_address:status?.api_address, checklist:summary, attempts:records, manual_decisions:manualDecisions(status)}, null, 2); type = 'application/json'; }
   else {
-    const columns = ['tag_name','address','attempt_id','result','operator_result','operator_result_at','operator_completed_at','api_result','api_cycle_complete','at','elapsed_ms','since_send_1_ms','end_mode','end_mode_confirmed_at','zero_requested_at','automatic_local_record','source','mapping_under_test','timeout_ms','backend_run_id','backend_result','backend_elapsed_ms','feedback_result','feedback_elapsed_ms','action','value','api_elapsed_ms','http_status','written','console_accepted_at','console_command_baseline_utc','supplier_timestamp_utc','zero_baseline_supplier_timestamp_utc','Remote','Local','command_value','feedback_tag','feedback_value','supplier_timestamp','note'];
-    const entries = records.flatMap(r => r.events.map(e => ({tag_name:r.tag_name,address:r.address,attempt_id:r.id,result:operatorStatus(r),operator_result:operatorResult(r),operator_result_at:r.operatorResultAt ?? r.operatorCompletedAt ?? r.issueAt ?? null,operator_completed_at:r.operatorCompletedAt ?? null,api_result:result(r),api_cycle_complete:apiCycleComplete(r),end_mode:r.endMode ?? null,end_mode_confirmed_at:r.endModeConfirmedAt ?? null,zero_requested_at:r.zeroRequestedAt ?? null,source:r.source ?? null,mapping_under_test:r.mappingUnderTest ?? null,timeout_ms:r.timeout_ms ?? null,backend_run_id:r.backendRunId ?? null,note:r.note,...e})));
-    for (const item of summary) if (!latest(tags.find(t => t.tag_name === item.tag_name))) entries.push({...item, action:'Not tested'});
+    const columns = ['tag_name','address','attempt_id','result','operator_result','operator_result_at','operator_completed_at','api_result','api_cycle_complete','api_check_status','at','elapsed_ms','since_send_1_ms','end_mode','end_mode_confirmed_at','zero_requested_at','automatic_local_record','source','mapping_under_test','timeout_ms','backend_run_id','backend_result','backend_elapsed_ms','feedback_result','feedback_elapsed_ms','action','value','api_elapsed_ms','http_status','written','console_accepted_at','console_command_baseline_utc','supplier_timestamp_utc','zero_baseline_supplier_timestamp_utc','Remote','Local','command_value','feedback_tag','feedback_value','supplier_timestamp','note'];
+    const entries = records.flatMap(r => r.events.map(e => ({tag_name:r.tag_name,address:r.address,attempt_id:r.id,result:operatorStatus(r),operator_result:operatorResult(r),operator_result_at:r.operatorResultAt ?? r.operatorCompletedAt ?? r.issueAt ?? null,operator_completed_at:r.operatorCompletedAt ?? null,api_result:result(r),api_cycle_complete:apiCycleComplete(r),api_check_status:apiCheckFor(tags.find(t=>t.tag_name===r.tag_name),status).api_status,end_mode:r.endMode ?? null,end_mode_confirmed_at:r.endModeConfirmedAt ?? null,zero_requested_at:r.zeroRequestedAt ?? null,source:r.source ?? null,mapping_under_test:r.mappingUnderTest ?? null,timeout_ms:r.timeout_ms ?? null,backend_run_id:r.backendRunId ?? null,note:r.note,...e})));
+    for (const item of summary) if (!latest(tags.find(t => t.tag_name === item.tag_name))) entries.push({...item, action:item.api_check_status==='checked' ? 'API pass; no local write attempt' : item.api_check_status==='failed' ? 'API first pass failed; no local write attempt' : 'Not tested'});
     const cell = value => { let s = String(value ?? ''); if (typeof value === 'string' && /^[=+@\-\t\r]/.test(s)) s = "'" + s; return '"' + s.replaceAll('"','""') + '"'; };
     content = [columns.join(','), ...entries.map(e => columns.map(k => cell(e[k])).join(','))].join('\r\n'); type = 'text/csv';
   }
@@ -527,7 +539,7 @@ export function initChecklist(onChange) {
       if (r.feedbackState === 'WAITING') stopFeedback(r, 'MONITORING INTERRUPTED', {reason:'Page left before completion was observed'});
     }
   });
-  for (const id of ['bool-search','bool-group','bool-filter']) $(id).addEventListener('input', render);
+  for (const id of ['bool-search','bool-group','bool-filter','bool-api-filter']) $(id).addEventListener('input', render);
   $('bool-choose-another').addEventListener('click', () => {
     const input = $('bool-search'); input.focus({preventScroll:true}); input.scrollIntoView({block:'center'});
   });

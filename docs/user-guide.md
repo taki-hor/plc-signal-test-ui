@@ -336,3 +336,27 @@ Future backend results and logs include command_readback, Remote and Local from
 the same feedback snapshot. Older results without those fields stay unknown.
 The supplied batch schema returns `results` and `count`; complete acceptance
 requires every requested item to match and explicitly report written=true.
+
+## Saved signal results and API pass
+
+All three write pages show **API pass / API fail / Unchecked**, with an independent
+human result. Use the API result filter to find failures, unchecked signals, or
+API passes that still need a human check. Automatic API pass requires fresh later
+readback and verified restoration, plus mapped status where available. Auto-bit
+readback alone does not prove equipment operation.
+
+Use the compact **API result** and **Human result** fields to correct a saved
+signal result, even without a new write attempt. Changes save immediately in this
+browser and send no command. **Use API evidence** removes a manual API override.
+The source and latest automatic result remain visible. A human Pass can backfill
+API pass, but an older human Pass does not hide a newer automatic API failure.
+
+**New attempt** starts a new unjudged attempt; it keeps the signal's saved Pass or
+Fail. A blank new attempt and a temporary result-refresh failure never reset your
+saved judgment. Explicitly choose Not checked or Unchecked to reset it. The
+Active test result belongs to that attempt; the compact saved fields belong to
+the signal. Export JSON to retain the manual decision audit as well as attempts.
+
+For the 26 October hardware run and outstanding tests, see
+[API first-pass notes](api-firstpass-2026-10-26.md). For documented and unknown
+conditions, see [prerequisites](api-prerequisites-2026-10-26.md).
